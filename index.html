@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.2.8</title>
+    <title>IDOL Designer v1.2.9</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -27,6 +27,7 @@
         const { useState, useEffect, useRef, useMemo } = React;
 
         // --- 🔒 セキュリティ設定 🔒 ---
+        // あなたのCloudflare WorkerのURLを入力
         const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
         const FIELD_KEYS = [
@@ -142,32 +143,28 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
-                    const auditPrompt = `以下の画像を分析し、結果を純粋なJSON形式のみで出力してください。
-                    ルール：
-                    1. 返答は { } で囲まれたJSONのみとし、解説は一切不要。
-                    2. キーは [${FIELD_KEYS.join(', ')}] を使用。
-                    3. FACS、物理監査（肉感）、重心比率を精密に抽出すること。`;
+                    const auditPrompt = `画像を分析し結果を純粋なJSONで出力。FACS、物理監査、重心比率を精密抽出。
+                    ルール: 返答は { } のJSONのみ。キー: [${FIELD_KEYS.join(', ')}]`;
 
-                    // 安定パス v1 を使用
-                    const response = await fetch(`${proxyBaseUrl}/v1/models/gemini-1.5-flash:generateContent`, {
+                    // パスを v1beta に、モデルを gemini-1.5-flash に固定
+                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-1.5-flash:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: auditPrompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
                             generationConfig: {
-                                temperature: 0.1,
-                                maxOutputTokens: 1000
+                                response_mime_type: "application/json",
+                                temperature: 0
                             }
                         }),
                     });
 
                     if (!response.ok) {
-                        const errorMsg = await response.text();
-                        throw new Error(`API Error (${response.status})`);
+                        const errorBody = await response.text();
+                        throw new Error(`API ERROR (${response.status})`);
                     }
                     const res = await response.json();
                     const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-                    // JSON部分を抽出
                     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
                     const result = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
@@ -220,20 +217,21 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    const response = await fetch(`${proxyBaseUrl}/v1/models/gemini-1.5-flash:generateContent`, {
+                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-1.5-flash:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `データに基づき、最高峰の画像生成プロンプトを作成してください。
-                            物理的干渉（肉感）とFACSを反映し、非実在性を明記。"${arTag}"を含めること。
-                            出力は必ず以下のJSON形式のみで行うこと：
-                            {"positive": "...", "negative": "..."}
-                            
+                            contents: [{ parts: [{ text: `データに基づき画像生成プロンプトをJSONで作成。肉感とFACSを反映、非実在性を明記。"${arTag}"を含める。
+                            形式: {"positive": "...", "negative": "..."}
                             データ:
-                            ${activeText}` }] }]
+                            ${activeText}` }] }],
+                            generationConfig: {
+                                response_mime_type: "application/json",
+                                temperature: 0.1
+                            }
                         }),
                     });
-                    if (!response.ok) throw new Error("API Error " + response.status);
+                    if (!response.ok) throw new Error("API ERROR " + response.status);
                     const res = await response.json();
                     const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
                     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
@@ -269,7 +267,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.8 Stable Final</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.9 Stable Fix</span>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => window.location.reload()} className="p-2 text-slate-300"><Icon name="refresh" /></button>
