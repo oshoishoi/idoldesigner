@@ -3,20 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.2</title>
+    <title>IDOL Designer v1.2.1</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Firebase SDK (Version 11.6.1) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        window.fb = { initializeApp, getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, getFirestore, doc, setDoc, getDoc, onSnapshot };
-    </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -35,11 +27,8 @@
         const { useState, useEffect, useRef, useMemo } = React;
 
         // --- 🔒 セキュリティ設定 🔒 ---
-        // 1. Cloudflare Workers のURLを入力してください（最後に / は付けない）
+        // 1. 作成したWorkerのURLを正しく入力してください
         const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
-        
-        // 2. ここを空にしてください（APIキーはWorker側にあります）
-        const apiKey = ""; 
 
         const FIELD_KEYS = [
             'hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture',
@@ -67,15 +56,15 @@
 
         const Icon = ({ name, className = "" }) => {
             const svgs = {
-                sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
+                sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
                 refresh: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
                 undo: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 7V5c0-1.1.9-2 2-2h2"/><path d="M17 3h2c1.1 0 2 .9 2 2v2"/><path d="M21 17v2c0 1.1-.9 2-2 2h-2"/><path d="M7 21H5c-1.1 0-2-.9-2-2v-2"/><path d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2Z"/><path d="M12 16v2"/><path d="M12 8V6"/><path d="M8 12H6"/><path d="M18 12h-2"/></svg>,
                 target: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
                 plus: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
                 save: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
-                zap: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
                 brain: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>,
                 info: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
+                zap: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
                 x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             };
             return svgs[name] || null;
@@ -88,8 +77,6 @@
                 return obj;
             };
 
-            const [user, setUser] = useState(null);
-            const [db, setDb] = useState(null);
             const [selections, setSelections] = useState(createEmptyState);
             const [globalHistory, setGlobalHistory] = useState([]);
             const [stagedData, setStagedData] = useState(null);
@@ -100,52 +87,23 @@
             const [englishPrompt, setEnglishPrompt] = useState('');
             const [negativePrompt, setNegativePrompt] = useState('');
             const [copyFeedback, setCopyFeedback] = useState(null); 
-            const [statusMessage, setStatusMessage] = useState('接続中...');
-            const [debugLog, setDebugLog] = useState(null);
+            const [statusMessage, setStatusMessage] = useState('');
             const [previews, setPreviews] = useState({ base: null, plus: null });
+            
+            // スロット（ブラウザ保存）
             const [memorySlots, setMemorySlots] = useState([null, null, null, null, null]);
 
             const baseInputRef = useRef(null);
             const plusInputRef = useRef(null);
             const resultRef = useRef(null);
 
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'idol-designer-v1';
-
-            // --- Storage初期化 (Firebase) ---
+            // --- 起動時にLocalStorageから読込 ---
             useEffect(() => {
-                const initFirebase = async () => {
-                    const { initializeApp, getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, getFirestore } = window.fb;
-                    const firebaseConfig = JSON.parse(__firebase_config);
-                    const app = initializeApp(firebaseConfig);
-                    const auth = getAuth(app);
-                    const database = getFirestore(app);
-                    setDb(database);
-
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-
-                    const unsubscribe = onAuthStateChanged(auth, (u) => {
-                        setUser(u);
-                        if (u) setStatusMessage('');
-                    });
-                    return () => unsubscribe();
-                };
-                initFirebase();
+                const saved = localStorage.getItem('idol_designer_slots');
+                if (saved) {
+                    try { setMemorySlots(JSON.parse(saved)); } catch (e) { console.error(e); }
+                }
             }, []);
-
-            // --- クラウドスロット同期 ---
-            useEffect(() => {
-                if (!user || !db) return;
-                const { doc, onSnapshot } = window.fb;
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'slots', 'all');
-                const unsubscribe = onSnapshot(docRef, (docSnap) => {
-                    if (docSnap.exists()) setMemorySlots(docSnap.data().items);
-                }, (error) => console.error("Sync Error:", error));
-                return () => unsubscribe();
-            }, [user, db]);
 
             const cleanupMemory = (type) => {
                 if (previews[type]) {
@@ -155,16 +113,16 @@
             };
 
             const safeProcessImage = async (file) => {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     const url = URL.createObjectURL(file);
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        const ANALYZE_MAX = 512;
+                        const MAX = 512;
                         let w = img.width, h = img.height;
-                        if (w > h) { if (w > ANALYZE_MAX) { h *= ANALYZE_MAX / w; w = ANALYZE_MAX; } }
-                        else { if (h > ANALYZE_MAX) { w *= ANALYZE_MAX / h; h = ANALYZE_MAX; } }
+                        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
+                        else { if (h > MAX) { w *= MAX / h; h = MAX; } }
                         canvas.width = w; canvas.height = h;
                         ctx.drawImage(img, 0, 0, w, h);
                         const b64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
@@ -178,7 +136,6 @@
                         img.src = ""; canvas.width = 0; canvas.height = 0;
                         resolve({ b64, pUrl, b64Preview });
                     };
-                    img.onerror = () => reject(new Error("Load Error"));
                     img.src = url;
                 });
             };
@@ -201,9 +158,7 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
-                    const auditPrompt = `画像を精密に監査し、人物の特徴を日本語のJSON形式で回答してください。FACS（AU番号と強度A-E）、物理監査（脇・ウエストの食い込み、盛り上がり）、配置比率（重心）を網羅。捏造厳禁。キーリスト: [${FIELD_KEYS.join(', ')}]`;
-
-                    // 【修正】Google APIではなく、自身の Proxy（Worker）を叩く
+                    const auditPrompt = `画像分析: FACS、物理監査（食い込み・盛り上がり）、重心比率を精密抽出。日本語JSONで回答。キー: [${FIELD_KEYS.join(', ')}]`;
                     const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -233,27 +188,23 @@
                 } catch (e) { setStatusMessage('解析失敗'); } finally { setIsAnalyzing(null); }
             };
 
-            const saveToSlot = async (index) => {
-                if (!user || !db) return;
-                const { doc, setDoc } = window.fb;
+            const saveToSlot = (index) => {
                 const newSlots = [...memorySlots];
                 newSlots[index] = {
                     data: { ...selections },
-                    preview: previews.baseStored || previews.plusStored || null,
-                    timestamp: Date.now()
+                    preview: previews.baseStored || previews.plusStored || null
                 };
-                try {
-                    await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'slots', 'all'), { items: newSlots });
-                    setStatusMessage(`Saved to Slot ${index + 1}`);
-                    setTimeout(() => setStatusMessage(''), 2000);
-                } catch (e) { setStatusMessage('Save Error'); }
+                setMemorySlots(newSlots);
+                localStorage.setItem('idol_designer_slots', JSON.stringify(newSlots));
+                setStatusMessage(`Slot ${index + 1} Saved`);
+                setTimeout(() => setStatusMessage(''), 2000);
             };
 
             const loadFromSlot = (index) => {
                 const slot = memorySlots[index];
                 if (!slot) return;
                 setSelections(slot.data);
-                setStatusMessage(`Loaded Slot ${index + 1}`);
+                setStatusMessage(`Slot ${index + 1} Loaded`);
                 setTimeout(() => setStatusMessage(''), 2000);
             };
 
@@ -270,19 +221,17 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    // 【修正】Google APIではなく、自身の Proxy（Worker）を叩く
                     const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: `データ:\n${activeText}` }] }],
-                            systemInstruction: { parts: [{ text: `最高峰プロンプトエンジニア。入力の物理的干渉（食い込み、盛り上がり）と${expressionMode === 'facs' ? 'FACS筋肉動作' : '表情'}を忠実に描写。非実在性を明記。"${arTag}"を含めJSON形式で返せ。` }] },
+                            systemInstruction: { parts: [{ text: `最高峰プロンプトエンジニア。物理的干渉（食い込み、盛り上がり）とFACS筋肉描写を反映。非実在性を明記。"${arTag}"を含めJSON出力。` }] },
                             generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
                         }),
                     });
                     const res = await response.json();
-                    const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text;
-                    const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
+                    const result = JSON.parse(res.candidates?.[0]?.content?.parts?.[0]?.text.match(/\{[\s\S]*\}/)?.[0] || "{}");
                     setEnglishPrompt(result.positive);
                     setNegativePrompt(result.negative || "");
                     setStatusMessage('');
@@ -313,46 +262,37 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2 Protected</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.1 Stable</span>
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={() => globalHistory.length > 0 && setSelections(globalHistory[0])} className="p-2 text-slate-300 active:scale-90"><Icon name="undo" /></button>
                             <button onClick={() => window.location.reload()} className="p-2 text-slate-300"><Icon name="refresh" /></button>
                         </div>
                     </header>
 
                     <main className="max-w-xl mx-auto px-4 mt-4 space-y-6">
-                        {/* 永続化スロット */}
                         <section className="space-y-2">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-2">Memory Slots (Cloud Sync)</span>
-                            <div className="grid grid-cols-3 gap-3">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-2">Memory Slots (Browser Sync)</span>
+                            <div className="grid grid-cols-5 gap-2">
                                 {memorySlots.map((slot, i) => (
-                                    <div key={i} className={i >= 3 ? 'col-span-1 hidden md:block' : ''}>
-                                        {/* スマホでも5スロット見せたい場合は hidden クラスを調整 */}
+                                    <div key={i} className="space-y-1">
+                                        <button 
+                                            onClick={() => slot ? loadFromSlot(i) : saveToSlot(i)}
+                                            className={`w-full aspect-square rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all relative ${slot ? 'border-pink-400 bg-white shadow-sm' : 'border-slate-200 bg-slate-50/50'}`}
+                                        >
+                                            {slot ? (
+                                                <>
+                                                    <img src={slot.preview} className="w-full h-full object-cover opacity-70" />
+                                                    <div className="absolute inset-0 flex items-center justify-center font-black text-[9px] text-pink-600 bg-white/20">{i+1}</div>
+                                                </>
+                                            ) : (
+                                                <span className="text-[10px] text-slate-300 font-bold uppercase">{i+1}</span>
+                                            )}
+                                        </button>
+                                        {slot && (
+                                            <button onClick={() => saveToSlot(i)} className="w-full py-1 text-[6px] font-black bg-white text-pink-500 rounded border border-pink-100 uppercase active:scale-95">SAVE</button>
+                                        )}
                                     </div>
                                 ))}
-                                <div className="col-span-3 grid grid-cols-5 gap-2">
-                                    {memorySlots.map((slot, i) => (
-                                        <div key={i} className="space-y-1">
-                                            <button 
-                                                onClick={() => slot ? loadFromSlot(i) : saveToSlot(i)}
-                                                className={`w-full aspect-square rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all relative ${slot ? 'border-pink-400 bg-white' : 'border-slate-200 bg-slate-50/50'}`}
-                                            >
-                                                {slot ? (
-                                                    <>
-                                                        <img src={slot.preview} className="w-full h-full object-cover opacity-70" />
-                                                        <div className="absolute inset-0 flex items-center justify-center font-black text-[9px] text-pink-600 bg-white/10">{i+1}</div>
-                                                    </>
-                                                ) : (
-                                                    <span className="text-[10px] text-slate-300 font-bold uppercase">{i+1}</span>
-                                                )}
-                                            </button>
-                                            {slot && (
-                                                <button onClick={() => saveToSlot(i)} className="w-full py-1 text-[6px] font-black bg-white text-pink-500 rounded border border-pink-100 uppercase active:scale-95">SAVE</button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
                             </div>
                         </section>
 
@@ -361,7 +301,7 @@
                                  <Icon name="info" className="text-blue-500 w-4 h-4 mt-0.5 shrink-0" />
                                  <p className="text-[9px] text-blue-700 font-bold leading-relaxed italic">【FICTION】生成内容はすべて架空の創作物であり、実在の人物とは一切関係ありません。</p>
                              </div>
-                             <p className="text-[8px] text-blue-600 font-bold leading-relaxed pl-6 opacity-80">※画像は分析のみに使用され、サーバーに保存されません。スロットのデータはあなた専用の領域に保存されます。</p>
+                             <p className="text-[8px] text-blue-600 font-bold leading-relaxed pl-6 opacity-80">※画像は分析のみに使用され、保存されません。各スロットのデータはあなたのブラウザにのみ保存されます。</p>
                         </div>
 
                         <div className="h-6 flex items-center justify-center">
