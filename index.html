@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.2.1</title>
+    <title>IDOL Designer v1.2.3</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -27,7 +27,7 @@
         const { useState, useEffect, useRef, useMemo } = React;
 
         // --- 🔒 セキュリティ設定 🔒 ---
-        // 1. 作成したWorkerのURLを正しく入力してください
+        // あなたのCloudflare WorkerのURLに書き換わっていることを確認してください
         const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
         const FIELD_KEYS = [
@@ -36,8 +36,7 @@
             'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs',
             'skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle',
             'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes',
-            'outfit', 'outfitDetail', 'pose',
-            'situation', 'lighting', 'artStyle', 'cameraAngle',
+            'outfit', 'outfitDetail', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle',
             'additionalNotes'
         ];
 
@@ -89,28 +88,18 @@
             const [copyFeedback, setCopyFeedback] = useState(null); 
             const [statusMessage, setStatusMessage] = useState('');
             const [previews, setPreviews] = useState({ base: null, plus: null });
-            
-            // スロット（ブラウザ保存）
             const [memorySlots, setMemorySlots] = useState([null, null, null, null, null]);
 
             const baseInputRef = useRef(null);
             const plusInputRef = useRef(null);
             const resultRef = useRef(null);
 
-            // --- 起動時にLocalStorageから読込 ---
             useEffect(() => {
-                const saved = localStorage.getItem('idol_designer_slots');
-                if (saved) {
-                    try { setMemorySlots(JSON.parse(saved)); } catch (e) { console.error(e); }
-                }
+                try {
+                    const saved = localStorage.getItem('idol_designer_slots');
+                    if (saved) setMemorySlots(JSON.parse(saved));
+                } catch (e) { console.error("Restore failed:", e); }
             }, []);
-
-            const cleanupMemory = (type) => {
-                if (previews[type]) {
-                    URL.revokeObjectURL(previews[type]);
-                    setPreviews(prev => ({ ...prev, [type]: null }));
-                }
-            };
 
             const safeProcessImage = async (file) => {
                 return new Promise((resolve) => {
@@ -126,14 +115,11 @@
                         canvas.width = w; canvas.height = h;
                         ctx.drawImage(img, 0, 0, w, h);
                         const b64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-                        
                         canvas.width = 160; canvas.height = (img.height / img.width) * 160;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         const b64Preview = canvas.toDataURL('image/jpeg', 0.4);
-
                         const pUrl = URL.createObjectURL(file);
                         URL.revokeObjectURL(url);
-                        img.src = ""; canvas.width = 0; canvas.height = 0;
                         resolve({ b64, pUrl, b64Preview });
                     };
                     img.src = url;
@@ -143,7 +129,6 @@
             const handleUpload = async (e, mode) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                cleanupMemory(mode);
                 setIsAnalyzing(mode);
                 setStatusMessage('分析中');
                 try {
@@ -151,14 +136,14 @@
                     setPreviews(prev => ({ ...prev, [mode]: pUrl, [`${mode}Stored`]: b64Preview }));
                     await runAnalysis(b64, mode);
                 } catch (err) {
-                    setStatusMessage('Error');
+                    setStatusMessage('Error: ' + err.message);
                     setIsAnalyzing(null);
                 } finally { e.target.value = ''; }
             };
 
             const runAnalysis = async (base64, mode) => {
                 try {
-                    const auditPrompt = `画像分析: FACS、物理監査（食い込み・盛り上がり）、重心比率を精密抽出。日本語JSONで回答。キー: [${FIELD_KEYS.join(', ')}]`;
+                    const auditPrompt = `画像分析: FACS、物理監査、配置重心を精密抽出。日本語JSON回答。キー: [${FIELD_KEYS.join(', ')}]`;
                     const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -168,6 +153,10 @@
                         }),
                     });
 
+                    if (!response.ok) {
+                        const errorMsg = await response.text();
+                        throw new Error(`Worker Error (${response.status}): ${errorMsg}`);
+                    }
                     const res = await response.json();
                     const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text;
                     const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || rawText);
@@ -185,7 +174,7 @@
                         setSelectedFields(Object.keys(result).reduce((a, k) => ({ ...a, [k]: result[k] !== 'none' }), {}));
                     }
                     setStatusMessage('');
-                } catch (e) { setStatusMessage('解析失敗'); } finally { setIsAnalyzing(null); }
+                } catch (e) { setStatusMessage('解析失敗: ' + e.message); } finally { setIsAnalyzing(null); }
             };
 
             const saveToSlot = (index) => {
@@ -226,17 +215,18 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: `データ:\n${activeText}` }] }],
-                            systemInstruction: { parts: [{ text: `最高峰プロンプトエンジニア。物理的干渉（食い込み、盛り上がり）とFACS筋肉描写を反映。非実在性を明記。"${arTag}"を含めJSON出力。` }] },
+                            systemInstruction: { parts: [{ text: `最高峰プロンプトエンジニア。物理的干渉とFACSを反映。非実在性を明記。"${arTag}"を含めJSON出力。` }] },
                             generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
                         }),
                     });
+                    if (!response.ok) throw new Error("Worker Error " + response.status);
                     const res = await response.json();
                     const result = JSON.parse(res.candidates?.[0]?.content?.parts?.[0]?.text.match(/\{[\s\S]*\}/)?.[0] || "{}");
                     setEnglishPrompt(result.positive);
                     setNegativePrompt(result.negative || "");
                     setStatusMessage('');
                     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
-                } catch (e) { setStatusMessage('Error'); } finally { setIsProcessing(false); }
+                } catch (e) { setStatusMessage('Error: ' + e.message); } finally { setIsProcessing(false); }
             };
 
             const copyText = (text, type) => {
@@ -262,7 +252,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.1 Stable</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.3 Stable</span>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => window.location.reload()} className="p-2 text-slate-300"><Icon name="refresh" /></button>
@@ -271,7 +261,7 @@
 
                     <main className="max-w-xl mx-auto px-4 mt-4 space-y-6">
                         <section className="space-y-2">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-2">Memory Slots (Browser Sync)</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-2">Memory Slots (Local Sync)</span>
                             <div className="grid grid-cols-5 gap-2">
                                 {memorySlots.map((slot, i) => (
                                     <div key={i} className="space-y-1">
@@ -306,8 +296,8 @@
 
                         <div className="h-6 flex items-center justify-center">
                             {statusMessage && (
-                                <div className="bg-white border border-pink-100 px-4 py-1.5 rounded-full text-[10px] font-black text-pink-500 shadow-sm flex items-center gap-3">
-                                    <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-ping"></div>
+                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 ${statusMessage.startsWith('Error') || statusMessage.startsWith('解析失敗') ? 'bg-red-50 text-red-500' : 'bg-white text-pink-500'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full animate-ping ${statusMessage.startsWith('Error') || statusMessage.startsWith('解析失敗') ? 'bg-red-400' : 'bg-pink-400'}`}></div>
                                     {statusMessage.toUpperCase()}
                                 </div>
                             )}
@@ -339,7 +329,6 @@
                                         ))}
                                     </div>
                                     <div className="p-4 bg-white border-t flex gap-2"><button onClick={() => setStagedData(null)} className="flex-1 py-3 text-slate-400 font-bold text-xs uppercase tracking-tight">CANCEL</button><button onClick={() => {
-                                        setGlobalHistory(prev => [selections, ...prev].slice(0, 3));
                                         setSelections(prev => {
                                             const next = { ...prev };
                                             Object.keys(selectedFields).forEach(key => { if (selectedFields[key]) next[key] = String(stagedData[key]); });
