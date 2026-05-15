@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.2.7</title>
+    <title>IDOL Designer v1.2.8</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -142,27 +142,34 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
-                    const auditPrompt = `画像分析: FACS、物理監査、配置重心を抽出。日本語JSON回答。キー: [${FIELD_KEYS.join(', ')}]`;
-                    // すべて v1beta に統一
-                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-1.5-flash:generateContent`, {
+                    const auditPrompt = `以下の画像を分析し、結果を純粋なJSON形式のみで出力してください。
+                    ルール：
+                    1. 返答は { } で囲まれたJSONのみとし、解説は一切不要。
+                    2. キーは [${FIELD_KEYS.join(', ')}] を使用。
+                    3. FACS、物理監査（肉感）、重心比率を精密に抽出すること。`;
+
+                    // 安定パス v1 を使用
+                    const response = await fetch(`${proxyBaseUrl}/v1/models/gemini-1.5-flash:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: auditPrompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
-                            generation_config: {
-                                response_mime_type: "application/json",
-                                temperature: 0
+                            generationConfig: {
+                                temperature: 0.1,
+                                maxOutputTokens: 1000
                             }
                         }),
                     });
 
                     if (!response.ok) {
                         const errorMsg = await response.text();
-                        throw new Error(`Worker Error (${response.status}): ${errorMsg}`);
+                        throw new Error(`API Error (${response.status})`);
                     }
                     const res = await response.json();
-                    const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text;
-                    const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || rawText);
+                    const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                    // JSON部分を抽出
+                    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                    const result = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
 
                     if (mode === 'base') {
                         setSelections(prev => {
@@ -203,7 +210,7 @@
             const generatePrompt = async () => {
                 if (isProcessing) return;
                 setIsProcessing(true);
-                setStatusMessage('分析中');
+                setStatusMessage('生成中');
                 try {
                     const arTag = selections.ratio === '1:1' ? "--ar 1:1" : (selections.orientation === 'portrait' ? `--ar ${selections.ratio.split(':')[0]}:${selections.ratio.split(':')[1]}` : `--ar ${selections.ratio.split(':')[1]}:${selections.ratio.split(':')[0]}`);
                     const activeData = { ...selections };
@@ -213,28 +220,26 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    // ここも v1beta に修正し、キーを snake_case に徹底
-                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-1.5-flash:generateContent`, {
+                    const response = await fetch(`${proxyBaseUrl}/v1/models/gemini-1.5-flash:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `データ:\n${activeText}` }] }],
-                            system_instruction: { 
-                                parts: [{ text: `最高峰プロンプトエンジニア。物理的干渉とFACSを反映。非実在性を明記。"${arTag}"を含めJSON出力。` }] 
-                            },
-                            generation_config: { 
-                                response_mime_type: "application/json", 
-                                temperature: 0.1 
-                            }
+                            contents: [{ parts: [{ text: `データに基づき、最高峰の画像生成プロンプトを作成してください。
+                            物理的干渉（肉感）とFACSを反映し、非実在性を明記。"${arTag}"を含めること。
+                            出力は必ず以下のJSON形式のみで行うこと：
+                            {"positive": "...", "negative": "..."}
+                            
+                            データ:
+                            ${activeText}` }] }]
                         }),
                     });
-                    if (!response.ok) {
-                        const errorMsg = await response.text();
-                        throw new Error(`Worker Error (${response.status}): ${errorMsg}`);
-                    }
+                    if (!response.ok) throw new Error("API Error " + response.status);
                     const res = await response.json();
-                    const result = JSON.parse(res.candidates?.[0]?.content?.parts?.[0]?.text.match(/\{[\s\S]*\}/)?.[0] || "{}");
-                    setEnglishPrompt(result.positive);
+                    const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                    const result = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
+
+                    setEnglishPrompt(result.positive || "");
                     setNegativePrompt(result.negative || "");
                     setStatusMessage('');
                     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
@@ -264,7 +269,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.7 Stable Fix</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.8 Stable Final</span>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => window.location.reload()} className="p-2 text-slate-300"><Icon name="refresh" /></button>
@@ -371,9 +376,9 @@
                                 <div className="space-y-3 px-4">
                                     <span className="text-pink-400 font-black text-[9px] uppercase tracking-[0.2em] block">Style Presets</span>
                                     <div className="flex gap-2 overflow-x-auto pb-1 justify-center no-scrollbar px-1">
-                                        <button onClick={() => applyPreset('cheki')} className={`shrink-0 flex items-center gap-1 text-[8px] font-black px-4 py-2 rounded-full border transition-all shadow-sm ${selections.ratio === '54:86' ? 'bg-pink-500 text-white border-pink-500 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}><Icon name="camera" className="width-3 h-3" /> チェキ風</button>
-                                        <button onClick={() => applyPreset('camera')} className={`shrink-0 flex items-center gap-1 text-[8px] font-black px-4 py-2 rounded-full border transition-all shadow-sm ${selections.artStyle.includes('Smartphone') ? 'bg-blue-500 text-white border-blue-500 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}><Icon name="camera" className="width-3 h-3" /> スマホ風</button>
-                                        <button onClick={() => applyPreset('realistic')} className={`shrink-0 flex items-center gap-1 text-[8px] font-black px-4 py-2 rounded-full border transition-all shadow-sm ${selections.artStyle.includes('Realistic') ? 'bg-slate-800 text-white border-slate-800 shadow-lg' : 'bg-white text-slate-400 border-slate-100'}`}><Icon name="camera" className="width-3 h-3" /> 実写風</button>
+                                        <button onClick={() => applyPreset('cheki')} className={`shrink-0 flex items-center gap-1 text-[8px] font-black px-4 py-2 rounded-full border transition-all shadow-sm ${selections.ratio === '54:86' ? 'bg-pink-500 text-white border-pink-500 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}><Icon name="camera" className="w-3 h-3" /> チェキ風</button>
+                                        <button onClick={() => applyPreset('camera')} className={`shrink-0 flex items-center gap-1 text-[8px] font-black px-4 py-2 rounded-full border transition-all shadow-sm ${selections.artStyle.includes('Smartphone') ? 'bg-blue-500 text-white border-blue-500 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}><Icon name="camera" className="w-3 h-3" /> スマホ風</button>
+                                        <button onClick={() => applyPreset('realistic')} className={`shrink-0 flex items-center gap-1 text-[8px] font-black px-4 py-2 rounded-full border transition-all shadow-sm ${selections.artStyle.includes('Realistic') ? 'bg-slate-800 text-white border-slate-800 shadow-lg' : 'bg-white text-slate-400 border-slate-100'}`}><Icon name="camera" className="w-3 h-3" /> 実写風</button>
                                     </div>
                                 </div>
 
