@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.2.5</title>
+    <title>IDOL Designer v1.2.6</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -27,7 +27,6 @@
         const { useState, useEffect, useRef, useMemo } = React;
 
         // --- 🔒 セキュリティ設定 🔒 ---
-        // あなたのCloudflare WorkerのURLを入力してください
         const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
         const FIELD_KEYS = [
@@ -143,14 +142,17 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
-                    const auditPrompt = `画像分析: FACS、物理監査、配置重心を精密抽出。日本語JSON回答。キー: [${FIELD_KEYS.join(', ')}]`;
-                    // パスを v1 に変更
-                    const response = await fetch(`${proxyBaseUrl}/v1/models/gemini-1.5-flash:generateContent`, {
+                    const auditPrompt = `画像分析: FACS、物理監査、配置重心を抽出。日本語JSON回答。キー: [${FIELD_KEYS.join(', ')}]`;
+                    // v1beta を使用し、項目名を snake_case に統一
+                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-1.5-flash:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: auditPrompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
-                            generationConfig: { responseMimeType: "application/json", temperature: 0 }
+                            generation_config: {
+                                response_mime_type: "application/json",
+                                temperature: 0.1
+                            }
                         }),
                     });
 
@@ -211,14 +213,19 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    // パスを v1 に、システム命令のキーを system_instruction に変更
-                    const response = await fetch(`${proxyBaseUrl}/v1/models/gemini-1.5-flash:generateContent`, {
+                    // v1beta を使用し、各キーを Google API が期待する snake_case に修正
+                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-1.5-flash:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: `データ:\n${activeText}` }] }],
-                            system_instruction: { parts: [{ text: `最高峰プロンプトエンジニア。物理的干渉とFACSを反映。非実在性を明記。"${arTag}"を含めJSON出力。` }] },
-                            generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
+                            system_instruction: { 
+                                parts: [{ text: `最高峰プロンプトエンジニア。物理的干渉とFACSを反映。非実在性を明記。"${arTag}"を含めJSON出力。` }] 
+                            },
+                            generation_config: { 
+                                response_mime_type: "application/json", 
+                                temperature: 0.1 
+                            }
                         }),
                     });
                     if (!response.ok) throw new Error("Worker Error " + response.status);
@@ -254,7 +261,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.5 Stable</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.6 Stable Sync</span>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => window.location.reload()} className="p-2 text-slate-300"><Icon name="refresh" /></button>
@@ -321,7 +328,7 @@
                         {stagedData && (
                             <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
                                 <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
-                                    <div className="p-4 bg-pink-500 text-white font-bold text-xs flex justify-between items-center italic tracking-widest uppercase">Merge Components <button onClick={() => setStagedData(null)}><Icon name="x" className="width-4 h-4" /></button></div>
+                                    <div className="p-4 bg-pink-500 text-white font-bold text-xs flex justify-between items-center italic tracking-widest uppercase">Merge Components <button onClick={() => setStagedData(null)}><Icon name="x" className="w-4 h-4" /></button></div>
                                     <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50 custom-scrollbar">
                                         {Object.entries(stagedData).map(([key, val]) => (!val || !LABEL_MAP[key] || val === 'none') ? null : (
                                             <div key={key} onClick={() => setSelectedFields(prev => ({ ...prev, [key]: !prev[key] }))} className={`p-3 rounded-xl border text-xs flex items-center gap-3 transition-all ${selectedFields[key] ? 'bg-white border-pink-500 shadow-sm' : 'bg-white opacity-40'}`}>
