@@ -64,7 +64,8 @@
                 zap: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
                 brain: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>,
                 info: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
-                x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+                check: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>
             };
             return svgs[name] || null;
         };
@@ -100,6 +101,24 @@
                 } catch (e) { console.error("Restore failed:", e); }
             }, []);
 
+            // プリセット関数の不足を補完
+            const applyPreset = (type) => {
+                setSelections(prev => {
+                    const next = { ...prev };
+                    if (type === 'cheki') {
+                        next.ratio = '54:86';
+                        next.artStyle = 'チェキ風、ポラロイド、レトロ';
+                    } else if (type === 'camera') {
+                        next.ratio = '9:16';
+                        next.artStyle = 'SNS風、スマホ撮影スナップ';
+                    } else if (type === 'realistic') {
+                        next.ratio = '9:16';
+                        next.artStyle = 'Realistic, high fidelity photo';
+                    }
+                    return next;
+                });
+            };
+
             const safeProcessImage = async (file) => {
                 return new Promise((resolve) => {
                     const url = URL.createObjectURL(file);
@@ -117,9 +136,8 @@
                         canvas.width = 160; canvas.height = (img.height / img.width) * 160;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         const b64Preview = canvas.toDataURL('image/jpeg', 0.4);
-                        const pUrl = URL.createObjectURL(file);
                         URL.revokeObjectURL(url);
-                        resolve({ b64, pUrl, b64Preview });
+                        resolve({ b64, pUrl: URL.createObjectURL(file), b64Preview });
                     };
                     img.src = url;
                 });
@@ -137,18 +155,20 @@
                 } catch (err) {
                     setStatusMessage('Error: ' + err.message);
                     setIsAnalyzing(null);
-                } finally { e.target.value = ''; }
+                }
             };
 
             const runAnalysis = async (base64, mode) => {
                 try {
                     const auditPrompt = `画像を精密に分析し結果を純粋なJSONのみで出力せよ。FACS、肉感（衣服の食い込み・盛り上がり）、重心を抽出。キー: [${FIELD_KEYS.join(', ')}]`;
                     
-                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-1.5-flash:generateContent`, {
+                    // 【修正箇所】 エンドポイントを gemini-3-flash-preview に最適化
+                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-3-flash-preview:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: auditPrompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }]
+                            contents: [{ parts: [{ text: auditPrompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
+                            generationConfig: { responseMimeType: "application/json" }
                         }),
                     });
 
@@ -170,7 +190,7 @@
                         setSelectedFields(Object.keys(result).reduce((a, k) => ({ ...a, [k]: result[k] !== 'none' }), {}));
                     }
                     setStatusMessage('');
-                } catch (e) { setStatusMessage('解析失敗: ' + e.message); } finally { setIsAnalyzing(null); }
+                } catch (e) { setStatusMessage('解析失敗: ' + e.message); } finally { setIsAnalyzing(null); if(baseInputRef.current) baseInputRef.current.value = ''; if(plusInputRef.current) plusInputRef.current.value = ''; }
             };
 
             const saveToSlot = (index) => {
@@ -206,11 +226,13 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-1.5-flash:generateContent`, {
+                    // 【修正箇所】 エンドポイントを gemini-3-flash-preview に最適化
+                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-3-flash-preview:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `以下のデータから最高峰の画像生成プロンプトを作成し、JSON {"positive": "...", "negative": "..."} で出力せよ。肉感とFACSを反映し"${arTag}"を含めること。\n\nデータ:\n${activeText}` }] }]
+                            contents: [{ parts: [{ text: `以下のデータから最高峰の画像生成プロンプトを作成し、JSON {"positive": "...", "negative": "..."} で出力せよ。肉感とFACSを反映し"${arTag}"を含めること。\n\nデータ:\n${activeText}` }] }],
+                            generationConfig: { responseMimeType: "application/json" }
                         }),
                     });
                     if (!response.ok) throw new Error("HTTP " + response.status);
@@ -227,7 +249,7 @@
                 const el = document.createElement("textarea");
                 el.value = text; document.body.appendChild(el);
                 el.select(); document.execCommand('copy');
-                document.body.removeChild(el);
+                if(el.parentNode) el.parentNode.removeChild(el);
                 setCopyFeedback(type);
                 setTimeout(() => setCopyFeedback(null), 2000);
             };
