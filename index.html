@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.2.3</title>
+    <title>IDOL Designer v1.2.4</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -27,7 +27,6 @@
         const { useState, useEffect, useRef, useMemo } = React;
 
         // --- 🔒 セキュリティ設定 🔒 ---
-        // あなたのCloudflare WorkerのURLに書き換わっていることを確認してください
         const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
         const FIELD_KEYS = [
@@ -36,7 +35,8 @@
             'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs',
             'skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle',
             'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes',
-            'outfit', 'outfitDetail', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle',
+            'outfit', 'outfitDetail', 'pose',
+            'situation', 'lighting', 'artStyle', 'cameraAngle',
             'additionalNotes'
         ];
 
@@ -77,7 +77,6 @@
             };
 
             const [selections, setSelections] = useState(createEmptyState);
-            const [globalHistory, setGlobalHistory] = useState([]);
             const [stagedData, setStagedData] = useState(null);
             const [selectedFields, setSelectedFields] = useState({});
             const [isProcessing, setIsProcessing] = useState(false);
@@ -144,7 +143,8 @@
             const runAnalysis = async (base64, mode) => {
                 try {
                     const auditPrompt = `画像分析: FACS、物理監査、配置重心を精密抽出。日本語JSON回答。キー: [${FIELD_KEYS.join(', ')}]`;
-                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`, {
+                    // モデル名を gemini-1.5-flash に変更
+                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-1.5-flash:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -210,12 +210,13 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`, {
+                    // モデル名を gemini-1.5-flash に変更し、system_instruction (スネークケース) に修正
+                    const response = await fetch(`${proxyBaseUrl}/v1beta/models/gemini-1.5-flash:generateContent`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: `データ:\n${activeText}` }] }],
-                            systemInstruction: { parts: [{ text: `最高峰プロンプトエンジニア。物理的干渉とFACSを反映。非実在性を明記。"${arTag}"を含めJSON出力。` }] },
+                            system_instruction: { parts: [{ text: `最高峰プロンプトエンジニア。物理的干渉とFACSを反映。非実在性を明記。"${arTag}"を含めJSON出力。` }] },
                             generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
                         }),
                     });
@@ -252,7 +253,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.3 Stable</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.2.4 Stable</span>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => window.location.reload()} className="p-2 text-slate-300"><Icon name="refresh" /></button>
