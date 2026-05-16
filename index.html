@@ -95,7 +95,7 @@
             const [selectedFields, setSelectedFields] = useState({});
             const [isProcessing, setIsProcessing] = useState(false);
             const [isAnalyzing, setIsAnalyzing] = useState(null); 
-            const [expressionMode, setExpressionMode] = useState('facs'); 
+            const [expressionMode, setExpressionMode] = useState('standard'); 
             const [englishPrompt, setEnglishPrompt] = useState('');
             const [negativePrompt, setNegativePrompt] = useState('');
             const [copyFeedback, setCopyFeedback] = useState(null); 
@@ -157,7 +157,7 @@
 
             const handleUpload = async (e, mode) => {
                 const file = e.target.files?.[0];
-                if (!file) return;
+                if (!file || isAnalyzing) return;
                 setIsAnalyzing(mode);
                 setStatusMessage('分析中');
                 try {
@@ -165,27 +165,28 @@
                     setPreviews(prev => ({ ...prev, [mode]: pUrl, [`${mode}Stored`]: b64Preview }));
                     await runAnalysis(b64, mode);
                 } catch (err) {
-                    setStatusMessage('Error: ' + err.message);
+                    setStatusMessage('Error');
                     setIsAnalyzing(null);
                 } finally { if(e.target) e.target.value = ''; }
             };
 
             const runAnalysis = async (base64, mode) => {
                 try {
+                    // 【分析ロジックの統合・強化】 
                     const auditPrompt = `画像を精密に分析し、結果を詳細な「日本語」のJSON形式のみで出力せよ。解説不要。
 
-                    【最優先監査：身体境界線、紐の幅、すき間】
-                    1. 身体境界線: 衣装の端（脇口、ストラップ、ウエスト、境界）を走査し「盛り上がり」「食い込み」「圧迫」を言語化せよ。
-                    2. 紐・布の幅: ストラップや紐の幅（極細、数ミリ単位等）を特定し、肌に触れる部分の幅詳細を記述せよ。
-                    3. すき間: 衣装と肌の間に生じている絶妙な「すき間(gaps)」を特定し、必ず「bodyInterface（その他）」に記述せよ。
+                    【最優先監査事項：身体境界線、紐の幅、すき間】
+                    1. 身体境界線: 衣装の端（脇、ストラップ、ウエスト、境界）を走査し「盛り上がり」「食い込み」「圧迫」を言語化せよ。
+                    2. 紐・布の幅: ストラップや紐の幅（極細、数ミリ単位など）を正確に特定し、肌に触れる部分の詳細を記述せよ。
+                    3. すき間: 衣装と肌の間に生じている絶妙な「すき間(gaps/loose fit)」を特定し、必ず「bodyInterface（その他）」に記述せよ。
 
-                    【極限監査：目と表情(FACS)】
-                    1. FACS: 表情をAction Unit番号と強度(A〜E)、および補助動作(AU51〜64：頭部の向き、視線)の組み合わせで精密に分析せよ。例: AU12C, AU51B。
-                    2. 目の詳細: 左右の対称性（高さや幅）、黒目（虹彩）の露出割合、目頭の鋭さ（蒙古襞の有無）、目尻の角度（タレ・ツリ）を詳細に分析せよ。
-                    3. アイメイク: アイラインの太さ、目尻の跳ね上げ角度、まつ毛の詳細を特定せよ。
+                    【極限監査：目と表情(FACS)とパーツ配置】
+                    1. FACS: 表情をAction Unit番号と強度(A〜E)、および補助動作(AU51〜64：頭部の向き、視線)の組み合わせで分析せよ。例: AU12C, AU51B。
+                    2. 目の詳細: 左右の対称性（高さや幅の差）、黒目（虹彩）の比率、目頭の鋭さ、目尻の角度（タレ・ツリ）を詳細に分析せよ。
+                    3. アイメイク: アイラインの引き方詳細、目尻の跳ね上げ、太さを特定せよ。
+                    4. パーツ配置: 「facePlacement」にて、目・鼻・口の距離感や黄金比からの乖離を客観的に記述せよ。
 
-                    キー: [${FIELD_KEYS.join(', ')}]
-                    値は日本語（FACSコードはそのまま）で回答せよ。`;
+                    キー: [${FIELD_KEYS.join(', ')}]`;
                     
                     const response = await fetch(getApiUrl("generateContent"), {
                         method: 'POST',
@@ -196,7 +197,9 @@
                         }),
                     });
 
+                    if (response.status === 429) throw new Error("WAIT_LIMIT");
                     if (!response.ok) throw new Error("HTTP " + response.status);
+                    
                     const res = await response.json();
                     const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
                     const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || rawText);
@@ -214,8 +217,10 @@
                         setSelectedFields(Object.keys(result).reduce((a, k) => ({ ...a, [k]: result[k] !== 'none' }), {}));
                     }
                     setStatusMessage('');
-                } catch (e) { setStatusMessage('解析失敗: ' + e.message); } finally { 
-                    setIsAnalyzing(null); 
+                } catch (e) { 
+                    setStatusMessage(e.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : '解析失敗');
+                } finally { 
+                    setTimeout(() => setIsAnalyzing(null), 1000); 
                 }
             };
 
@@ -252,6 +257,7 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
+                    // 【節約モード：テキストのみでリクエスト】
                     const response = await fetch(getApiUrl("generateContent"), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -259,23 +265,31 @@
                             contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプト（英語）を作成せよ。
 
                             【最優先・重要指示】
-                            1. FACSのクリーン出力: FACSのAction Unitsは「AU12C」のようにコードと強度のみを反映し、「(Cheek Raiser)」のような補助的な表記は一切含めないこと。補助動作（AU51〜64：頭部姿勢、視線）も同様にコードと強度のみで精密に反映せよ。
-                            2. 目の極限描写: 左右の対称性、黒目の比率、目頭・目尻の鋭さ、アイラインの筆致(winged eyeliner, tightlining)を詳細に反映せよ。
-                            3. 物理的こだわり: ストラップの幅による「鋭い食い込み(sharp squish)」「肉の盛り上がり(bulge)」「すき間(gaps)」を、モデルのスタイル美として強調せよ。
-                            4. 基本設定：「ランジェリー」は「activewear」に置換。「CG」というワードは禁止。実写、RAW品質描写。
+                            1. FACSのクリーン出力: Action Unitsは「AU12C」のようにコードと強度のみを反映し、補助的な解説表記は一切含めないこと。補助動作（AU51〜64）も同様。
+                            2. 目の極限描写: 対称性、黒目の比率、目頭・目尻の鋭さ、アイラインの筆致を精緻に反映せよ。
+                            3. 物理的こだわり: 衣装の幅や紐による「肌への食い込み(squish)」「肉の盛り上がり(bulge)」「すき間(gaps)」を、スタイルを良く見せるこだわりとして極力強調して含めること。
+                            4. 基本設定：「ランジェリー」は「activewear」に置換。「CG」というワードは絶対に使用禁止。実写、RAW品質描写。
+                            5. 顔のパーツ配置バランス（facePlacement）を厳格に再現すること。
                             
-                            出力は必ずJSON {"positive": "...", "negative": "..."} のみ。末尾に比率 "${arTag}" を含めること。\n\nデータ:\n${activeText}` }] }],
+                            出力は必ずJSON {"positive": "...", "negative": "..."} のみで行え。末尾に比率 "${arTag}" を含めること。\n\nデータ:\n${activeText}` }] }],
                             generationConfig: { responseMimeType: "application/json" }
                         }),
                     });
+
+                    if (response.status === 429) throw new Error("WAIT_LIMIT");
                     if (!response.ok) throw new Error("HTTP " + response.status);
+                    
                     const res = await response.json();
                     const result = JSON.parse(res.candidates?.[0]?.content?.parts?.[0]?.text.match(/\{[\s\S]*\}/)?.[0] || "{}");
                     setEnglishPrompt(result.positive || "");
                     setNegativePrompt(result.negative || "");
                     setStatusMessage('');
                     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
-                } catch (e) { setStatusMessage('Error: ' + e.message); } finally { setIsProcessing(false); }
+                } catch (e) { 
+                    setStatusMessage(e.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : 'Error');
+                } finally { 
+                    setTimeout(() => setIsProcessing(false), 3000); 
+                }
             };
 
             const copyText = (text, type) => {
@@ -345,24 +359,30 @@
 
                         <div className="h-6 flex items-center justify-center">
                             {statusMessage && (
-                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 ${statusMessage.startsWith('Error') || statusMessage.startsWith('解析失敗') ? 'bg-red-50 text-red-500' : 'bg-white text-pink-500'}`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full animate-ping ${statusMessage.startsWith('Error') || statusMessage.startsWith('解析失敗') ? 'bg-red-400' : 'bg-pink-400'}`}></div>
+                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 ${statusMessage.includes('制限中') || statusMessage.startsWith('Error') || statusMessage.startsWith('解析失敗') ? 'bg-red-50 text-red-500' : 'bg-white text-pink-500'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full animate-ping ${statusMessage.includes('制限中') || statusMessage.startsWith('Error') || statusMessage.startsWith('解析失敗') ? 'bg-red-400' : 'bg-pink-400'}`}></div>
                                     {statusMessage.toUpperCase()}
                                 </div>
                             )}
                         </div>
 
                         <section className="bg-white rounded-3xl p-5 shadow-sm border border-pink-50 flex gap-4">
-                            <div onClick={() => baseInputRef.current?.click()} className="flex-1 aspect-square border-2 border-dashed border-blue-100 rounded-2xl flex items-center justify-center bg-slate-50/50 relative active:scale-95 transition-all overflow-hidden shadow-inner">
+                            <div 
+                                onClick={() => !isAnalyzing && baseInputRef.current?.click()} 
+                                className={`flex-1 aspect-square border-2 border-dashed border-blue-100 rounded-2xl flex items-center justify-center bg-slate-50/50 relative active:scale-95 transition-all overflow-hidden shadow-inner ${isAnalyzing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            >
                                 {previews.base ? <img src={previews.base} className="w-full h-full object-cover" alt="base" /> : <Icon name="target" className="text-blue-200" />}
                                 {isAnalyzing === 'base' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center animate-spin"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full"></div></div>}
                             </div>
-                            <div onClick={() => plusInputRef.current?.click()} className="flex-1 aspect-square border-2 border-dashed border-pink-100 rounded-2xl flex items-center justify-center bg-slate-50/50 relative active:scale-95 transition-all overflow-hidden shadow-inner">
+                            <div 
+                                onClick={() => !isAnalyzing && plusInputRef.current?.click()} 
+                                className={`flex-1 aspect-square border-2 border-dashed border-pink-100 rounded-2xl flex items-center justify-center bg-slate-50/50 relative active:scale-95 transition-all overflow-hidden shadow-inner ${isAnalyzing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            >
                                 {previews.plus ? <img src={previews.plus} className="w-full h-full object-cover" alt="plus" /> : <Icon name="plus" className="text-pink-200" />}
                                 {isAnalyzing === 'plus' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center animate-spin"><div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full"></div></div>}
                             </div>
-                            <input type="file" ref={baseInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'base')} />
-                            <input type="file" ref={plusInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'plus')} />
+                            <input type="file" ref={baseInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'base')} disabled={!!isAnalyzing} />
+                            <input type="file" ref={plusInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'plus')} disabled={!!isAnalyzing} />
                         </section>
 
                         {stagedData && (
@@ -434,8 +454,12 @@
                             </div>
 
                             <div className="space-y-4 pt-4 border-t border-pink-50">
-                                <button onClick={generatePrompt} disabled={isProcessing} className="w-full bg-slate-900 text-white py-6 rounded-3xl font-black text-sm shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 italic tracking-widest uppercase">
-                                    {isProcessing ? '生成中' : <><Icon name="zap" /> Generate Master Script</>}
+                                <button 
+                                    onClick={generatePrompt} 
+                                    disabled={isProcessing} 
+                                    className={`w-full py-6 rounded-3xl font-black text-sm shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 italic tracking-widest uppercase ${isProcessing ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-slate-900 text-white'}`}
+                                >
+                                    {isProcessing ? 'クールダウン中...' : <><Icon name="zap" /> プロンプトを出力</>}
                                 </button>
                                 <p className="text-[7px] text-slate-400 text-center font-bold px-8 leading-relaxed opacity-60 uppercase tracking-tighter italic">
                                     AI Character Production. Result is not a real individual.
