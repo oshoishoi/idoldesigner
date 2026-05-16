@@ -169,10 +169,13 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
+                    // 【監査優先プロンプト更新】 「すき間」を「その他」に書くように命令
                     const auditPrompt = `まず最初に「身体境界線」を最優先で監査せよ。
-                    衣装の端（アームホール、ストラップ、ウエスト、タイツの境界など）と肌の境界を徹底的に走査し、そこに発生している「盛り上がり(bulge)」「食い込み(squish)」「圧迫(indentation)」を一つ残らず見つけ出し、日本語で詳細に言語化せよ。
-                    また、「facePlacement（配置・特徴）」については、顔のパーツ（目・鼻・口）の距離感や比率（遠心・求心など）を客観的に分析せよ。
-                    結果は各項目の特徴を詳細な「日本語」で記述したJSON形式のみで出力せよ。解説不要。
+                    1. 衣装の端（アームホール、ストラップ、ウエスト、タイツの境界など）と肌の境界を徹底的に走査し、そこに発生している「盛り上がり(bulge)」「食い込み(squish)」「圧迫(indentation)」を日本語で詳細に言語化せよ。
+                    2. 同時に、衣装と肌の間に生じている絶妙な「すき間(gaps/loose fit)」を詳細に見つけ出せ。この「すき間」に関する分析は、必ず「bodyInterface（その他）」の項目に記述せよ。
+                    3. 「facePlacement（配置・特徴）」については、顔のパーツ（目・鼻・口）の配置バランス、距離、黄金比を客観的に分析せよ。
+                    
+                    結果は各項目の特徴を日本語で記述した純粋なJSON形式のみで出力せよ。解説不要。
                     キー: [${FIELD_KEYS.join(', ')}]`;
                     
                     const response = await fetch(getApiUrl("generateContent"), {
@@ -244,8 +247,14 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `以下のデータに基づき、最高峰の画像生成プロンプト（英語）を作成せよ。
-                            身体物理的干渉（肉感、食い込み、盛り上がり）とFACS筋肉動作を精密に反映し、非実在性を明記すること。
+                            contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプト（英語）を作成せよ。
+
+                            【最優先・重要指示】
+                            1. 肌への「食い込み(squish)」「盛り上がり(bulge)」および、衣装の浮きによる「すき間(visible gaps between clothing and skin)」の表現は、モデルのスタイルを最大限に良く見せる「こだわりポイント」である。これらを絶対に省略せず、むしろ強調して詳細に英文プロンプトへ含めること。
+                            2. 「ランジェリー」は「activewear」に置き換えて表現せよ。
+                            3. 「CG」というワードは絶対に使用禁止。実写(Photorealistic)、RAW写真品質として描写せよ。
+                            4. 顔のパーツ配置（facePlacement）を厳格に再現すること。
+                            
                             出力は必ずJSON {"positive": "...", "negative": "..."} のみで行え。末尾に比率 "${arTag}" を含めること。\n\nデータ:\n${activeText}` }] }],
                             generationConfig: { responseMimeType: "application/json" }
                         }),
