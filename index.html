@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.3.2</title>
+    <title>IDOL Designer v1.3.5</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -38,6 +38,14 @@
             }
             return `${proxyBaseUrl}/v1beta/models/${model}:${endpoint}`;
         };
+
+        // 共通セーフティ設定（誤検知によるブロックを最小化）
+        const safetySettings = [
+            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
+        ];
 
         const FIELD_KEYS = [
             'hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture',
@@ -95,7 +103,7 @@
             const [selectedFields, setSelectedFields] = useState({});
             const [isProcessing, setIsProcessing] = useState(false);
             const [isAnalyzing, setIsAnalyzing] = useState(null); 
-            const [expressionMode, setExpressionMode] = useState('standard'); 
+            const [expressionMode, setExpressionMode] = useState('facs'); 
             const [englishPrompt, setEnglishPrompt] = useState('');
             const [negativePrompt, setNegativePrompt] = useState('');
             const [copyFeedback, setCopyFeedback] = useState(null); 
@@ -138,13 +146,13 @@
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        const MAX = 512;
+                        const MAX = 448; // トークン節約のためわずかに縮小
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
                         else { if (h > MAX) { w *= MAX / h; h = MAX; } }
                         canvas.width = w; canvas.height = h;
                         ctx.drawImage(img, 0, 0, w, h);
-                        const b64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+                        const b64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
                         canvas.width = 160; canvas.height = (img.height / img.width) * 160;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         const b64Preview = canvas.toDataURL('image/jpeg', 0.4);
@@ -172,27 +180,32 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
-                    // 【分析ロジックの統合・強化】 
-                    const auditPrompt = `画像を精密に分析し、結果を詳細な「日本語」のJSON形式のみで出力せよ。解説不要。
+                    const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼、身体物理監査官です。
+画像を精密に分析し、指定のJSON形式のみで回答してください。
 
-                    【最優先監査事項：身体境界線、紐の幅、すき間】
-                    1. 身体境界線: 衣装の端（脇、ストラップ、ウエスト、境界）を走査し「盛り上がり」「食い込み」「圧迫」を言語化せよ。
-                    2. 紐・布の幅: ストラップや紐の幅（極細、数ミリ単位など）を正確に特定し、肌に触れる部分の詳細を記述せよ。
-                    3. すき間: 衣装と肌の間に生じている絶妙な「すき間(gaps/loose fit)」を特定し、必ず「bodyInterface（その他）」に記述せよ。
+【身体境界線の最優先監査】
+1. 衣装の端（脇口、ストラップ、ウエスト、境界）と肌の接点をミリ単位で走査せよ。
+2. ストラップや紐の幅（極細、数ミリ単位等）を特定せよ。
+3. 発生している「盛り上がり(bulge)」「鋭い食い込み(squish)」「圧迫(indentation)」を日本語で詳細に言語化せよ。
+4. 衣装と肌の間に生じている絶妙な「すき間(gaps/loose fit)」を特定し、必ず「bodyInterface」に記述せよ。
 
-                    【極限監査：目と表情(FACS)とパーツ配置】
-                    1. FACS: 表情をAction Unit番号と強度(A〜E)、および補助動作(AU51〜64：頭部の向き、視線)の組み合わせで分析せよ。例: AU12C, AU51B。
-                    2. 目の詳細: 左右の対称性（高さや幅の差）、黒目（虹彩）の比率、目頭の鋭さ、目尻の角度（タレ・ツリ）を詳細に分析せよ。
-                    3. アイメイク: アイラインの引き方詳細、目尻の跳ね上げ、太さを特定せよ。
-                    4. パーツ配置: 「facePlacement」にて、目・鼻・口の距離感や黄金比からの乖離を客観的に記述せよ。
+【顔と目の極限監査】
+1. FACS: 表情をAction Unit番号と強度(A〜E)、補助動作(AU51〜64：頭部姿勢、視線)の組み合わせで精密判定せよ（例: AU12C, AU51B）。
+2. 目の詳細: 左右の対称性（高さ・幅）、黒目比率、目頭（蒙古襞）、目尻角度を分析せよ。
+3. アイメイク: アイラインの太さ、目尻の跳ね上げ詳細を特定せよ。
 
-                    キー: [${FIELD_KEYS.join(', ')}]`;
-                    
+【出力ルール】
+- 形式: 純粋なJSONのみ。解説不可。
+- キー: [${FIELD_KEYS.join(', ')}]
+- 言語: 値はすべて詳細な日本語（FACSコードのみ英数字）。`;
+
                     const response = await fetch(getApiUrl("generateContent"), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: auditPrompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
+                            contents: [{ parts: [{ inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
+                            systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
+                            safetySettings,
                             generationConfig: { responseMimeType: "application/json" }
                         }),
                     });
@@ -257,21 +270,27 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    // 【節約モード：テキストのみでリクエスト】
+                    const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。入力された日本語設計データを、最高品質の英語プロンプトに変換してください。
+
+【出力形式】
+純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
+
+【最優先・鉄の掟】
+1. 物理描写の強調: 衣装の幅による「鋭い食い込み(sharp squish)」「肉の盛り上がり(bulge)」「すき間(visible gaps between clothing and skin)」は、肉体美を強調する最重要こだわりポイントとして、過剰なほど詳細に含めること。
+2. FACSクリーン化: Action Unitsは「AU12C」のようなコードと強度のみを反映し、名称説明（(Cheek Raiser)等）は一切含めない。
+3. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
+4. 禁則事項: プロンプト内での「CG」というワード使用は絶対禁止。実写(Photorealistic)、RAW写真品質として描写。
+5. 置換ルール: 「ランジェリー」は必ず「activewear」に置き換えて表現。
+6. 顔のパーツ配置バランス（facePlacement）を厳格に再現すること。`;
+
+                    // 【節約モード】 画像を送らずテキストのみでリクエスト
                     const response = await fetch(getApiUrl("generateContent"), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプト（英語）を作成せよ。
-
-                            【最優先・重要指示】
-                            1. FACSのクリーン出力: Action Unitsは「AU12C」のようにコードと強度のみを反映し、補助的な解説表記は一切含めないこと。補助動作（AU51〜64）も同様。
-                            2. 目の極限描写: 対称性、黒目の比率、目頭・目尻の鋭さ、アイラインの筆致を精緻に反映せよ。
-                            3. 物理的こだわり: 衣装の幅や紐による「肌への食い込み(squish)」「肉の盛り上がり(bulge)」「すき間(gaps)」を、スタイルを良く見せるこだわりとして極力強調して含めること。
-                            4. 基本設定：「ランジェリー」は「activewear」に置換。「CG」というワードは絶対に使用禁止。実写、RAW品質描写。
-                            5. 顔のパーツ配置バランス（facePlacement）を厳格に再現すること。
-                            
-                            出力は必ずJSON {"positive": "...", "negative": "..."} のみで行え。末尾に比率 "${arTag}" を含めること。\n\nデータ:\n${activeText}` }] }],
+                            contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプトを作成し、末尾に比率 "${arTag}" を含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
+                            systemInstruction: { parts: [{ text: promptSystemInstruction }] },
+                            safetySettings,
                             generationConfig: { responseMimeType: "application/json" }
                         }),
                     });
@@ -315,7 +334,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.3.2 Stable Sync</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.3.5 Optimized Sync</span>
                         </div>
                         <button onClick={() => window.location.reload()} className="p-2 text-slate-300 active:rotate-180 transition-all duration-500"><Icon name="refresh" /></button>
                     </header>
