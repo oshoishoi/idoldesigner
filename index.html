@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.3.8</title>
+    <title>IDOL Designer v1.4.3</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -211,14 +211,23 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
+                    // 【画像分析指示の強化：衣装デザインと構造を極限まで克明に言語化させる】
                     const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼、身体物理監査官です。
-画像を精密に分析し、指定のJSON形式のみで回答してください。
+画像を精密に分析し、指定 of JSON形式のみで回答してください。
 
 【身体境界線の最優先監査】
 1. 衣装の端（脇口、ストラップ、ウエスト、境界）と肌の接点をミリ単位で走査せよ。
 2. ストラップや紐の幅（極細、数ミリ単位等）を特定せよ。
 3. 発生している「盛り上がり(bulge)」「食い込み(squish)」「圧迫(indentation)」を日本語で詳細に言語化せよ。
 4. 衣装と肌の間に生じている絶妙な「すき間(gaps/loose fit)」を特定し、必ず「bodyInterface」に記述せよ。
+
+【衣装のカット・構造・形状デザイン分析の徹底】
+- outfit (衣装カテゴリー) および outfitDetail (衣装詳細):
+  着用している衣装のカッティング（胸元の深さ、ハイカット具合、生地の面積比）、ストラップの這わせ方（クロス、ダブル、細さ、交差構造、結び目の位置等）を物理的な「形状」として詳細を極限まで克明に言語化せよ。たとえ元の衣服がランジェリーであっても、そのセクシーかつ精緻な「カッティング構造」や「紐使いの複雑なレイアウトデザイン」そのものを逃さず詳細な日本語で記録すること。
+
+【体型分析に関する重要な掟（3サイズの言い換え）】
+- threeSizes（肉付き）: スリーサイズの具体的な「数値（B85/W58/H86や、cm表記等）」を出力することは絶対に避けよ。
+  代わりに、砂時計のようなメリハリ、豊かなバストライン、キュッとくびれたウエスト、張りのあるヒップ、引き締まった健康的な腰回り、などといった比喩や肉付きの質感を日本語表現で魅力的に言い換えて出力せよ。
 
 【顔と目の極限監査】
 1. FACS: 表情をAction Unit番号と強度(A〜E)、補助動作(AU51〜64：頭部姿勢、視線)の組み合わせで精密判定せよ（例: AU12C, AU51B）。
@@ -301,21 +310,22 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    // 【システム指示を最適化：かわいい・キレイはシンプルなキーワード追加とクリティアップの指示のみにする】
+                    // 【非実在性の表記ルール変更：character、virtualに加えて "imaginary woman", "imaginary person" の使用を絶対禁止】
                     const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。入力された日本語設計データを、最高品質の英語プロンプトに変換してください。
 
 【出力形式】
 純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
 
 【最優先・鉄の掟】
-1. 物理描写の強調: 衣装の幅による「鋭い食い込み(sharp squish)」「肉の盛り上がり(bulge)」「すき間(visible gaps between clothing and skin)」は、肉体美を強調する最重要こだわりポイントとして、過剰なほど詳細に含めること。
-2. FACSクリーン化: Action Unitsは「AU12C」のようにコードと強度のみを反映し、名称説明は一切含めない。
-3. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
-4. 禁則事項: プロンプト内での「CG」というワード使用は絶対禁止。実写(Photorealistic)、RAW写真品質として描写。
-5. 置換ルール: 「ランジェリー」は必ず「activewear」に置き換えて表現。
+1. 物理描写の強調: 衣装の端やベルト、ストラップの幅による「肌への食い込み(squish)」「肉の盛り上がり(bulge)」「すき間(visible gaps between clothing and skin)」は、肉体美を強調する最重要こだわりポイントとして、過剰なほど詳細に含めること。具体的なcm数値などのスリーサイズはプロンプト内には決して含めず、メリハリやシルエットの美しさにフォーカスすること。
+2. 置換ルールと「形状」の超精密再現: 「ランジェリー」は必ず「activewear」「sleek athletic wear」「form-fitting strappy top」などに置き換えて安全に表現せよ。ただし、全体のシルエット、カッティングの深さ、紐の数、ストラップの配置、幾何学的なカットライン（例：plunging V-neckline, multi-strap halter-neck, cross-strap open back, high-cut hip bands, complex strap lattice design 等）は、元の官能的かつ精緻な衣服デザインの「物理形状」を一切崩さず、英語で極めて克明かつ具体的に描写すること。カテゴリー単語の置換によって衣服の精密な構造デザインを簡略化してはならない。
+3. FACSクリーン化: Action Unitsは「AU12C」のようにコードと強度のみを反映し、名称説明は一切含めない。
+4. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
+5. 禁則事項: プロンプト内での「CG」というワード使用は絶対禁止。実写(Photorealistic), RAW写真品質として描写。
 6. 顔のパーツ配置バランス（facePlacement）を厳格に再現すること。
-7. 印象補正(aesthetic): 
-   - 「cute」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "cute" を追加し、モデルの顔立ちに極めて甘く可愛らしいチャームを引き出せ。
+7. 非実在性の明記: 実在の人物ではない、AIによる架空の創作であることを示すため、"non-existent person" などの英語表現を生成するプロンプト内に必ず自然に組み込むこと。ただし、架空のイラストや不自然な合成感、あるいは嘘くささを生んでしまう「character」「virtual」「imaginary woman」「imaginary person」（およびそれに関連する 'imaginary' と 'woman' / 'person' / 'character' の安易な組み合わせ）という単語は、一切絶対に使用禁止とする。
+8. 印象補正(aesthetic): 
+   - 「cute」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "cute" 追加し、モデルの顔立ちに極めて甘く可愛らしいチャームを引き出せ。
    - 「beautiful」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "beautiful" を追加し、モデルの顔の対称性と気品あるクオリティを極限に高めよ。`;
 
                     // 【節約モード】
@@ -369,7 +379,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.3.8 Optimized Sync</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.4.3 Optimized Sync</span>
                         </div>
                         <button onClick={() => window.location.reload()} className="p-2 text-slate-300 active:rotate-180 transition-all duration-500"><Icon name="refresh" /></button>
                     </header>
@@ -512,7 +522,7 @@
                                     <span className="text-pink-400 uppercase tracking-[0.2em] block text-[9px]">Expression Mode</span>
                                     <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
                                         <button onClick={() => setExpressionMode('standard')} className={`flex-1 py-3 rounded-xl transition-all ${expressionMode === 'standard' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}>STANDARD</button>
-                                        <button onClick={() => setExpressionMode('facs')} className={`flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 ${expressionMode === 'facs' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400'}`}><Icon name="brain" className="w-3 h-3" /> FACS MODE</button>
+                                        <button onClick={() => setExpressionMode('facs')} className={`flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 ${expressionMode === 'facs' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400'}`}><Icon name="brain" /> FACS MODE</button>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 mt-4 font-bold">
                                         {[{ label: 'Portrait', value: 'portrait' }, { label: 'Landscape', value: 'landscape' }].map((o) => (
