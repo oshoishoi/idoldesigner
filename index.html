@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.4.3</title>
+    <title>IDOL Designer v1.4.5</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -110,16 +110,28 @@
             const [copyFeedback, setCopyFeedback] = useState(null); 
             const [statusMessage, setStatusMessage] = useState('');
             const [previews, setPreviews] = useState({ base: null, plus: null });
-            const [memorySlots, setMemorySlots] = useState([null, null, null, null, null]);
+            
+            // 【10スロット対応】初期状態の配列を10個に拡張
+            const [memorySlots, setMemorySlots] = useState(Array(10).fill(null));
 
             const baseInputRef = useRef(null);
             const plusInputRef = useRef(null);
             const resultRef = useRef(null);
 
+            // ローカルストレージからの読み込み時に10スロット化への自動マイグレーションを行う
             useEffect(() => {
                 try {
                     const saved = localStorage.getItem('idol_designer_slots');
-                    if (saved) setMemorySlots(JSON.parse(saved));
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (Array.isArray(parsed)) {
+                            const extendedSlots = Array(10).fill(null);
+                            parsed.forEach((item, idx) => {
+                                if (idx < 10) extendedSlots[idx] = item;
+                            });
+                            setMemorySlots(extendedSlots);
+                        }
+                    }
                 } catch (e) { console.error("Restore failed:", e); }
             }, []);
 
@@ -211,9 +223,8 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
-                    // 【画像分析指示の強化：衣装デザインと構造を極限まで克明に言語化させる】
                     const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼、身体物理監査官です。
-画像を精密に分析し、指定 of JSON形式のみで回答してください。
+画像を精密に分析し、指定のJSON形式のみで回答してください。
 
 【身体境界線の最優先監査】
 1. 衣装の端（脇口、ストラップ、ウエスト、境界）と肌の接点をミリ単位で走査せよ。
@@ -310,14 +321,13 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    // 【非実在性の表記ルール変更：character、virtualに加えて "imaginary woman", "imaginary person" の使用を絶対禁止】
                     const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。入力された日本語設計データを、最高品質の英語プロンプトに変換してください。
 
 【出力形式】
 純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
 
 【最優先・鉄の掟】
-1. 物理描写の強調: 衣装の端やベルト、ストラップの幅による「肌への食い込み(squish)」「肉の盛り上がり(bulge)」「すき間(visible gaps between clothing and skin)」は、肉体美を強調する最重要こだわりポイントとして、過剰なほど詳細に含めること。具体的なcm数値などのスリーサイズはプロンプト内には決して含めず、メリハリやシルエットの美しさにフォーカスすること。
+1. 物理描写の強調: 衣装の端やベルト、ストラップの幅による「肌への食い込み(squish)」「肉の盛り上がり(bulge)」「すき間(visible gaps between clothing and skin)」は、肉体美を強調する最重要こだわりポイントとして、過剰なほど詳細に含めること。具体的なcm数値などのスリーサイズはプロンプト内には決して含めず、メリハリやシルエット of 美しさにフォーカスすること。
 2. 置換ルールと「形状」の超精密再現: 「ランジェリー」は必ず「activewear」「sleek athletic wear」「form-fitting strappy top」などに置き換えて安全に表現せよ。ただし、全体のシルエット、カッティングの深さ、紐の数、ストラップの配置、幾何学的なカットライン（例：plunging V-neckline, multi-strap halter-neck, cross-strap open back, high-cut hip bands, complex strap lattice design 等）は、元の官能的かつ精緻な衣服デザインの「物理形状」を一切崩さず、英語で極めて克明かつ具体的に描写すること。カテゴリー単語の置換によって衣服の精密な構造デザインを簡略化してはならない。
 3. FACSクリーン化: Action Unitsは「AU12C」のようにコードと強度のみを反映し、名称説明は一切含めない。
 4. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
@@ -379,12 +389,13 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.4.3 Optimized Sync</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.4.5 Optimized Sync</span>
                         </div>
                         <button onClick={() => window.location.reload()} className="p-2 text-slate-300 active:rotate-180 transition-all duration-500"><Icon name="refresh" /></button>
                     </header>
 
                     <main className="max-w-xl mx-auto px-4 mt-4 space-y-6">
+                        {/* 【10スロット対応】グリッドレイアウトを調整し、5列×2行で綺麗に折り返すように配置 */}
                         <section className="space-y-2">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-2 italic">Memory Slots</span>
                             <div className="grid grid-cols-5 gap-2">
