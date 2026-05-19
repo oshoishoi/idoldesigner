@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.6.0</title>
+    <title>IDOL Designer v1.6.2</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -32,10 +32,8 @@
         const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
         const getApiUrl = (endpoint) => {
-            // 【環境に応じたモデル名の最適化】
-            // プレビュー環境ではエミュレータがサポートするgemini-2.5-flash-preview-09-2025に固定してエラーを回避。
-            // 本番環境（中継プロキシ経由）では、最新鋭のgemini-3-flash-previewを適用し高精度な分析と生成を実現。
-            const model = isPreview ? "gemini-2.5-flash-preview-09-2025" : "gemini-3-flash-preview";
+            // 【429根本治療】無料枠でも最もレート制限（RPM/TPM）が緩く安定稼働するプロダクション安定モデル「gemini-2.5-flash」に完全統一
+            const model = "gemini-2.5-flash";
             if (isPreview) {
                 return `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${apiKey}`;
             }
@@ -204,9 +202,12 @@
                         canvas.width = w; canvas.height = h;
                         ctx.drawImage(img, 0, 0, w, h);
                         const b64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
-                        canvas.width = 160; canvas.height = (img.height / img.width) * 160;
+                        
+                        // サムネイル用の切り出しサイズを 80px に極小化し、データサイズを1スロットあたり1〜2KB以下に極限削減
+                        canvas.width = 80; canvas.height = (img.height / img.width) * 80;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const b64Preview = canvas.toDataURL('image/jpeg', 0.4);
+                        const b64Preview = canvas.toDataURL('image/jpeg', 0.3);
+                        
                         URL.revokeObjectURL(url);
                         resolve({ b64, pUrl: URL.createObjectURL(file), b64Preview });
                     };
@@ -229,54 +230,51 @@
                 } finally { if(e.target) e.target.value = ''; }
             };
 
-            // 429自動リトライ分析コール
+            // 429自動リトライ分析コール (システムプロンプトのトークンダイエット版)
             const runAnalysis = async (base64, mode) => {
                 let delay = 1000;
                 let response;
                 let success = false;
                 
-                const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼、身体物理監査官です。
-画像を精密に分析し、指定のJSON形式のみで回答してください。
+                // 【トークン・ダイエット】表現のブレや重複・無駄な助詞を徹底圧縮。ルール強度は100%維持。
+                const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼身体物理監査官です。
+画像を精密分析し、指定JSON形式のみで回答。解説不可。
 
-【身体境界線の最優先監査】
-1. 衣装の端（脇口、ストラップ、ウエスト、境界）と肌の接点をミリ単位で走査せよ。
-2. ストラップや紐の幅（極細、数ミリ単位等）を特定せよ。
-3. 発生している「盛り上がり(bulge)」「食い込み(squish)」「圧迫(indentation)」を日本語で詳細に言語化せよ。
-4. 衣装と肌の間に生じている絶妙な「すき間(gaps/loose fit)」を特定し、必ず「bodyInterface」に記述せよ。
+【身体境界の最優先監査】
+1. 衣装の端（脇口、ストラップ、境界）と肌の接点を走査。
+2. 紐の幅（ミリ単位）を特定。
+3. 食い込み(squish)、盛り上がり(bulge)、圧迫(indentation)を日本語で詳細に言語化。
+4. 衣装と肌の「すき間(gaps/loose fit)」を特定し、必ず「bodyInterface」に記述。
 
-【アウター・羽織りものの着崩し位置の精密監査】
-1. 浴衣、着物、シャツ、カーディガンなどの羽織りものを着用している（あるいは肩からはだけている）場合、そのアウターが「肩」「デコルテ」「胸元」「お腹」「腰」「ヒップ」のどの高さまでずり下がっているかを厳密に監査せよ。
-2. 特に、アウターが腰やお尻、肘の低い位置まで完全にずり落ちていて、上半身（胸、背中、肩、お腹）が完全に露出している場合、その物理的な「留まり境界線」の位置（例：「浴衣は腰の低い位置とお尻まで完全にずり下がっている」「肘のラインで引っかかっている」など）を「outfitDetail」に極限まで克明に明記せよ。
+【着崩し位置の監査】
+1. 浴衣、シャツ、ガウン等が肩からはだけている場合、アウターが「肩/胸/お腹/腰/ヒップ」のどこまでずり下がっているかを厳密監査。
+2. 上半身が完全露出している場合、留まっている境界線(例:「腰とお尻までずり下がり肘で留まる」)を「outfitDetail」に極限まで克明に明記。
 
-【文化的地域・背景設定(Region)の特定】
-1. 画像内の人物のメイク、顔立ち、髪型、衣装スタイル、または背景に映る建具・調度品から推測される「地域・文化的背景」を特定し、「region」に日本語のみで記述せよ（例：日本/和風、韓国/K-POP風、欧米風、中華風、北欧風など）。
+【地域背景特定】
+1. メイク、顔、髪、衣装、背景調度品から「地域背景」を特定し、「region」に日本語で記述（例: 日本/和風、韓国/K-POP風、欧米風など）。
 
-【フェイスライン（輪郭）内部のパーツ配置(facePlacement)の精密幾何学監査】
-- facePlacement（パーツ配置）: **「顔全体が写真のどこに写っているか（中央、右側など）」のレイアウト分析は絶対に禁止する。**
-  代わりに、**「フェイスライン（輪郭）という閉じた領域の中で、目・鼻・口・眉がどのような比率や距離感で配置されているか」**を美容・整形・メイク理論に基づいて専門的な日本語で分析・記述せよ。
-  - 縦方向の比率：おでこの広さ（額の比率）、中顔面の長さ（目から鼻の下までの長さ。例：「中顔面が短く極めて幼いバランス」「中顔面が程よくある大人びた黄金比」など）、人中の長さ、下顎（あご）の長さ。
-  - 横方向の比率：目と目の間の距離（例：「目と目の間隔が目1つ分空いた遠心的なパーツ配置」「目と目の間が狭い求心的なパーツ配置」など）。
-  - 全体配置：パーツが顔全体の下半分にギュッと集中したベビーフェイス（童顔）傾向か、等間隔に美しく整った大人の黄金比率配置か。
+【輪郭内パーツ配置(facePlacement)監査】
+- facePlacement: **「顔全体の画像内位置（中央など）」の記述は絶対禁止。**
+  **「輪郭領域内における、目・鼻・口・眉の配置・間隔比率」**を美容・整形理論で記述。
+  - 縦比率：額の比率、中顔面の長さ（例:中顔面が短く幼い、中顔面が程よくある大人びた黄金比等）、人中、顎の長さ。
+  - 横比率：目と目の間隔（例:目1つ分空いた遠心顔、求心顔など）。
+  - 全体配置：下半分に集中したベビーフェイス顔か、等間隔の大人の黄金比率配置か。
 
-【衣装のカット・構造・形状デザイン分析の徹底】
-- outfit (衣装カテゴリー) および outfitDetail (衣装詳細):
-  着用している衣装のカッティング（胸元のハートシェイプの深さ、カップフチの波打つ形状、ハイカット、生地の極小面積比）、ストラップの這わせ方（クロス、ダブル、細さ、交差構造、結び目の位置等）を物理的な「形状」として詳細を極限まで克明に言語化せよ。たとえ元の衣服がランジェリーであっても、その透け感（シースルー構造、アンダーの透け網）や、カッティング構造、紐使いの複雑なレイアウトデザインそのものを逃さず詳細な日本語で記録すること。
+【衣装カット・形状監査】
+- outfit / outfitDetail:
+  カッティング（胸元のハートシェイプ深さ、カップのスカラップ波形状、ハイカット、極小面積比）、ストラップの這わせ方（クロス、ダブル、細さ、交差構造）を物理「形状」で極限まで言語化。ランジェリーでも、シースルー網、カップフチ形状、紐レイアウトを詳細な日本語で記録。
 
-【体型分析に関する重要な掟（3サイズの言い換え）】
-- threeSizes（肉付き）: スリーサイズの具体的な「数値（B85/W58/H86や, cm表記等）」を出力することは絶対に避けよ。
-  代わりに、砂時計のようなメリハリ、豊かなバストライン、キュッとくびれたウエスト、張りのあるヒップ、引き締まった健康的な腰回り、などといった比喩や肉付きの質感を日本語表現で魅力的に言い換えて出力せよ。
+【体型監査（スリーサイズ言い換え）】
+- threeSizes: スリーサイズ数値(B85/W58など)は絶対禁止。砂時計のようなメリハリ、豊かなバスト、くびれたウエスト、張りのあるヒップ等、肉付きの質感を日本語で言い換えて出力。
 
-【顔と目の極限監査】
-1. FACS: 表情をAction Unit番号（AU）およびAction Descriptor番号（AD）と、その強度(A〜E)、補助動作(AU51〜64：頭部姿勢、視線)の組み合わせで精密判定せよ。
-   - 「AD」は「AU」の誤字ではない。AU（Action Units）とAD（Action Descriptors、例：AD19、AD38など）の両方を混同せず正確に区別して判定・出力せよ。
-   - 例: AU12C, AD19, AU51B。
-2. 目の詳細: 左右の対称性（高さ・幅）、黒目比率、目頭（蒙古襞）、目尻角度を分析せよ。
-3. アイメイク: アイラインの太さ、目尻の跳ね上げ詳細を特定せよ。
+【顔・表情・FACS監査】
+1. FACS: AUおよびADコードと強度(A〜E)、補助動作(AU51〜64：頭部姿勢、視線)の組み合わせで精密判定。
+   - 「AD」は「AU」の誤字ではない。AUとAD（例: AD19、AD38など）の両方を正確に区別して「AU12C, AD19, AU51B」のように判定せよ。
+2. 目元：左右対称性、黒目比率、目頭（蒙古襞）、目尻角度、アイライン太さ、目尻跳ね上げ。
 
 【出力ルール】
-- 形式: 純粋なJSONのみ。解説不可。
-- キー: [${FIELD_KEYS.join(', ')}]
-- 言語: 値はすべて詳細な日本語（FACSコードのみ英数字、aestheticは空のままにせよ）。`;
+- 形式: 純粋JSONのみ。キー: [${FIELD_KEYS.join(', ')}]
+- 言語: FACSのみ英数字、他はすべて詳細な日本語（aestheticは空にせよ）。`;
 
                 for (let attempt = 0; attempt < 5; attempt++) {
                     try {
@@ -365,44 +363,44 @@
                     if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|紐ショーツ|tバック|チューブトップ|ビスチェ|ブラ|下着|ナイロン|swimwear|bikini|strappy|thong)/i)) {
                         // ストラップ・水着系：形状ロックと露出ロックを最大化
                         routeSpecificInstruction = `
-- 【露出領域の物理的ロック】: 衣服を生成する際、腕の隙間を勝手に布地で塞がれるのを防ぐため、「leaving the shoulders completely bare and the midriff fully exposed」（完全に露出した肩と、遮るもののないお腹）という上下セパレート構造を確定させる物理指示フレーズを、衣服記述の冒頭部分に必ず配置して出力すること。また、「a wide and continuous expanse of bare skin is completely visible on her flat stomach between the top and bottom pieces」を盛り込むこと。
-- 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密に描写して指定すること。
-- 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込むこと。
-- コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の官能的かつ精緻な衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。
+- 【露出領域の物理的ロック】: 腕の隙間を布地で塞がれるのを防ぐため、「leaving the shoulders completely bare and the midriff fully exposed」（完全に露出した肩と、遮るもののないお腹）という上下セパレート構造を確定させる物理指示フレーズを、衣服記述の冒頭部分に必ず配置。また、「a wide and continuous expanse of bare skin is completely visible on her flat stomach between the top and bottom pieces」を盛り込め。
+- 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密描写せよ。
+- 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込め。
+- コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写せよ。
 - 綿・リブニット・麻素材の部屋着化を完全に防ぐため、「sleek high-gloss wet-look spandex-nylon material」などの高光沢の化学繊維素材記述を優先させ、普通の部屋着（lounge, loungewear, ribbed cotton）は一切禁止、およびネガティブプロンプトで完全に排除（camisole, pajamas, loungewear, loose cotton fabric を記載）せよ。`;
                     } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|はおり|羽織|ローブ|ガウン|シャツ|着崩|kimono|yukata|robe|draped off|slid down)/i)) {
                         // 着崩し・羽織りもの系：アウター位置固定ロック（Drape Position Lock）
                         routeSpecificInstruction = `
-- 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 浴衣、着物、シャツ、カーディガンなどの羽織りものが「はだけている」「ずり落ちている（draped off/slid down）」描写がある場合、画像生成AIが勝手に衣服の位置を持ち上げて肩にかけ直したり上半身を隠したりするのを物理的に完全阻止する。プロンプト内に「the outer garment (yukata, kimono, or shirt) is strictly and flawlessly locked in its low-draped position, slithered completely down off her shoulders and resting low around her lower hips, buttocks, or elbows, leaving her entire upper body, torso, chest, shoulders, and back completely bare-skinned, exposed, and unobstructed, with absolutely no vertical shifting, rising, or simplification of the draping layout」という厳格な位置固定ロック指示文を必ずポジティブプロンプトに組み込むこと。
+- 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 浴衣、着物、シャツ、カーディガンなどの羽織りものが「はだけている」「ずり落ちている（draped off/slid down）」描写がある場合、画像生成AIが勝手に衣服の位置を持ち上げて肩にかけ直したり上半身を隠したりするのを物理的に完全阻止。プロンプト内に「the outer garment (yukata, kimono, or shirt) is strictly and flawlessly locked in its low-draped position, slithered completely down off her shoulders and resting low around her lower hips, buttocks, or elbows, leaving her entire upper body, torso, chest, shoulders, and back completely bare-skinned, exposed, and unobstructed, with absolutely no vertical shifting, rising, or simplification of the draping layout」という厳格な位置固定ロック指示文を必ずポジティブプロンプトに組み込め。
 - 無理なストラップ食い込み記述（spaghetti shoulder straps, multi-strap halter-neck 等）は衣装と矛盾して不自然になるため自動的に抑制し、和服本来の素材、帯、染め模様（large polka dots, traditional floral motifs など）の美しさと質感描写にフォーカスさせよ。`;
                     } else {
                         // カジュアル・ドレス・その他の日常服：形状を美しく再現し、無理なストラップ記述は排除
                         routeSpecificInstruction = `
-- 衣装デザインの物理カッティング（例: plunging V-neckline, side slit, asymmetric drape, high-low hemline）の美しさを幾何学的かつ具体的に美しく英語へ英訳せよ。
+- 衣装デザインの物理カッティング（例: plunging V-neckline, side slit, asymmetric drape, high-low hemline）の美しさを幾何学的かつ具体的に美しく英語へ英訳。
 - 衣装と矛盾する「1mm spaghetti straps」や「high-cut side-tie strings」といった食い込み記述の強制挿入は行わず、対象となる衣服のテクスチャ（silk, satin, chiffon, dense knit, structured denim 等）やドレープラインの表現に美しくフォーカスせよ。`;
                     }
 
-                    const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。入力された日本語設計データを、最高品質の英語プロンプトに変換してください。
+                    // 【トークン・ダイエット】ルール強度は100%維持しながら余剰表現を徹底トリミング
+                    const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質の英語プロンプトに変換してください。
 
 【出力形式】
 純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
 
 【最優先・鉄の掟】
-1. 物理描写の強調: 衣装の端やベルト、ストラップの幅による「肌への食い込み(squish)」「肉の盛り上がり(bulge)」「すき間(visible gaps between clothing and skin)」は、肉体美を強調する最重要こだわりポイントとして、過剰なほど詳細に含めること。具体的なcm数値などのスリーサイズはプロンプト内には決して含めず、メリハリやシルエットの美しさにフォーカスすること。
+1. 物理描写の強調: 衣装の端、ベルト、ストラップによる肌の食い込み(squish)、盛り上がり(bulge)、すき間(visible gaps between clothing and skin)は肉体美を強調するこだわりとして詳細に含めよ。具体的なcm数値などのスリーサイズは含めず、メリハリやシルエットにフォーカスせよ。
 2. 衣服特性に応じた動的プロンプトルーティング設計:${routeSpecificInstruction}
-3. セーフティ置換：もし元の衣服が「ランジェリー」やそれに類する直接的な単語を含む場合は、必ず安全な表現（delicate strappy set, form-fitting strappy top 等）に置き換えて表現せよ。
-4. FACSコード（AUおよびAD）のクリーン化: Action Units（AU）およびAction Descriptors（AD）は「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は一切含めない。
-5. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
-6. 禁則事項: プロンプト内での「CG」というワード使用は絶対禁止。実写(Photorealistic), RAW写真品質として描写。
-7. 顔のパーツ配置バランス（facePlacement）の厳格な英訳再現:
-   - 日本語の輪郭内パーツ比率分析（例：中顔面が短い、求心顔など）を、画像生成AIが最高精度で理解・描写できる物理的・幾何学的な顔面比率の表現に変換せよ。
-   - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them", "symmetrical and cohesive facial harmony" などの表現を用い、単に "centered face" や "face in the center of image" といったカメラフレーミングを指す不適切な記述は絶対に使用禁止とする。
-8. 非実在性の明記: 実在の人物ではない、AIによる架空の創作であることを示すため、"non-existent person" などの英語表現を生成するプロンプト内に必ず自然に組み込むこと。ただし、架空のイラストや不自然な合成感、あるいは嘘くささを生んでしまう「character」「virtual」「imaginary woman」「imaginary person」（およびそれに関連する 'imaginary' と 'woman' / 'person' / 'character' の安易な組み合わせ）という単語は、一切絶対に使用禁止とする。
+3. セーフティ置換：元の衣服が「ランジェリー」等を含む場合は、必ず安全な表現（delicate strappy set, form-fitting strappy top 等）に置き換えよ。
+4. FACSコードクリーン化: AUおよびADは「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は含めない。
+5. 目元：対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映。
+6. 禁則：プロンプト内での「CG」というワード使用は絶対禁止。実写(Photorealistic), RAW写真品質として描写。
+7. 顔のパーツ配置バランス（facePlacement）の厳格英訳再現:
+   - 日本語の輪郭内パーツ比率分析を、AIが最高精度で理解できる幾何学的表現に変換。「centered face」等のフレーミング描写は禁止。
+   - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them" などの表現を用いよ。
+8. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" 等の表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person」は絶対に使用禁止。
 9. 地域・文化的背景(region): 
-   - 「region」に地域や文化的背景（例：日本/和風、韓国風、西洋風）が設定されている場合、プロンプト全体にその文化的背景を明確に反映するキーワード（例：「日本」なら "Japanese aesthetic, Tokyo modern room backdrop, subtle traditional textiles", 「韓国」なら "K-beauty aesthetic, modern Seoul studio backdrop" など）を適宜自然に組み込み、画像のロケーションやスタイルに確固たる説得力を持たせよ。
+   - 「region」が設定されている場合、その背景キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
 10. 印象補正(aesthetic): 
-   - 「cute」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "cute" 追加し、モデルの顔立ちに極めて甘く可愛らしいチャームを引き出せ。
-   - 「beautiful」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "beautiful" を追加し、モデルの顔の対称性と気品あるクオリティを極限に高めよ。`;
+   - 「cute」時は先頭や自然な位置に "cute"、「beautiful」時は "beautiful" を追加し、顔立ちの魅力を極限に高めよ。`;
 
                     for (let attempt = 0; attempt < 5; attempt++) {
                         try {
@@ -482,11 +480,23 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.6.0 Optimized Sync</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.6.2 Robust Memory Sync</span>
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={() => globalHistory.length > 0 && setSelections(globalHistory[0])} className="p-2 text-slate-300 active:scale-90"><Icon name="undo" /></button>
-                            <button onClick={() => window.location.reload()} className="p-2 text-slate-300"><Icon name="refresh" /></button>
+                            <button 
+                                onClick={() => globalHistory.length > 0 && setSelections(globalHistory[0])} 
+                                disabled={!!isAnalyzing || isProcessing}
+                                className={`p-2 text-slate-300 active:scale-90 ${(isAnalyzing || isProcessing) ? 'opacity-30 pointer-events-none' : ''}`}
+                            >
+                                <Icon name="undo" />
+                            </button>
+                            <button 
+                                onClick={() => window.location.reload()} 
+                                disabled={!!isAnalyzing || isProcessing}
+                                className={`p-2 text-slate-300 ${(isAnalyzing || isProcessing) ? 'opacity-30 pointer-events-none' : ''}`}
+                            >
+                                <Icon name="refresh" />
+                            </button>
                         </div>
                     </header>
 
@@ -498,8 +508,9 @@
                                 {memorySlots.map((slot, i) => (
                                     <div key={i} className="space-y-1">
                                         <button 
-                                            onClick={() => slot ? loadFromSlot(i) : saveToSlot(i)}
-                                            className={`w-full aspect-square rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all relative ${slot ? 'border-pink-400 bg-white shadow-sm' : 'border-slate-200 bg-slate-50/50'}`}
+                                            onClick={() => slot ? loadFromSlot(i, memorySlots, setSelections, setPreviews, setStatusMessage) : saveToSlot(i, memorySlots, selections, previews, setMemorySlots, setStatusMessage)}
+                                            disabled={!!isAnalyzing || isProcessing}
+                                            className={`w-full aspect-square rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all relative ${slot ? 'border-pink-400 bg-white shadow-sm' : 'border-slate-200 bg-slate-50/50'} ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}
                                         >
                                             {slot ? (
                                                 <>
@@ -511,7 +522,13 @@
                                             )}
                                         </button>
                                         {slot && (
-                                            <button onClick={() => saveToSlot(i)} className="w-full py-1 text-[6px] font-black bg-white text-pink-500 rounded border border-pink-100 uppercase active:scale-95">SAVE</button>
+                                            <button 
+                                                onClick={() => saveToSlot(i, memorySlots, selections, previews, setMemorySlots, setStatusMessage)} 
+                                                disabled={!!isAnalyzing || isProcessing}
+                                                className={`w-full py-1 text-[6px] font-black bg-white text-pink-500 rounded border border-pink-100 uppercase active:scale-95 ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}
+                                            >
+                                                SAVE
+                                            </button>
                                         )}
                                     </div>
                                 ))}
@@ -537,23 +554,24 @@
                             )}
                         </div>
 
-                        <section className="bg-white rounded-3xl p-5 shadow-sm border border-pink-50 flex gap-4">
+                        {/* UIの多重操作を物理防御 (pointer-events-none化) */}
+                        <section className={`bg-white rounded-3xl p-5 shadow-sm border border-pink-50 flex gap-4 ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}>
                             <div 
                                 onClick={() => !isAnalyzing && baseInputRef.current?.click()} 
-                                className={`flex-1 aspect-square border-2 border-dashed border-blue-100 rounded-2xl flex items-center justify-center bg-slate-50/50 relative active:scale-95 transition-all overflow-hidden shadow-inner ${isAnalyzing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                className={`flex-1 aspect-square border-2 border-dashed border-blue-100 rounded-2xl flex items-center justify-center bg-slate-50/50 relative active:scale-95 transition-all overflow-hidden shadow-inner cursor-pointer`}
                             >
                                 {previews.base ? <img src={previews.base} className="w-full h-full object-cover" alt="base" /> : <Icon name="target" className="text-blue-200" />}
                                 {isAnalyzing === 'base' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center animate-spin"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full"></div></div>}
                             </div>
                             <div 
                                 onClick={() => !isAnalyzing && plusInputRef.current?.click()} 
-                                className={`flex-1 aspect-square border-2 border-dashed border-pink-100 rounded-2xl flex items-center justify-center bg-slate-50/50 relative active:scale-95 transition-all overflow-hidden shadow-inner ${isAnalyzing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                className={`flex-1 aspect-square border-2 border-dashed border-pink-100 rounded-2xl flex items-center justify-center bg-slate-50/50 relative active:scale-95 transition-all overflow-hidden shadow-inner cursor-pointer`}
                             >
                                 {previews.plus ? <img src={previews.plus} className="w-full h-full object-cover" alt="plus" /> : <Icon name="plus" className="text-pink-200" />}
                                 {isAnalyzing === 'plus' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center animate-spin"><div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full"></div></div>}
                             </div>
-                            <input type="file" ref={baseInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'base')} disabled={!!isAnalyzing} />
-                            <input type="file" ref={plusInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'plus')} disabled={!!isAnalyzing} />
+                            <input type="file" ref={baseInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'base')} disabled={!!isAnalyzing || isProcessing} />
+                            <input type="file" ref={plusInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'plus')} disabled={!!isAnalyzing || isProcessing} />
                         </section>
 
                         {stagedData && (
@@ -580,7 +598,7 @@
                             </div>
                         )}
 
-                        <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-pink-50 space-y-10">
+                        <div className={`bg-white rounded-[2.5rem] p-6 shadow-sm border border-pink-50 space-y-10 ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}>
                             {sections.map((section, idx) => (
                                 <div key={idx} className="space-y-4">
                                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 border-l-2 border-pink-200 pl-3">{section.title}</h3>
@@ -647,7 +665,7 @@
                             <div className="space-y-4 pt-4 border-t border-pink-50">
                                 <button 
                                     onClick={generatePrompt} 
-                                    disabled={isProcessing} 
+                                    disabled={isProcessing || isAnalyzing} 
                                     className={`w-full py-6 rounded-3xl font-black text-sm shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 italic tracking-widest uppercase ${isProcessing ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-slate-900 text-white'}`}
                                 >
                                     {isProcessing ? 'クールダウン中...' : <><Icon name="zap" /> プロンプトを出力</>}
@@ -704,6 +722,37 @@
                 </div>
             );
         }
+
+        // スロットロード・セーブ時の完全連動処理
+        const saveToSlot = (index, memorySlots, selections, previews, setMemorySlots, setStatusMessage) => {
+            const newSlots = [...memorySlots];
+            const existingPreview = memorySlots[index]?.preview || null;
+            newSlots[index] = {
+                data: { ...selections },
+                preview: previews.baseStored || previews.plusStored || existingPreview
+            };
+            setMemorySlots(newSlots);
+            localStorage.setItem('idol_designer_slots', JSON.stringify(newSlots));
+            setStatusMessage(`Slot ${index + 1} Saved`);
+            setTimeout(() => setStatusMessage(''), 2000);
+        };
+
+        const loadFromSlot = (index, memorySlots, setSelections, setPreviews, setStatusMessage) => {
+            const slot = memorySlots[index];
+            if (!slot) return;
+            setSelections(slot.data);
+            
+            // ロード時に対象の縮小サムネイル画像をプレビュー枠に完全復元する同期ロジック
+            if (slot.preview) {
+                setPreviews(prev => ({
+                    ...prev,
+                    base: slot.preview,
+                    baseStored: slot.preview
+                }));
+            }
+            setStatusMessage(`Slot ${index + 1} Loaded`);
+            setTimeout(() => setStatusMessage(''), 2000);
+        };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
