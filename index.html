@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.5.4</title>
+    <title>IDOL Designer v1.5.5</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -65,7 +65,7 @@
 
         const LABEL_MAP = {
             hairStyle: '髪型', hairBangs: '前髪', hairColor: '髪色', hairAccessory: '飾り', hairTexture: '髪質',
-            faceOutline: '輪郭', facePlacement: 'パーツ配置', 
+            faceOutline: '輪郭', facePlacement: '顔のパーツ配置比率', 
             eyeShape: '目の形', eyeSymmetry: '目の対称性', irisRatio: '黒目の比率', eyeCorners: '目頭・目尻', 
             eyeColor: '瞳色', eyelidType: 'まぶた', tearBags: '涙袋', eyelashes: 'まつ毛', eyeSparkle: '瞳の輝き', 
             eyeMakeupDetail: 'アイメイク詳細', eyebrowShape: '眉の形',
@@ -231,7 +231,7 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
-                    // 【羽織りもの・浴衣などの着崩し位置の精密分析ロジックを追加】
+                    // 【パーツ配置(facePlacement)の監査ルールを「顔全体の画像内位置」から「輪郭内の目・鼻・口の比率・間隔」へ完全改修】
                     const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼、身体物理監査官です。
 画像を精密に分析し、指定のJSON形式のみで回答してください。
 
@@ -247,6 +247,13 @@
 
 【文化的地域・背景設定(Region)の特定】
 1. 画像内の人物のメイク、顔立ち、髪型、衣装スタイル、または背景に映る建具・調度品から推測される「地域・文化的背景」を特定し、「region」に日本語のみで記述せよ（例：日本/和風、韓国/K-POP風、欧米風、中華風、北欧風など）。
+
+【フェイスライン（輪郭）内部のパーツ配置(facePlacement)の精密幾何学監査】
+- facePlacement（パーツ配置）: **「顔全体が写真のどこに写っているか（中央、右側など）」のレイアウト分析は絶対に禁止する。**
+  代わりに、**「フェイスライン（輪郭）という閉じた領域の中で、目・鼻・口・眉がどのような比率や距離感で配置されているか」**を美容・整形・メイク理論に基づいて専門的な日本語で分析・記述せよ。
+  - 縦方向の比率：おでこの広さ（額の比率）、中顔面の長さ（目から鼻の下までの長さ。例：「中顔面が短く極めて幼いバランス」「中顔面が程よくある大人びた黄金比」など）、人中の長さ、下顎（あご）の長さ。
+  - 横方向の比率：目と目の間の距離（例：「目と目の間隔が目1つ分空いた遠心的なパーツ配置」「目と目の間が狭い求心的なパーツ配置」など）。
+  - 全体配置：パーツが顔全体の下半分にギュッと集中したベビーフェイス（童顔）傾向か、等間隔に美しく整った大人の黄金比率配置か。
 
 【衣装のカット・構造・形状デザイン分析の徹底】
 - outfit (衣装カテゴリー) および outfitDetail (衣装詳細):
@@ -339,7 +346,7 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    // 【プロンプト生成エンジン：アウター・羽織りもののずり下がり位置を腰・ヒップ位置に完全に低くロックする指示を追加】
+                    // 【顔のパーツ配置比率（facePlacement）を幾何学的英語に転写する最適化ルール】
                     const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。入力された日本語設計データを、最高品質の英語プロンプトに変換してください。
 
 【出力形式】
@@ -359,7 +366,9 @@
 3. FACSコード（AUおよびAD）のクリーン化: Action Units（AU）およびAction Descriptors（AD）は「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は一切含めない。
 4. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
 5. 禁則事項: プロンプト内での「CG」というワード使用は絶対禁止。実写(Photorealistic), RAW写真品質として描写。
-6. 顔のパーツ配置バランス（facePlacement）を厳格に再現すること。
+6. 顔のパーツ配置バランス（facePlacement）の厳格な英訳再現:
+   - 日本語の輪郭内パーツ比率分析（例：中顔面が短い、求心顔など）を、画像生成AIが最高精度で理解・描写できる物理的・幾何学的な顔面比率の表現に変換せよ。
+   - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them", "symmetrical and cohesive facial harmony" などの表現を用い、単に "centered face" や "face in the center of image" といったカメラフレーミングを指す不適切な記述は絶対に使用禁止とする。
 7. 非実在性の明記: 実在の人物ではない、AIによる架空の創作であることを示すため、"non-existent person" などの英語表現を生成するプロンプト内に必ず自然に組み込むこと。ただし、架空のイラストや不自然な合成感、あるいは嘘くささを生んでしまう「character」「virtual」「imaginary woman」「imaginary person」（およびそれに関連する 'imaginary' と 'woman' / 'person' / 'character' の安易な組み合わせ）という単語は、一切絶対に使用禁止とする。
 8. 地域・文化的背景(region): 
    - 「region」に地域や文化的背景（例：日本/和風、韓国風、西洋風）が設定されている場合、プロンプト全体にその文化的背景を明確に反映するキーワード（例：「日本」なら "Japanese aesthetic, Tokyo modern room backdrop, subtle traditional textiles", 「韓国」なら "K-beauty aesthetic, modern Seoul studio backdrop" など）を適宜自然に組み込み、画像のロケーションやスタイルに確固たる説得力を持たせよ。
@@ -423,7 +432,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.5.4 Optimized Sync</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.5.5 Optimized Sync</span>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => globalHistory.length > 0 && setSelections(globalHistory[0])} className="p-2 text-slate-300 active:scale-90"><Icon name="undo" /></button>
