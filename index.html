@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.5.5</title>
+    <title>IDOL Designer v1.6.0</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -229,10 +229,13 @@
                 } finally { if(e.target) e.target.value = ''; }
             };
 
+            // 429自動リトライ分析コール
             const runAnalysis = async (base64, mode) => {
-                try {
-                    // 【パーツ配置(facePlacement)の監査ルールを「顔全体の画像内位置」から「輪郭内の目・鼻・口の比率・間隔」へ完全改修】
-                    const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼、身体物理監査官です。
+                let delay = 1000;
+                let response;
+                let success = false;
+                
+                const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼、身体物理監査官です。
 画像を精密に分析し、指定のJSON形式のみで回答してください。
 
 【身体境界線の最優先監査】
@@ -260,7 +263,7 @@
   着用している衣装のカッティング（胸元のハートシェイプの深さ、カップフチの波打つ形状、ハイカット、生地の極小面積比）、ストラップの這わせ方（クロス、ダブル、細さ、交差構造、結び目の位置等）を物理的な「形状」として詳細を極限まで克明に言語化せよ。たとえ元の衣服がランジェリーであっても、その透け感（シースルー構造、アンダーの透け網）や、カッティング構造、紐使いの複雑なレイアウトデザインそのものを逃さず詳細な日本語で記録すること。
 
 【体型分析に関する重要な掟（3サイズの言い換え）】
-- threeSizes（肉付き）: スリーサイズの具体的な「数値（B85/W58/H86や、cm表記等）」を出力することは絶対に避けよ。
+- threeSizes（肉付き）: スリーサイズの具体的な「数値（B85/W58/H86や, cm表記等）」を出力することは絶対に避けよ。
   代わりに、砂時計のようなメリハリ、豊かなバストライン、キュッとくびれたウエスト、張りのあるヒップ、引き締まった健康的な腰回り、などといった比喩や肉付きの質感を日本語表現で魅力的に言い換えて出力せよ。
 
 【顔と目の極限監査】
@@ -275,68 +278,77 @@
 - キー: [${FIELD_KEYS.join(', ')}]
 - 言語: 値はすべて詳細な日本語（FACSコードのみ英数字、aestheticは空のままにせよ）。`;
 
-                    const response = await fetch(getApiUrl("generateContent"), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
-                            systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
-                            safetySettings,
-                            generationConfig: { responseMimeType: "application/json" }
-                        }),
-                    });
-
-                    if (response.status === 429) throw new Error("WAIT_LIMIT");
-                    if (!response.ok) throw new Error("HTTP " + response.status);
-                    
-                    const res = await response.json();
-                    const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-                    const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || rawText);
-
-                    if (mode === 'base') {
-                        setSelections(prev => {
-                            const next = createEmptyState();
-                            next.orientation = prev.orientation;
-                            next.ratio = prev.ratio;
-                            FIELD_KEYS.forEach(k => { if(result[k] && result[k] !== 'none' && result[k] !== '不明') next[k] = String(result[k]); });
-                            return next;
+                for (let attempt = 0; attempt < 5; attempt++) {
+                    try {
+                        setStatusMessage(attempt > 0 ? `再試行中 (${attempt}/5)...` : '分析中');
+                        response = await fetch(getApiUrl("generateContent"), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
+                                systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
+                                safetySettings,
+                                generationConfig: { responseMimeType: "application/json" }
+                            }),
                         });
-                    } else {
-                        setStagedData(result);
-                        setSelectedFields(Object.keys(result).reduce((a, k) => ({ ...a, [k]: result[k] !== 'none' && result[k] !== '不明' }), {}));
+
+                        if (response.status === 429) {
+                            if (attempt === 4) throw new Error("WAIT_LIMIT");
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            delay *= 2;
+                            continue;
+                        }
+
+                        if (!response.ok) throw new Error("HTTP " + response.status);
+                        success = true;
+                        break;
+                    } catch (err) {
+                        if (attempt === 4) {
+                            setStatusMessage(err.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : '解析失敗');
+                            setTimeout(() => setIsAnalyzing(null), 1000);
+                            return;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
                     }
-                    setStatusMessage('');
-                } catch (e) { 
-                    setStatusMessage(e.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : '解析失敗');
-                } finally { 
-                    setTimeout(() => setIsAnalyzing(null), 1000); 
                 }
-            };
 
-            const saveToSlot = (index) => {
-                const newSlots = [...memorySlots];
-                newSlots[index] = {
-                    data: { ...selections },
-                    preview: previews.baseStored || previews.plusStored || null
-                };
-                setMemorySlots(newSlots);
-                localStorage.setItem('idol_designer_slots', JSON.stringify(newSlots));
-                setStatusMessage(`Slot ${index + 1} Saved`);
-                setTimeout(() => setStatusMessage(''), 2000);
-            };
+                if (success) {
+                    try {
+                        const res = await response.json();
+                        const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                        const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || rawText);
 
-            const loadFromSlot = (index) => {
-                const slot = memorySlots[index];
-                if (!slot) return;
-                setSelections(slot.data);
-                setStatusMessage(`Slot ${index + 1} Loaded`);
-                setTimeout(() => setStatusMessage(''), 2000);
+                        if (mode === 'base') {
+                            setSelections(prev => {
+                                const next = createEmptyState();
+                                next.orientation = prev.orientation;
+                                next.ratio = prev.ratio;
+                                FIELD_KEYS.forEach(k => { if(result[k] && result[k] !== 'none' && result[k] !== '不明') next[k] = String(result[k]); });
+                                return next;
+                            });
+                        } else {
+                            setStagedData(result);
+                            setSelectedFields(Object.keys(result).reduce((a, k) => ({ ...a, [k]: result[k] !== 'none' && result[k] !== '不明' }), {}));
+                        }
+                        setStatusMessage('');
+                    } catch (e) {
+                        setStatusMessage('解析失敗');
+                    } finally {
+                        setTimeout(() => setIsAnalyzing(null), 1000);
+                    }
+                }
             };
 
             const generatePrompt = async () => {
                 if (isProcessing) return;
                 setIsProcessing(true);
                 setStatusMessage('生成中');
+                
+                let delay = 1000;
+                let response;
+                let success = false;
+
                 try {
                     const arTag = selections.ratio === '1:1' ? "--ar 1:1" : (selections.orientation === 'portrait' ? `--ar ${selections.ratio.split(':')[0]}:${selections.ratio.split(':')[1]}` : `--ar ${selections.ratio.split(':')[1]}:${selections.ratio.split(':')[0]}`);
                     const activeData = { ...selections };
@@ -346,7 +358,30 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    // 【顔のパーツ配置比率（facePlacement）を幾何学的英語に転写する最適化ルール】
+                    // 【動的衣装ルーター（Dynamic Outfit Router）】の自動判別ロジック
+                    const outfitText = ((selections.outfit || "") + " " + (selections.outfitDetail || "")).toLowerCase();
+                    let routeSpecificInstruction = "";
+
+                    if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|紐ショーツ|tバック|チューブトップ|ビスチェ|ブラ|下着|ナイロン|swimwear|bikini|strappy|thong)/i)) {
+                        // ストラップ・水着系：形状ロックと露出ロックを最大化
+                        routeSpecificInstruction = `
+- 【露出領域の物理的ロック】: 衣服を生成する際、腕の隙間を勝手に布地で塞がれるのを防ぐため、「leaving the shoulders completely bare and the midriff fully exposed」（完全に露出した肩と、遮るもののないお腹）という上下セパレート構造を確定させる物理指示フレーズを、衣服記述の冒頭部分に必ず配置して出力すること。また、「a wide and continuous expanse of bare skin is completely visible on her flat stomach between the top and bottom pieces」を盛り込むこと。
+- 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密に描写して指定すること。
+- 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込むこと。
+- コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の官能的かつ精緻な衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。
+- 綿・リブニット・麻素材の部屋着化を完全に防ぐため、「sleek high-gloss wet-look spandex-nylon material」などの高光沢の化学繊維素材記述を優先させ、普通の部屋着（lounge, loungewear, ribbed cotton）は一切禁止、およびネガティブプロンプトで完全に排除（camisole, pajamas, loungewear, loose cotton fabric を記載）せよ。`;
+                    } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|はおり|羽織|ローブ|ガウン|シャツ|着崩|kimono|yukata|robe|draped off|slid down)/i)) {
+                        // 着崩し・羽織りもの系：アウター位置固定ロック（Drape Position Lock）
+                        routeSpecificInstruction = `
+- 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 浴衣、着物、シャツ、カーディガンなどの羽織りものが「はだけている」「ずり落ちている（draped off/slid down）」描写がある場合、画像生成AIが勝手に衣服の位置を持ち上げて肩にかけ直したり上半身を隠したりするのを物理的に完全阻止する。プロンプト内に「the outer garment (yukata, kimono, or shirt) is strictly and flawlessly locked in its low-draped position, slithered completely down off her shoulders and resting low around her lower hips, buttocks, or elbows, leaving her entire upper body, torso, chest, shoulders, and back completely bare-skinned, exposed, and unobstructed, with absolutely no vertical shifting, rising, or simplification of the draping layout」という厳格な位置固定ロック指示文を必ずポジティブプロンプトに組み込むこと。
+- 無理なストラップ食い込み記述（spaghetti shoulder straps, multi-strap halter-neck 等）は衣装と矛盾して不自然になるため自動的に抑制し、和服本来の素材、帯、染め模様（large polka dots, traditional floral motifs など）の美しさと質感描写にフォーカスさせよ。`;
+                    } else {
+                        // カジュアル・ドレス・その他の日常服：形状を美しく再現し、無理なストラップ記述は排除
+                        routeSpecificInstruction = `
+- 衣装デザインの物理カッティング（例: plunging V-neckline, side slit, asymmetric drape, high-low hemline）の美しさを幾何学的かつ具体的に美しく英語へ英訳せよ。
+- 衣装と矛盾する「1mm spaghetti straps」や「high-cut side-tie strings」といった食い込み記述の強制挿入は行わず、対象となる衣服のテクスチャ（silk, satin, chiffon, dense knit, structured denim 等）やドレープラインの表現に美しくフォーカスせよ。`;
+                    }
+
                     const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。入力された日本語設計データを、最高品質の英語プロンプトに変換してください。
 
 【出力形式】
@@ -354,52 +389,67 @@
 
 【最優先・鉄の掟】
 1. 物理描写の強調: 衣装の端やベルト、ストラップの幅による「肌への食い込み(squish)」「肉の盛り上がり(bulge)」「すき間(visible gaps between clothing and skin)」は、肉体美を強調する最重要こだわりポイントとして、過剰なほど詳細に含めること。具体的なcm数値などのスリーサイズはプロンプト内には決して含めず、メリハリやシルエットの美しさにフォーカスすること。
-2. セーフティ置換ルールと「形状」の超精密・絶対改変禁止再現: 
-   - 「ランジェリー」やそれに類する直接的な単語は、必ず「delicate strappy wet-look seamless stretch-nylon set」や「form-fitting strappy top with transparent net-lace body」などに置き換えて安全に表現せよ。
-   - 【部屋着化・タンクトップ化の防止】: 衣服素材にカジュアルな綿やリネン（麻）を連想させ、お腹を覆うパジャマや部屋着へと変形させてしまう単語「lounge」「loungewear」の使用は一切を絶対禁止とする。
-   - 【スポーツブラ化の防止】: 分厚いスポーツウェアや退屈なスポーツブラを想起させる単語「athletic activewear」の使用は、形状の簡略化を引き起こすため一切を絶対禁止とする。
-   - 【露出領域の物理的ロック】: 衣服を生成する際、腕の隙間を勝手に布地で塞がれるのを防ぐため、「leaving the shoulders completely bare and the midriff fully exposed」（完全に露出した肩と、遮るもののないお腹）という上下セパレート構造を確定させる物理指示フレーズを、衣服記述の冒頭部分に必ず配置して出力すること。
-   - 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 浴衣、着物、シャツ、カーディガンなどの羽織りものが「はだけている」「ずり落ちている（draped off/slid down）」描写がある場合、画像生成AIが勝手に衣服の位置を持ち上げて肩にかけ直したり上半身を隠したりするのを物理的に完全阻止する。プロンプト内に「the outer garment (yukata, kimono, or shirt) is strictly and flawlessly locked in its low-draped position, slithered completely down off her shoulders and resting low around her lower hips, buttocks, or elbows, leaving her entire upper body, torso, chest, shoulders, and back completely bare-skinned, exposed, and unobstructed, with absolutely no vertical shifting, rising, or simplification of the draping layout」という厳格な位置固定ロック指示文を必ずポジティブプロンプトに組み込むこと。
-   - 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密に描写して指定すること。
-   - 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込むこと。
-   - コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の官能的かつ精緻な衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。カテゴリー単語の置換によって衣服の精密な構造デザインを絶対に簡略化してはならない。
-3. FACSコード（AUおよびAD）のクリーン化: Action Units（AU）およびAction Descriptors（AD）は「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は一切含めない。
-4. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
-5. 禁則事項: プロンプト内での「CG」というワード使用は絶対禁止。実写(Photorealistic), RAW写真品質として描写。
-6. 顔のパーツ配置バランス（facePlacement）の厳格な英訳再現:
+2. 衣服特性に応じた動的プロンプトルーティング設計:${routeSpecificInstruction}
+3. セーフティ置換：もし元の衣服が「ランジェリー」やそれに類する直接的な単語を含む場合は、必ず安全な表現（delicate strappy set, form-fitting strappy top 等）に置き換えて表現せよ。
+4. FACSコード（AUおよびAD）のクリーン化: Action Units（AU）およびAction Descriptors（AD）は「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は一切含めない。
+5. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
+6. 禁則事項: プロンプト内での「CG」というワード使用は絶対禁止。実写(Photorealistic), RAW写真品質として描写。
+7. 顔のパーツ配置バランス（facePlacement）の厳格な英訳再現:
    - 日本語の輪郭内パーツ比率分析（例：中顔面が短い、求心顔など）を、画像生成AIが最高精度で理解・描写できる物理的・幾何学的な顔面比率の表現に変換せよ。
    - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them", "symmetrical and cohesive facial harmony" などの表現を用い、単に "centered face" や "face in the center of image" といったカメラフレーミングを指す不適切な記述は絶対に使用禁止とする。
-7. 非実在性の明記: 実在の人物ではない、AIによる架空の創作であることを示すため、"non-existent person" などの英語表現を生成するプロンプト内に必ず自然に組み込むこと。ただし、架空のイラストや不自然な合成感、あるいは嘘くささを生んでしまう「character」「virtual」「imaginary woman」「imaginary person」（およびそれに関連する 'imaginary' と 'woman' / 'person' / 'character' の安易な組み合わせ）という単語は、一切絶対に使用禁止とする。
-8. 地域・文化的背景(region): 
+8. 非実在性の明記: 実在の人物ではない、AIによる架空の創作であることを示すため、"non-existent person" などの英語表現を生成するプロンプト内に必ず自然に組み込むこと。ただし、架空のイラストや不自然な合成感、あるいは嘘くささを生んでしまう「character」「virtual」「imaginary woman」「imaginary person」（およびそれに関連する 'imaginary' と 'woman' / 'person' / 'character' の安易な組み合わせ）という単語は、一切絶対に使用禁止とする。
+9. 地域・文化的背景(region): 
    - 「region」に地域や文化的背景（例：日本/和風、韓国風、西洋風）が設定されている場合、プロンプト全体にその文化的背景を明確に反映するキーワード（例：「日本」なら "Japanese aesthetic, Tokyo modern room backdrop, subtle traditional textiles", 「韓国」なら "K-beauty aesthetic, modern Seoul studio backdrop" など）を適宜自然に組み込み、画像のロケーションやスタイルに確固たる説得力を持たせよ。
-9. 印象補正(aesthetic): 
+10. 印象補正(aesthetic): 
    - 「cute」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "cute" 追加し、モデルの顔立ちに極めて甘く可愛らしいチャームを引き出せ。
    - 「beautiful」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "beautiful" を追加し、モデルの顔の対称性と気品あるクオリティを極限に高めよ。`;
 
-                    const response = await fetch(getApiUrl("generateContent"), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプトを作成し、末尾に比率 "${arTag}" を含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
-                            systemInstruction: { parts: [{ text: promptSystemInstruction }] },
-                            safetySettings,
-                            generationConfig: { responseMimeType: "application/json" }
-                        }),
-                    });
+                    for (let attempt = 0; attempt < 5; attempt++) {
+                        try {
+                            setStatusMessage(attempt > 0 ? `再試行中 (${attempt}/5)...` : '生成中');
+                            response = await fetch(getApiUrl("generateContent"), {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプトを作成し、末尾に比率 "${arTag}" を含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
+                                    systemInstruction: { parts: [{ text: promptSystemInstruction }] },
+                                    safetySettings,
+                                    generationConfig: { responseMimeType: "application/json" }
+                                }),
+                            });
 
-                    if (response.status === 429) throw new Error("WAIT_LIMIT");
-                    if (!response.ok) throw new Error("HTTP " + response.status);
-                    
-                    const res = await response.json();
-                    const result = JSON.parse(res.candidates?.[0]?.content?.parts?.[0]?.text.match(/\{[\s\S]*\}/)?.[0] || "{}");
-                    setEnglishPrompt(result.positive || "");
-                    setNegativePrompt(result.negative || "");
-                    setStatusMessage('');
-                    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
-                } catch (e) { 
-                    setStatusMessage(e.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : 'Error');
-                } finally { 
-                    setTimeout(() => setIsProcessing(false), 3000); 
+                            if (response.status === 429) {
+                                if (attempt === 4) throw new Error("WAIT_LIMIT");
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                                delay *= 2;
+                                continue;
+                            }
+
+                            if (!response.ok) throw new Error("HTTP " + response.status);
+                            success = true;
+                            break;
+                        } catch (err) {
+                            if (attempt === 4) {
+                                setStatusMessage(err.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : 'Error');
+                                return;
+                            }
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            delay *= 2;
+                        }
+                    }
+
+                    if (success) {
+                        const res = await response.json();
+                        const result = JSON.parse(res.candidates?.[0]?.content?.parts?.[0]?.text.match(/\{[\s\S]*\}/)?.[0] || "{}");
+                        setEnglishPrompt(result.positive || "");
+                        setNegativePrompt(result.negative || "");
+                        setStatusMessage('');
+                        setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
+                    }
+                } catch (e) {
+                    setStatusMessage('Error');
+                } finally {
+                    setTimeout(() => setIsProcessing(false), 3000);
                 }
             };
 
@@ -432,7 +482,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.5.5 Optimized Sync</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.6.0 Optimized Sync</span>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => globalHistory.length > 0 && setSelections(globalHistory[0])} className="p-2 text-slate-300 active:scale-90"><Icon name="undo" /></button>
@@ -480,8 +530,8 @@
 
                         <div className="h-6 flex items-center justify-center">
                             {statusMessage && (
-                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 ${statusMessage.includes('制限中') || statusMessage.startsWith('Error') || statusMessage.startsWith('解析失敗') ? 'bg-red-50 text-red-500' : 'bg-white text-pink-500'}`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full animate-ping ${statusMessage.includes('制限中') || statusMessage.startsWith('Error') || statusMessage.startsWith('解析失敗') ? 'bg-red-400' : 'bg-pink-400'}`}></div>
+                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 ${statusMessage.includes('制限中') || statusMessage.startsWith('Error') || statusMessage.startsWith('解析失敗') || statusMessage.includes('再試行中') ? 'bg-red-50 text-red-500' : 'bg-white text-pink-500'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full animate-ping ${statusMessage.includes('制限中') || statusMessage.startsWith('Error') || statusMessage.startsWith('解析失敗') || statusMessage.includes('再試行中') ? 'bg-red-400' : 'bg-pink-400'}`}></div>
                                     {statusMessage.toUpperCase()}
                                 </div>
                             )}
