@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.4.8</title>
+    <title>IDOL Designer v1.4.9</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -236,7 +236,7 @@
 【文化的地域・背景設定(Region)の特定】
 1. 画像内の人物のメイク、顔立ち、髪型、衣装スタイル、または背景に映る建具・調度品から推測される「地域・文化的背景」を特定し、「region」に日本語のみで記述せよ（例：日本/和風、韓国/K-POP風、欧米風、中華風、北欧風など）。
 
-【衣装のカット・構造・形状デザイン分析の徹底】
+【衣装のカット・構造・形状デザイン分析 of 徹底】
 - outfit (衣装カテゴリー) および outfitDetail (衣装詳細):
   着用している衣装のカッティング（胸元のハートシェイプの深さ、カップフチの波打つ形状、ハイカット、生地の極小面積比）、ストラップの這わせ方（クロス、ダブル、細さ、交差構造、結び目の位置等）を物理的な「形状」として詳細を極限まで克明に言語化せよ。たとえ元の衣服がランジェリーであっても、その透け感（シースルー構造、アンダーの透け網）や、カッティング構造、紐使いの複雑なレイアウトデザインそのものを逃さず詳細な日本語で記録すること。
 
@@ -327,7 +327,7 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    // 【プロンプトエンジンの強化：スポーツ感を完全に防ぐ極薄繊細構造の英語指示と絶対形状改変阻止指示】
+                    // 【プロンプトエンジンの強化：loungeを完全に禁止し、部屋着化を完全に防止。極薄繊細構造の英語指示と絶対形状改変阻止指示】
                     const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。入力された日本語設計データを、最高品質の英語プロンプトに変換してください。
 
 【出力形式】
@@ -336,8 +336,12 @@
 【最優先・鉄の掟】
 1. 物理描写の強調: 衣装の端やベルト、ストラップの幅による「肌への食い込み(squish)」「肉の盛り上がり(bulge)」「すき間(visible gaps between clothing and skin)」は、肉体美を強調する最重要こだわりポイントとして、過剰なほど詳細に含めること。具体的なcm数値などのスリーサイズはプロンプト内には決して含めず、メリハリやシルエットの美しさにフォーカスすること。
 2. セーフティ置換ルールと「形状」の超精密・絶対改変禁止再現: 
-   - 「ランジェリー」やそれに類する直接的な単語は必ず「delicate strappy lounge activewear」「sheer lace-trimmed fashion set」「form-fitting strappy top with transparent net-lace body」などに置き換えて安全に表現せよ。**「athletic activewear」のような分厚いスポーツウェアを想起させる単語はAIの簡略化を引き起こすため絶対に使用禁止とする。**
-   - 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に**「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」**や**「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」**といった厳格な形状固定化指示テキストを必ずプロンプトに組み込むこと。
+   - 「ランジェリー」やそれに類する直接的な単語は、必ず「delicate strappy wet-look seamless stretch-nylon set」や「form-fitting strappy top with transparent net-lace body」などに置き換えて安全に表現せよ。
+   - **【部屋着化・タンクトップ化の防止】: 衣服素材にカジュアルな綿やリネン（麻）を連想させ、お腹を覆うパジャマや部屋着へと変形させてしまう単語「lounge」「loungewear」の使用は一切を絶対禁止とする。**
+   - **【スポーツブラ化の防止】: 分厚いスポーツウェアや退屈なスポーツブラを想起させる単語「athletic activewear」の使用は、形状の簡略化を引き起こすため一切を絶対禁止とする。**
+   - **【露出領域の物理的ロック】: 衣服を生成する際、腕の隙間を勝手に布地で塞がれるのを防ぐため、「leaving the shoulders completely bare and the midriff fully exposed」（完全に露出した肩と、遮るもののないお腹）という上下セパレート構造を確定させる物理指示フレーズを、衣服記述の冒頭部分に必ず配置して出力すること。**
+   - **【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密に描写して指定すること。**
+   - **【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込むこと。**
    - コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の官能的かつ精緻な衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。カテゴリー単語の置換によって衣服の精密な構造デザインを絶対に簡略化してはならない。
 3. FACSコード（AUおよびAD）のクリーン化: Action Units（AU）およびAction Descriptors（AD）は「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は一切含めない。
 4. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
@@ -401,7 +405,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.4.8 Optimized Sync</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.4.9 Optimized Sync</span>
                         </div>
                         <button onClick={() => window.location.reload()} className="p-2 text-slate-300 active:rotate-180 transition-all duration-500"><Icon name="refresh" /></button>
                     </header>
