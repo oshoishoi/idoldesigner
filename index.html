@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.5.0</title>
+    <title>IDOL Designer v1.5.3</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -32,6 +32,9 @@
         const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
         const getApiUrl = (endpoint) => {
+            // 【環境に応じたモデル名の最適化】
+            // プレビュー環境ではエミュレータがサポートするgemini-2.5-flash-preview-09-2025に固定してエラーを回避。
+            // 本番環境（中継プロキシ経由）では、最新鋭のgemini-3-flash-previewを適用し高精度な分析と生成を実現。
             const model = isPreview ? "gemini-2.5-flash-preview-09-2025" : "gemini-3-flash-preview";
             if (isPreview) {
                 return `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${apiKey}`;
@@ -228,7 +231,7 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
-                    const analysisSystemInstruction = `あなたは世界最高峰 of キャラクターデザイナー兼、身体物理監査官です。
+                    const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼、身体物理監査官です。
 画像を精密に分析し、指定のJSON形式のみで回答してください。
 
 【身体境界線の最優先監査】
@@ -260,7 +263,7 @@
 - キー: [${FIELD_KEYS.join(', ')}]
 - 言語: 値はすべて詳細な日本語（FACSコードのみ英数字、aestheticは空のままにせよ）。`;
 
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    const response = await fetch(getApiUrl("generateContent"), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -351,15 +354,14 @@
 4. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
 5. 禁則事項: プロンプト内での「CG」というワード使用は絶対禁止。実写(Photorealistic), RAW写真品質として描写。
 6. 顔のパーツ配置バランス（facePlacement）を厳格に再現すること。
-7. 非実在性の明記: 実在の人物ではない、AIによる架空의 創作であることを示すため、"non-existent person" などの英語表現を生成するプロンプト内に必ず自然に組み込むこと。ただし、架空のイラストや不自然な合成感、あるいは嘘くささを生んでしまう「character」「virtual」「imaginary woman」「imaginary person」（およびそれに関連する 'imaginary' と 'woman' / 'person' / 'character' の安易な組み合わせ）という単語は、一切絶対に使用禁止とする。
+7. 非実在性の明記: 実在の人物ではない、AIによる架空の創作であることを示すため、"non-existent person" などの英語表現を生成するプロンプト内に必ず自然に組み込むこと。ただし、架空のイラストや不自然な合成感、あるいは嘘くささを生んでしまう「character」「virtual」「imaginary woman」「imaginary person」（およびそれに関連する 'imaginary' と 'woman' / 'person' / 'character' の安易な組み合わせ）という単語は、一切絶対に使用禁止とする。
 8. 地域・文化的背景(region): 
    - 「region」に地域や文化的背景（例：日本/和風、韓国風、西洋風）が設定されている場合、プロンプト全体にその文化的背景を明確に反映するキーワード（例：「日本」なら "Japanese aesthetic, Tokyo modern room backdrop, subtle traditional textiles", 「韓国」なら "K-beauty aesthetic, modern Seoul studio backdrop" など）を適宜自然に組み込み、画像のロケーションやスタイルに確固たる説得力を持たせよ。
 9. 印象補正(aesthetic): 
    - 「cute」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "cute" 追加し、モデルの顔立ちに極めて甘く可愛らしいチャームを引き出せ。
    - 「beautiful」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "beautiful" を追加し、モデルの顔の対称性と気品あるクオリティを極限に高めよ。`;
 
-                    // 【節約モード】
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    const response = await fetch(getApiUrl("generateContent"), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -415,7 +417,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.5.0 Optimized Sync</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.5.3 Optimized Sync</span>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => globalHistory.length > 0 && setSelections(globalHistory[0])} className="p-2 text-slate-300 active:scale-90"><Icon name="undo" /></button>
