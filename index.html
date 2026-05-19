@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.5.3</title>
+    <title>IDOL Designer v1.5.4</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -231,6 +231,7 @@
 
             const runAnalysis = async (base64, mode) => {
                 try {
+                    // 【羽織りもの・浴衣などの着崩し位置の精密分析ロジックを追加】
                     const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼、身体物理監査官です。
 画像を精密に分析し、指定のJSON形式のみで回答してください。
 
@@ -239,6 +240,10 @@
 2. ストラップや紐の幅（極細、数ミリ単位等）を特定せよ。
 3. 発生している「盛り上がり(bulge)」「食い込み(squish)」「圧迫(indentation)」を日本語で詳細に言語化せよ。
 4. 衣装と肌の間に生じている絶妙な「すき間(gaps/loose fit)」を特定し、必ず「bodyInterface」に記述せよ。
+
+【アウター・羽織りものの着崩し位置の精密監査】
+1. 浴衣、着物、シャツ、カーディガンなどの羽織りものを着用している（あるいは肩からはだけている）場合、そのアウターが「肩」「デコルテ」「胸元」「お腹」「腰」「ヒップ」のどの高さまでずり下がっているかを厳密に監査せよ。
+2. 特に、アウターが腰やお尻、肘の低い位置まで完全にずり落ちていて、上半身（胸、背中、肩、お腹）が完全に露出している場合、その物理的な「留まり境界線」の位置（例：「浴衣は腰の低い位置とお尻まで完全にずり下がっている」「肘のラインで引っかかっている」など）を「outfitDetail」に極限まで克明に明記せよ。
 
 【文化的地域・背景設定(Region)の特定】
 1. 画像内の人物のメイク、顔立ち、髪型、衣装スタイル、または背景に映る建具・調度品から推測される「地域・文化的背景」を特定し、「region」に日本語のみで記述せよ（例：日本/和風、韓国/K-POP風、欧米風、中華風、北欧風など）。
@@ -334,7 +339,7 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
-                    // 【プロンプト生成エンジン：部屋着化徹底防止、形状改変阻止ロック、Bare/Exposed指示、禁則ワード排除】
+                    // 【プロンプト生成エンジン：アウター・羽織りもののずり下がり位置を腰・ヒップ位置に完全に低くロックする指示を追加】
                     const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。入力された日本語設計データを、最高品質の英語プロンプトに変換してください。
 
 【出力形式】
@@ -347,6 +352,7 @@
    - 【部屋着化・タンクトップ化の防止】: 衣服素材にカジュアルな綿やリネン（麻）を連想させ、お腹を覆うパジャマや部屋着へと変形させてしまう単語「lounge」「loungewear」の使用は一切を絶対禁止とする。
    - 【スポーツブラ化の防止】: 分厚いスポーツウェアや退屈なスポーツブラを想起させる単語「athletic activewear」の使用は、形状の簡略化を引き起こすため一切を絶対禁止とする。
    - 【露出領域の物理的ロック】: 衣服を生成する際、腕の隙間を勝手に布地で塞がれるのを防ぐため、「leaving the shoulders completely bare and the midriff fully exposed」（完全に露出した肩と、遮るもののないお腹）という上下セパレート構造を確定させる物理指示フレーズを、衣服記述の冒頭部分に必ず配置して出力すること。
+   - 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 浴衣、着物、シャツ、カーディガンなどの羽織りものが「はだけている」「ずり落ちている（draped off/slid down）」描写がある場合、画像生成AIが勝手に衣服の位置を持ち上げて肩にかけ直したり上半身を隠したりするのを物理的に完全阻止する。プロンプト内に「the outer garment (yukata, kimono, or shirt) is strictly and flawlessly locked in its low-draped position, slithered completely down off her shoulders and resting low around her lower hips, buttocks, or elbows, leaving her entire upper body, torso, chest, shoulders, and back completely bare-skinned, exposed, and unobstructed, with absolutely no vertical shifting, rising, or simplification of the draping layout」という厳格な位置固定ロック指示文を必ずポジティブプロンプトに組み込むこと。
    - 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密に描写して指定すること。
    - 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込むこと。
    - コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の官能的かつ精緻な衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。カテゴリー単語の置換によって衣服の精密な構造デザインを絶対に簡略化してはならない。
@@ -417,7 +423,7 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.5.3 Optimized Sync</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.5.4 Optimized Sync</span>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => globalHistory.length > 0 && setSelections(globalHistory[0])} className="p-2 text-slate-300 active:scale-90"><Icon name="undo" /></button>
