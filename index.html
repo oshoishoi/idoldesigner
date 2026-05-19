@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.4.5</title>
+    <title>IDOL Designer v1.4.8</title>
     <!-- React, Babel, Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -47,6 +47,7 @@
             { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
         ];
 
+        // フィールドキー定義
         const FIELD_KEYS = [
             'hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture',
             'faceOutline', 'facePlacement', 
@@ -56,7 +57,7 @@
             'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes',
             'outfit', 'outfitDetail', 'pose',
             'situation', 'lighting', 'artStyle', 'cameraAngle',
-            'aesthetic', 'additionalNotes'
+            'region', 'aesthetic', 'additionalNotes'
         ];
 
         const LABEL_MAP = {
@@ -72,6 +73,7 @@
             bodyInterface: 'その他(すき間等)',
             outfit: '衣装', outfitDetail: '衣装詳細', pose: 'ポーズ',
             situation: '状況', lighting: '光演出', artStyle: '画風', cameraAngle: 'アングル',
+            region: '地域・文化的背景',
             aesthetic: '印象補正',
             additionalNotes: '追記'
         };
@@ -111,14 +113,14 @@
             const [statusMessage, setStatusMessage] = useState('');
             const [previews, setPreviews] = useState({ base: null, plus: null });
             
-            // 【10スロット対応】初期状態の配列を10個に拡張
+            // 10セーブスロット
             const [memorySlots, setMemorySlots] = useState(Array(10).fill(null));
 
             const baseInputRef = useRef(null);
             const plusInputRef = useRef(null);
             const resultRef = useRef(null);
 
-            // ローカルストレージからの読み込み時に10スロット化への自動マイグレーションを行う
+            // 10スロットマイグレーション
             useEffect(() => {
                 try {
                     const saved = localStorage.getItem('idol_designer_slots');
@@ -135,7 +137,7 @@
                 } catch (e) { console.error("Restore failed:", e); }
             }, []);
 
-            // 【プリセット選択ロジック】チェキ・スマホ・実写のベース土台のみを担当
+            // プリセット適用ロジック
             const applyPreset = (type) => {
                 setSelections(prev => {
                     const next = { ...prev };
@@ -167,7 +169,6 @@
                 });
             };
 
-            // 向きボタン切り替え時にチェキ枠の描写指示を太い余白の位置を含めて自動修正する
             const handleOrientationChange = (orientation) => {
                 setSelections(prev => {
                     const next = { ...prev, orientation };
@@ -189,7 +190,7 @@
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        const MAX = 448; // トークン節約
+                        const MAX = 448; 
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
                         else { if (h > MAX) { w *= MAX / h; h = MAX; } }
@@ -232,16 +233,21 @@
 3. 発生している「盛り上がり(bulge)」「食い込み(squish)」「圧迫(indentation)」を日本語で詳細に言語化せよ。
 4. 衣装と肌の間に生じている絶妙な「すき間(gaps/loose fit)」を特定し、必ず「bodyInterface」に記述せよ。
 
+【文化的地域・背景設定(Region)の特定】
+1. 画像内の人物のメイク、顔立ち、髪型、衣装スタイル、または背景に映る建具・調度品から推測される「地域・文化的背景」を特定し、「region」に日本語のみで記述せよ（例：日本/和風、韓国/K-POP風、欧米風、中華風、北欧風など）。
+
 【衣装のカット・構造・形状デザイン分析の徹底】
 - outfit (衣装カテゴリー) および outfitDetail (衣装詳細):
-  着用している衣装のカッティング（胸元の深さ、ハイカット具合、生地の面積比）、ストラップの這わせ方（クロス、ダブル、細さ、交差構造、結び目の位置等）を物理的な「形状」として詳細を極限まで克明に言語化せよ。たとえ元の衣服がランジェリーであっても、そのセクシーかつ精緻な「カッティング構造」や「紐使いの複雑なレイアウトデザイン」そのものを逃さず詳細な日本語で記録すること。
+  着用している衣装のカッティング（胸元のハートシェイプの深さ、カップフチの波打つ形状、ハイカット、生地の極小面積比）、ストラップの這わせ方（クロス、ダブル、細さ、交差構造、結び目の位置等）を物理的な「形状」として詳細を極限まで克明に言語化せよ。たとえ元の衣服がランジェリーであっても、その透け感（シースルー構造、アンダーの透け網）や、カッティング構造、紐使いの複雑なレイアウトデザインそのものを逃さず詳細な日本語で記録すること。
 
 【体型分析に関する重要な掟（3サイズの言い換え）】
 - threeSizes（肉付き）: スリーサイズの具体的な「数値（B85/W58/H86や、cm表記等）」を出力することは絶対に避けよ。
   代わりに、砂時計のようなメリハリ、豊かなバストライン、キュッとくびれたウエスト、張りのあるヒップ、引き締まった健康的な腰回り、などといった比喩や肉付きの質感を日本語表現で魅力的に言い換えて出力せよ。
 
 【顔と目の極限監査】
-1. FACS: 表情をAction Unit番号と強度(A〜E)、補助動作(AU51〜64：頭部姿勢、視線)の組み合わせで精密判定せよ（例: AU12C, AU51B）。
+1. FACS: 表情をAction Unit番号（AU）およびAction Descriptor番号（AD）と、その強度(A〜E)、補助動作(AU51〜64：頭部姿勢、視線)の組み合わせで精密判定せよ。
+   - 「AD」は「AU」の誤字ではない。AU（Action Units）とAD（Action Descriptors、例：AD19、AD38など）の両方を混同せず正確に区別して判定・出力せよ。
+   - 例: AU12C, AD19, AU51B。
 2. 目の詳細: 左右の対称性（高さ・幅）、黒目比率、目頭（蒙古襞）、目尻角度を分析せよ。
 3. アイメイク: アイラインの太さ、目尻の跳ね上げ詳細を特定せよ。
 
@@ -321,20 +327,26 @@
                         .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
                         .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
+                    // 【プロンプトエンジンの強化：スポーツ感を完全に防ぐ極薄繊細構造の英語指示と絶対形状改変阻止指示】
                     const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。入力された日本語設計データを、最高品質の英語プロンプトに変換してください。
 
 【出力形式】
 純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
 
 【最優先・鉄の掟】
-1. 物理描写の強調: 衣装の端やベルト、ストラップの幅による「肌への食い込み(squish)」「肉の盛り上がり(bulge)」「すき間(visible gaps between clothing and skin)」は、肉体美を強調する最重要こだわりポイントとして、過剰なほど詳細に含めること。具体的なcm数値などのスリーサイズはプロンプト内には決して含めず、メリハリやシルエット of 美しさにフォーカスすること。
-2. 置換ルールと「形状」の超精密再現: 「ランジェリー」は必ず「activewear」「sleek athletic wear」「form-fitting strappy top」などに置き換えて安全に表現せよ。ただし、全体のシルエット、カッティングの深さ、紐の数、ストラップの配置、幾何学的なカットライン（例：plunging V-neckline, multi-strap halter-neck, cross-strap open back, high-cut hip bands, complex strap lattice design 等）は、元の官能的かつ精緻な衣服デザインの「物理形状」を一切崩さず、英語で極めて克明かつ具体的に描写すること。カテゴリー単語の置換によって衣服の精密な構造デザインを簡略化してはならない。
-3. FACSクリーン化: Action Unitsは「AU12C」のようにコードと強度のみを反映し、名称説明は一切含めない。
+1. 物理描写の強調: 衣装の端やベルト、ストラップの幅による「肌への食い込み(squish)」「肉の盛り上がり(bulge)」「すき間(visible gaps between clothing and skin)」は、肉体美を強調する最重要こだわりポイントとして、過剰なほど詳細に含めること。具体的なcm数値などのスリーサイズはプロンプト内には決して含めず、メリハリやシルエットの美しさにフォーカスすること。
+2. セーフティ置換ルールと「形状」の超精密・絶対改変禁止再現: 
+   - 「ランジェリー」やそれに類する直接的な単語は必ず「delicate strappy lounge activewear」「sheer lace-trimmed fashion set」「form-fitting strappy top with transparent net-lace body」などに置き換えて安全に表現せよ。**「athletic activewear」のような分厚いスポーツウェアを想起させる単語はAIの簡略化を引き起こすため絶対に使用禁止とする。**
+   - 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に**「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」**や**「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」**といった厳格な形状固定化指示テキストを必ずプロンプトに組み込むこと。
+   - コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の官能的かつ精緻な衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。カテゴリー単語の置換によって衣服の精密な構造デザインを絶対に簡略化してはならない。
+3. FACSコード（AUおよびAD）のクリーン化: Action Units（AU）およびAction Descriptors（AD）は「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は一切含めない。
 4. 目の極限描写: 対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映せよ。
 5. 禁則事項: プロンプト内での「CG」というワード使用は絶対禁止。実写(Photorealistic), RAW写真品質として描写。
 6. 顔のパーツ配置バランス（facePlacement）を厳格に再現すること。
 7. 非実在性の明記: 実在の人物ではない、AIによる架空の創作であることを示すため、"non-existent person" などの英語表現を生成するプロンプト内に必ず自然に組み込むこと。ただし、架空のイラストや不自然な合成感、あるいは嘘くささを生んでしまう「character」「virtual」「imaginary woman」「imaginary person」（およびそれに関連する 'imaginary' と 'woman' / 'person' / 'character' の安易な組み合わせ）という単語は、一切絶対に使用禁止とする。
-8. 印象補正(aesthetic): 
+8. 地域・文化的背景(region): 
+   - 「region」に地域や文化的背景（例：日本/和風、韓国風、西洋風）が設定されている場合、プロンプト全体にその文化的背景を明確に反映するキーワード（例：「日本」なら "Japanese aesthetic, Tokyo modern room backdrop, subtle traditional textiles", 「韓国」なら "K-beauty aesthetic, modern Seoul studio backdrop" など）を適宜自然に組み込み、画像のロケーションやスタイルに確固たる説得力を持たせよ。
+9. 印象補正(aesthetic): 
    - 「cute」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "cute" 追加し、モデルの顔立ちに極めて甘く可愛らしいチャームを引き出せ。
    - 「beautiful」が指定されている場合は、プロンプトの人物説明の先頭または自然な位置に英単語 "beautiful" を追加し、モデルの顔の対称性と気品あるクオリティを極限に高めよ。`;
 
@@ -379,7 +391,7 @@
                 { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture'] },
                 { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs'] },
                 { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'] },
-                { title: "衣装・演出", fields: ['outfit', 'outfitDetail', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
+                { title: "衣装・演出・地域設定", fields: ['outfit', 'outfitDetail', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'region', 'additionalNotes'] }
             ], []);
 
             return (
@@ -389,13 +401,13 @@
                             <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                                 <Icon name="sparkles" /> IDOL Designer
                             </h1>
-                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.4.5 Optimized Sync</span>
+                            <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.4.8 Optimized Sync</span>
                         </div>
                         <button onClick={() => window.location.reload()} className="p-2 text-slate-300 active:rotate-180 transition-all duration-500"><Icon name="refresh" /></button>
                     </header>
 
                     <main className="max-w-xl mx-auto px-4 mt-4 space-y-6">
-                        {/* 【10スロット対応】グリッドレイアウトを調整し、5列×2行で綺麗に折り返すように配置 */}
+                        {/* 10セーブスロットグリッドレイアウト */}
                         <section className="space-y-2">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-2 italic">Memory Slots</span>
                             <div className="grid grid-cols-5 gap-2">
@@ -490,7 +502,7 @@
                                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 border-l-2 border-pink-200 pl-3">{section.title}</h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         {section.fields.map((id) => (
-                                            <div key={id} className={id === 'additionalNotes' || id === 'outfitDetail' || id === 'situation' || id === 'facePlacement' || id === 'bodyInterface' || id === 'facs' || id === 'eyeMakeupDetail' ? 'col-span-2' : ''}>
+                                            <div key={id} className={id === 'additionalNotes' || id === 'outfitDetail' || id === 'situation' || id === 'facePlacement' || id === 'bodyInterface' || id === 'facs' || id === 'eyeMakeupDetail' || id === 'region' ? 'col-span-2' : ''}>
                                                 <label className="text-[7px] font-black text-slate-300 uppercase ml-1">{LABEL_MAP[id]}</label>
                                                 <input type="text" className={`w-full p-3 border-none rounded-xl text-xs font-bold shadow-inner ${selections[id] ? 'bg-pink-50/50 text-pink-700' : 'bg-slate-50 focus:bg-white'} transition-all`} value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
                                             </div>
@@ -510,7 +522,7 @@
                                     </div>
                                 </div>
 
-                                {/* 【重ね掛け対応：独立した印象補正（かわいい・キレイ）トグル】 */}
+                                {/* 重ね掛け対応：独立した印象補正（かわいい・キレイ）トグル */}
                                 <div className="space-y-3 px-4">
                                     <span className="text-pink-400 uppercase tracking-[0.2em] block text-[9px]">Aesthetic Filter (顔の印象補正)</span>
                                     <div className="flex gap-3 justify-center px-1">
