@@ -1,6 +1,12 @@
 // App.js
 const { useState, useEffect, useRef, useMemo } = React;
 
+// windowオブジェクトから安全に設定を展開
+const FIELD_KEYS = window.FIELD_KEYS || [];
+const LABEL_MAP = window.LABEL_MAP || {};
+const getApiUrl = window.getApiUrl;
+const safetySettings = window.safetySettings || [];
+
 const Icon = ({ name, className = "" }) => {
     const svgs = {
         sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
@@ -20,13 +26,6 @@ const Icon = ({ name, className = "" }) => {
 };
 
 function App() {
-    // ⚠️ useMemoを使ってグローバルから確実に定数をリアルタイム同期
-    const FIELD_KEYS = useMemo(() => window.FIELD_KEYS || [], []);
-    const LABEL_MAP = useMemo(() => window.LABEL_MAP || {}, []);
-    const proxyBaseUrl = window.proxyBaseUrl || "";
-    const getApiUrl = window.getApiUrl;
-    const safetySettings = window.safetySettings || [];
-
     const createEmptyState = () => {
         const obj = { orientation: 'portrait', ratio: '9:16', aesthetic: '' };
         FIELD_KEYS.forEach(k => obj[k] = '');
@@ -192,7 +191,7 @@ function App() {
 
 【顔・表情・FACS監査】
 1. FACS: AUおよびADコードと強度(A〜E)、補助動作(AU51〜64：頭部姿勢、視線)の組み合わせで精密判定。
-   - 「AD」は「AU」の誤字ではない。AUとAD（例: AD19、AD38など）の両方を正確に区別して「AU12C, AD19, AU51B」のように判定せよ。
+   - 「AD」は「AU` + `」の誤字ではない。AUとAD（例: AD19、AD38など）の両方を正確に区別して「AU12C, AD19, AU51B」のように判定せよ。
 2. 目元：左右対称性、黒目比率、目頭（蒙古襞）、目尻角度、アイライン太さ、目尻跳ね上げ。
 
 【出力ルール】
@@ -311,9 +310,9 @@ function App() {
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|紐ショーツ|tバック|チューブトップ|ビスチェ|ブラ|下着|ナイロン|swimwear|bikini|strappy|thong)/i)) {
                 routeSpecificInstruction = `
 - 【露出領域の物理的ロック】: 腕の隙間を勝手に布地で塞がれるのを防ぐため、「leaving the shoulders completely bare and the midriff fully exposed」（完全に露出した肩と、遮るもののないお腹）という上下セパレート構造を確定させる物理指示フレーズを、衣服記述の冒頭部分に必ず配置。また、「a wide and continuous expanse of bare skin is completely visible on her flat stomach between the top and bottom pieces」を盛り込め。
-- 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密描写せよ。
+- 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles slums」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密描写せよ。
 - 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込め。
-- コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小의 フロント布面積（microscopic low-rise lace front panel）などの、元の衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。
+- コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。
 - 綿・リブニット・麻素材の部屋着化を完全に防ぐため、「sleek high-gloss wet-look spandex-nylon material」などの高光沢の化学繊維素材記述を優先させ、普通の部屋着（lounge, loungewear, ribbed cotton）は一切禁止、およびネガティブプロンプトで完全に排除（camisole, pajamas, loungewear, loose cotton fabric を記載）せよ。`;
             } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|はおり|羽織|ローブ|ガウン|シャツ|着崩|kimono|yukata|robe|draped off|slid down)/i)) {
                 routeSpecificInstruction = `
@@ -336,7 +335,7 @@ function App() {
 - また、チェキの伝統的な余白レイアウトを再現するため、「Classic white instant photo frame with a wide, thick white border on the ${borderSide} side」というフレーム記述を英語プロンプトの文中に正確に盛り込むこと。`;
             } else {
                 artStyleSpecificInstruction = `
-- 【チェキ風画質の完全排除】: プロンプトの冒頭に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。`;
+- 【チェキ風画質の完全排除】: プロンプトの冒頭に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores Fluss」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。`;
             }
 
             const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質の英語プロンプトに変換してください。
@@ -345,7 +344,7 @@ function App() {
 純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
 
 【最優先・鉄の掟】
-1. 物理描写の強調: 衣装の端、ベルト、ストラップによる肌の食い込み(squish)、盛り上がり(bulge)、すき間(visible gaps between clothing and skin)は肉体美を強調するこだわりとして詳細に含めよ。具体的なcm数値などのスリーサイズは含めず、メリハリやシルエットにフォーカスせよ。
+1. 物理描写の強調: 衣装の端、ベルト、ストラップによる肌の食い込み(squish), 盛り上がり(bulge), すき間(visible gaps between clothing and skin)は肉体美を強調するこだわりとして詳細に含めよ。具体的なcm数値などのスリーサイズは含めず、メリハリやシルエットにフォーカスせよ。
 2. 衣服特性に応じた動的プロンプトルーティング設計:${routeSpecificInstruction}
 3. 画風特性に応じた動的プロンプトルーティング設計:${artStyleSpecificInstruction}
 4. セーフティ置換：元の衣服が「ランジェリー」等を含む場合は、必ず安全な表現（delicate strappy set, form-fitting strappy top 等）に置き換えよ。
@@ -355,7 +354,7 @@ function App() {
 8. 顔のパーツ配置バランス（facePlacement）の厳格英訳再現:
    - 日本語の輪郭内パーツ比率分析を、AIが最高精度で理解できる幾何学的表現に変換。「centered face」等のフレーミング描写は禁止。
    - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them" などの表現を用いよ。
-9. 非実在性の明記: AIによる架空 of 創作であることを示すため、"non-existent person" 等の表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person」は絶対に使用禁止。
+9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" 等の表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person」は絶対に使用禁止。
 10. 地域・文化的背景(region): 
    - 「region」が設定されている場合、その背景キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
 11. 印象補正(aesthetic): 
@@ -429,7 +428,7 @@ function App() {
         { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs'] },
         { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'] },
         { title: "衣装・演出・地域設定", fields: ['outfit', 'outfitDetail', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'region', 'additionalNotes'] }
-    ], [FIELD_KEYS]);
+    ], []); // ⚠️ 空の依存配列に固定して再レンダリングバグを強制防御
 
     return (
         <div className="min-h-[100dvh] bg-[#FFF8FA] text-slate-800 font-sans pb-40 overflow-x-hidden text-[12px]">
