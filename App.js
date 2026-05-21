@@ -109,7 +109,7 @@ function App() {
         });
     };
 
-    // v1.5.6: 429エラーを自動突破するリトライ機能
+    // v1.5.6: 429エラーを自動突破するリretry機能
     const fetchWithRetry = async (url, options, maxRetries = 5) => {
         let delay = 1000;
         for (let i = 0; i < maxRetries; i++) {
@@ -155,7 +155,7 @@ function App() {
             if (!response.ok) throw new Error("HTTP " + response.status);
             const res = await response.json();
             const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
+            const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
 
             if (mode === 'base') {
                 setSelections(prev => {
@@ -227,7 +227,7 @@ const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
             });
             if (!response.ok) throw new Error("HTTP " + response.status);
             const res = await response.json();
-            const result = JSON.parse(res.candidates?.?.content?.parts?.?.text.match(/\{[\s\S]*\}/)?. || "{}");
+            const result = JSON.parse(res.candidates?.[0]?.content?.parts?.[0]?.text?.match(/\{[\s\S]*\}/)?.[0] || "{}");
             
             setEnglishPrompt(result.positive || "");
             setNegativePrompt(result.negative || "");
