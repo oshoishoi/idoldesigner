@@ -1,13 +1,6 @@
 // App.js
 const { useState, useEffect, useRef, useMemo } = React;
 
-// windowオブジェクトから安全に設定を展開
-const FIELD_KEYS = window.FIELD_KEYS || [];
-const LABEL_MAP = window.LABEL_MAP || {};
-const getApiUrl = window.getApiUrl;
-const safetySettings = window.safetySettings || [];
-const isProcessingGlobal = typeof isProcessing !== 'undefined';
-
 const Icon = ({ name, className = "" }) => {
     const svgs = {
         sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
@@ -27,6 +20,13 @@ const Icon = ({ name, className = "" }) => {
 };
 
 function App() {
+    // ⚠️ useMemoを使ってグローバルから確実に定数をリアルタイム同期
+    const FIELD_KEYS = useMemo(() => window.FIELD_KEYS || [], []);
+    const LABEL_MAP = useMemo(() => window.LABEL_MAP || {}, []);
+    const proxyBaseUrl = window.proxyBaseUrl || "";
+    const getApiUrl = window.getApiUrl;
+    const safetySettings = window.safetySettings || [];
+
     const createEmptyState = () => {
         const obj = { orientation: 'portrait', ratio: '9:16', aesthetic: '' };
         FIELD_KEYS.forEach(k => obj[k] = '');
@@ -355,7 +355,7 @@ function App() {
 8. 顔のパーツ配置バランス（facePlacement）の厳格英訳再現:
    - 日本語の輪郭内パーツ比率分析を、AIが最高精度で理解できる幾何学的表現に変換。「centered face」等のフレーミング描写は禁止。
    - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them" などの表現を用いよ。
-9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" 等の表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person」は絶対に使用禁止。
+9. 非実在性の明記: AIによる架空 of 創作であることを示すため、"non-existent person" 等の表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person」は絶対に使用禁止。
 10. 地域・文化的背景(region): 
    - 「region」が設定されている場合、その背景キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
 11. 印象補正(aesthetic): 
@@ -429,7 +429,7 @@ function App() {
         { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs'] },
         { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'] },
         { title: "衣装・演出・地域設定", fields: ['outfit', 'outfitDetail', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'region', 'additionalNotes'] }
-    ], []);
+    ], [FIELD_KEYS]);
 
     return (
         <div className="min-h-[100dvh] bg-[#FFF8FA] text-slate-800 font-sans pb-40 overflow-x-hidden text-[12px]">
