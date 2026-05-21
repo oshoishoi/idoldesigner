@@ -126,7 +126,7 @@ function App() {
     };
 
     const handleUpload = async (e, mode) => {
-        const file = e.target.files?.`0`;
+        const file = e.target.files?.[0];
         if (!file) return;
         setIsAnalyzing(mode);
         setStatusMessage('分析中');
