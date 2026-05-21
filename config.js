@@ -19,7 +19,7 @@ window.safetySettings = [
     { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
 ];
 
-// ⚠️ 精度を100%復元する元の完全なフィールドキー定義
+// フィールドキー定義（45項目完全版）
 window.FIELD_KEYS = [
     'hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture',
     'faceOutline', 'facePlacement', 
@@ -32,6 +32,7 @@ window.FIELD_KEYS = [
     'region', 'aesthetic', 'additionalNotes'
 ];
 
+// ラベルマッピング定義（空欄化を完全に防ぐマッピング）
 window.LABEL_MAP = {
     hairStyle: '髪型', hairBangs: '前髪', hairColor: '髪色', hairAccessory: '飾り', hairTexture: '髪質',
     faceOutline: '輪郭', facePlacement: '顔のパーツ配置比率', 

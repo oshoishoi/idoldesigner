@@ -1,56 +1,6 @@
 // App.js
 const { useState, useEffect, useRef, useMemo } = React;
 
-// ⚠️ 外部ファイル（config.js）との名前衝突を100%防ぐため、内部専用名に完全リネーム
-const LOCAL_FIELD_KEYS = [
-    'hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture',
-    'faceOutline', 'facePlacement', 
-    'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape',
-    'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs',
-    'skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle',
-    'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes',
-    'outfit', 'outfitDetail', 'pose',
-    'situation', 'lighting', 'artStyle', 'cameraAngle',
-    'region', 'aesthetic', 'additionalNotes'
-];
-
-const LOCAL_LABEL_MAP = {
-    hairStyle: '髪型', hairBangs: '前髪', hairColor: '髪色', hairAccessory: '飾り', hairTexture: '髪質',
-    faceOutline: '輪郭', facePlacement: '顔のパーツ配置比率', 
-    eyeShape: '目の形', eyeSymmetry: '目の対称性', irisRatio: '黒目の比率', eyeCorners: '目頭・目尻', 
-    eyeColor: '瞳色', eyelidType: 'まぶた', tearBags: '涙袋', eyelashes: 'まつ毛', eyeSparkle: '瞳の輝き', 
-    eyeMakeupDetail: 'アイメイク詳細', eyebrowShape: '眉の形',
-    noseShape: '鼻の形', mouthShape: '口の形', lipTexture: '唇の質感', teeth: '歯の印象', cheekStyle: 'ほっぺ',
-    expression: '表情', facs: 'FACS (動作符号/強度)',
-    skinColor: '肌の色', skinTexture: '肌質', molesFreckles: '特徴', makeupStyle: '全体メイク',
-    age: '年齢感', height: '身長', bodyType: '体型', bodyFrame: '骨格', threeSizes: '肉付き', 
-    bodyInterface: 'その他(すき間等)',
-    outfit: '衣装', outfitDetail: '衣装詳細', pose: 'ポーズ',
-    situation: '状況', lighting: '光演出', artStyle: '画風', cameraAngle: 'アングル',
-    region: '地域・文化的背景',
-    aesthetic: '印象補正',
-    additionalNotes: '追記'
-};
-
-const isPreview = typeof __app_id !== 'undefined';
-const apiKey = ""; 
-const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
-
-const getApiUrl = (endpoint) => {
-    const model = "gemini-2.5-flash";
-    if (isPreview) {
-        return `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${apiKey}`;
-    }
-    return `${proxyBaseUrl}/v1beta/models/${model}:${endpoint}`;
-};
-
-const safetySettings = [
-    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
-];
-
 const Icon = ({ name, className = "" }) => {
     const svgs = {
         sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
@@ -70,9 +20,16 @@ const Icon = ({ name, className = "" }) => {
 };
 
 function App() {
+    // ⚠️ windowから定数を安全にフックし、Babel特有の遅延読み込みラグを完全回避
+    const FIELD_KEYS = useMemo(() => window.FIELD_KEYS || [], [window.FIELD_KEYS]);
+    const LABEL_MAP = useMemo(() => window.LABEL_MAP || {}, [window.LABEL_MAP]);
+    const getApiUrl = window.getApiUrl;
+    const safetySettings = window.safetySettings || [];
+    const proxyBaseUrl = window.proxyBaseUrl || "";
+
     const createEmptyState = () => {
         const obj = { orientation: 'portrait', ratio: '9:16', aesthetic: '' };
-        LOCAL_FIELD_KEYS.forEach(k => obj[k] = '');
+        FIELD_KEYS.forEach(k => obj[k] = '');
         return obj;
     };
 
@@ -94,6 +51,17 @@ function App() {
     const baseInputRef = useRef(null);
     const plusInputRef = useRef(null);
     const resultRef = useRef(null);
+
+    // ⚠️ FIELD_KEYSの展開完了を待って selections の初期状態を安全に再補正
+    useEffect(() => {
+        if (FIELD_KEYS.length > 0) {
+            setSelections(prev => {
+                const next = { ...prev };
+                FIELD_KEYS.forEach(k => { if (next[k] === undefined) next[k] = ''; });
+                return next;
+            });
+        }
+    }, [FIELD_KEYS]);
 
     useEffect(() => {
         try {
@@ -310,7 +278,7 @@ function App() {
                         const next = createEmptyState();
                         next.orientation = prev.orientation;
                         next.ratio = prev.ratio;
-                        LOCAL_FIELD_KEYS.forEach(k => { 
+                        FIELD_KEYS.forEach(k => { 
                             if(cleanedResult[k] && cleanedResult[k] !== 'none' && cleanedResult[k] !== '不明' && cleanedResult[k] !== '') {
                                 next[k] = cleanedResult[k]; 
                             }
@@ -346,7 +314,7 @@ function App() {
 
             const activeText = Object.entries(activeData)
                 .filter(([k, v]) => v && v !== '' && !['orientation', 'ratio'].includes(k))
-                .map(([k, v]) => `${LOCAL_LABEL_MAP[k] || k}: ${v}`).join('\n');
+                .map(([k, v]) => `${LABEL_MAP[k] || k}: ${v}`).join('\n');
 
             const outfitText = ((selections.outfit || "") + " " + (selections.outfitDetail || "")).toLowerCase();
             let routeSpecificInstruction = "";
@@ -357,7 +325,7 @@ function App() {
 - 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密描写せよ。
 - 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込め。
 - コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。
-- 綿・リブニット・麻素材の部屋着化を完全に防ぐため、「sleek high-gloss wet-look spandex-nylon material} などの高光沢の化学繊維素材記述を優先させ、普通の部屋着（lounge, loungewear, ribbed cotton）は一切禁止、およびネガティブプロンプトで完全に排除（camisole, pajamas, loungewear, loose cotton fabric を記載）せよ。`;
+- 綿・リブニット・麻素材の部屋着化を完全に防ぐため、「sleek high-gloss wet-look spandex-nylon material」などの高光沢の化学繊維素材記述を優先させ、普通の部屋着（lounge, loungewear, ribbed cotton）は一切禁止、およびネガティブプロンプトで完全に排除（camisole, pajamas, loungewear, loose cotton fabric を記載）せよ。`;
             } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|はおり|羽織|ローブ|ガウン|シャツ|着崩|kimono|yukata|robe|draped off|slid down)/i)) {
                 routeSpecificInstruction = `
 - 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 浴衣、着物、シャツ、カーディガンなどの羽織りものが「はだけている」「ずり落ちている（draped off/slid down）」描写がある場合、画像生成AIが勝手に衣服の位置を持ち上げて肩にかけ直したり上半身を隠したりするのを物理的に完全阻止。プロンプト内に「the outer garment (yukata, kimono, or shirt) is strictly and flawlessly locked in its low-draped position, slithered completely down off her shoulders and resting low around her lower hips, buttocks, or elbows, leaving her entire upper body, torso, chest, shoulders, and back completely bare-skinned, exposed, and unobstructed, with absolutely no vertical shifting, rising, or simplification of the draping layout」という厳格な位置固定ロック指示文を必ずポジティブプロンプトに組み込め。
@@ -392,7 +360,7 @@ function App() {
 2. 衣服特性に応じた動的プロンプトルーティング設計:${routeSpecificInstruction}
 3. 画風特性に応じた動的プロンプトルーティング設計:${artStyleSpecificInstruction}
 4. セーフティ置換：元の衣服が「ランジェリー」等を含む場合は、必ず安全な表現（delicate strappy set, form-fitting strappy top 等）に置き換えよ。
-5. FACSコードクリーン化: AUおよびADは「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は含めない。
+5. FACSコードクリーン化: AUおよびADは「AU12C」「AD19assign」のようにコードと強度のみを反映し、名称説明は含めない。
 6. 目元：対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映。
 7. 禁則：プロンプト内での「CG」というワード使用は絶対禁止。
 8. 顔のパーツ配置バランス（facePlacement）の厳格英訳再現:
@@ -467,13 +435,13 @@ function App() {
         copyText(combinedText, 'both');
     };
 
-    // ⚠️ 完全に独立した固定のマッピング構造
-    const sections = [
-        { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture'] },
-        { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs'] },
-        { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'] },
-        { title: "衣装・演出・地域設定", fields: ['outfit', 'outfitDetail', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'region', 'additionalNotes'] }
-    ];
+    // ⚠️ FIELD_KEYSの変更に完璧に連動するリアクティブなセクションマッピング
+    const sections = useMemo(() => [
+        { title: "髪のデザイン", fields: FIELD_KEYS.filter(k => ['hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture'].includes(k)) },
+        { title: "顔・表情・目の極限監査", fields: FIELD_KEYS.filter(k => ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs'].includes(k)) },
+        { title: "身体・肌・詳細", fields: FIELD_KEYS.filter(k => ['skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'].includes(k)) },
+        { title: "衣装・演出・地域設定", fields: FIELD_KEYS.filter(k => ['outfit', 'outfitDetail', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'region', 'additionalNotes'].includes(k)) }
+    ], [FIELD_KEYS]);
 
     return (
         <div className="min-h-[100dvh] bg-[#FFF8FA] text-slate-800 font-sans pb-40 overflow-x-hidden text-[12px]">
@@ -579,10 +547,10 @@ function App() {
                         <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
                             <div className="p-4 bg-pink-500 text-white font-bold text-xs flex justify-between items-center italic tracking-widest uppercase">Merge Components <button onClick={() => setStagedData(null)}><Icon name="x" className="w-4 h-4" /></button></div>
                             <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50 custom-scrollbar">
-                                {Object.entries(stagedData).map(([key, val]) => (!val || !LOCAL_LABEL_MAP[key] || val === 'none') ? null : (
+                                {Object.entries(stagedData).map(([key, val]) => (!val || !LABEL_MAP[key] || val === 'none') ? null : (
                                     <div key={key} onClick={() => setSelectedFields(prev => ({ ...prev, [key]: !prev[key] }))} className={`p-3 rounded-xl border text-xs flex items-center gap-3 transition-all ${selectedFields[key] ? 'bg-white border-pink-500 shadow-sm' : 'bg-white opacity-40'}`}>
                                         <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedFields[key] ? 'bg-pink-500 border-pink-500 text-white' : 'bg-white border-slate-200'}`}>{selectedFields[key] && <Icon name="check" />}</div>
-                                        <div className="min-w-0 flex-1"><span className="text-[7px] text-slate-400 block uppercase font-black tracking-tighter">{LOCAL_LABEL_MAP[key]}</span><p className="font-bold truncate">{String(val)}</p></div>
+                                        <div className="min-w-0 flex-1"><span className="text-[7px] text-slate-400 block uppercase font-black tracking-tighter">{LABEL_MAP[key]}</span><p className="font-bold truncate">{String(val)}</p></div>
                                     </div>
                                 ))}
                             </div>
@@ -605,7 +573,7 @@ function App() {
                             <div className="grid grid-cols-2 gap-4">
                                 {section.fields.map((id) => (
                                     <div key={id} className={id === 'additionalNotes' || id === 'outfitDetail' || id === 'situation' || id === 'facePlacement' || id === 'bodyInterface' || id === 'facs' || id === 'region' ? 'col-span-2' : ''}>
-                                        <label className="text-[7px] font-black text-slate-300 uppercase ml-1">{LOCAL_LABEL_MAP[id] || id}</label>
+                                        <label className="text-[7px] font-black text-slate-300 uppercase ml-1">{LABEL_MAP[id] || id}</label>
                                         <input type="text" className={`w-full p-3 border-none rounded-xl text-xs font-bold shadow-inner ${selections[id] ? 'bg-pink-50/50 text-pink-700' : 'bg-slate-50 focus:bg-white'} transition-all`} value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
                                     </div>
                                 ))}
