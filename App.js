@@ -240,7 +240,6 @@ ${keyListString}`;
                 };
 
                 const cleanedResult = {};
-                // ⚠️ ここでAI側の出力キーをすべて小文字やトリミングのブレを考慮せずマッピングできるよう正規化
                 Object.keys(result).forEach(k => {
                     cleanedResult[k] = safeStringifyValue(result[k]);
                 });
@@ -251,7 +250,6 @@ ${keyListString}`;
                         next.orientation = prev.orientation;
                         next.ratio = prev.ratio;
                         FIELD_KEYS.forEach(k => { 
-                            // AIから届いたデータを安全にチェック。万が一AIがキーを出力し忘れていたら空文字を担保
                             const aiVal = cleanedResult[k] || result[k];
                             if(aiVal && aiVal !== 'none' && aiVal !== '不明' && aiVal !== '') {
                                 next[k] = safeStringifyValue(aiVal); 
@@ -300,8 +298,8 @@ ${keyListString}`;
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|紐ショーツ|tバック|チューブトップ|ビスチェ|ブラ|下着|ナイロン|swimwear|bikini|strappy|thong)/i)) {
                 routeSpecificInstruction = `
 - 【露出領域の物理的ロック】: 腕の隙間を勝手に布地で塞がれるのを防ぐため、「leaving the shoulders completely bare and the midriff fully exposed」（完全に露出した肩と、遮るもののないお腹）という上下セパレート構造を確定させる物理指示フレーズを、衣服記述の冒頭部分に必ず配置。また、「a wide and continuous expanse of bare skin is completely visible on her flat stomach between the top and bottom pieces」を盛り込め。
-- 【過激ワードの幾学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles slums」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密描写せよ。
-- 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込め。
+- 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles slums」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings nudge」といった幾何学・寸法的表現で極小カッティングを精密描写せよ。
+- 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や "highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts" といった厳格な形状固定化指示テキストを必ずプロンプトに組み込め。
 - コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。
 - 綿・リブニット・麻素材の部屋着化を完全に防ぐため、「sleek high-gloss wet-look spandex-nylon material」などの高光沢の化学繊維素材記述を優先させ、普通の部屋着（lounge, loungewear, ribbed cotton）は一切禁止、およびネガティブプロンプトで完全に排除（camisole, pajamas, loungewear, loose cotton fabric を記載）せよ。`;
             } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|はおり|羽織|ローブ|ガウン|シャツ|着崩|kimono|yukata|robe|draped off|slid down)/i)) {
@@ -334,7 +332,7 @@ ${keyListString}`;
 純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
 
 【最優先・鉄の掟】
-1. 物理描写の強調: 衣装の端、ベルト、ストラップによる肌の食い込み(squish), 盛り上がり(bulge), すき間(visible gaps between clothing and skin)は肉体美を強調するこだわりとして詳細に含めよ。具体的なcm数値などのスリーサイズは含めず、メリハリやシルエットにフォーカスせよ。
+1. 物理描写の強調: 衣装の端、ベルト、ストラップによる肌の食い込み(squish)、盛り上がり(bulge)、すき間(visible gaps between clothing and skin)は肉体美を強調するこだわりとして詳細に含めよ。具体的なcm数値などのスリーサイズは含めず、メリハリやシルエットにフォーカスせよ。
 2. 衣服特性に応じた動的プロンプトルーティング設計:${routeSpecificInstruction}
 3. 画風特性に応じた動的プロンプトルーティング設計:${artStyleSpecificInstruction}
 4. セーフティ置換：元の衣服が「ランジェリー」等を含む場合は、必ず安全な表現（delicate strappy set, form-fitting strappy top 等）に置き換えよ。
@@ -348,7 +346,7 @@ ${keyListString}`;
 10. 地域・文化的背景(region): 
    - 「region」が設定されている場合、その背景キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
 11. 印象補正(aesthetic): 
-   - "cute"時は先頭や自然な位置に "cute"、"beautiful"時は "beautiful" を追加し、顔立ちの力を極限に高めよ。`;
+   - "cute"時は先頭や自然な位置に "cute"、"beautiful"時は "beautiful" を追加し、顔立ちの魅力を極限に高めよ。`;
 
             for (let attempt = 0; attempt < 5; attempt++) {
                 try {
@@ -394,7 +392,7 @@ ${keyListString}`;
             }
         } catch (e) {
             setStatusMessage('Error');
-        } fillalry {
+        } finally {
             setTimeout(() => setIsProcessing(false), 3000);
         }
     };
