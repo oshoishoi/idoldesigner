@@ -1,3 +1,4 @@
+// config.js
 const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev";
 
 const FIELD_KEYS = [
@@ -5,7 +6,7 @@ const FIELD_KEYS = [
     'faceOutline', 'facePlacement', 'eyeShape', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyebrowShape',
     'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs',
     'skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle',
-    'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes',
+    'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes', 'region',
     'outfit', 'outfitDetail', 'pose',
     'situation', 'lighting', 'artStyle', 'cameraAngle',
     'additionalNotes'
@@ -17,7 +18,7 @@ const LABEL_MAP = {
     noseShape: '鼻の形', mouthShape: '口の形', lipTexture: '唇の質感', teeth: '歯の印象', cheekStyle: 'ほっぺ',
     expression: '表情', facs: 'FACS (筋肉動作)',
     skinColor: '肌の色', skinTexture: '肌質', molesFreckles: '特徴', makeupStyle: 'メイク',
-    age: '年齢感', height: '身長', bodyType: '体型', bodyFrame: '骨格', threeSizes: '肉付き',
+    age: '年齢感', height: '身長', bodyType: '体型', bodyFrame: '骨格', threeSizes: '肉付き', region: '地域・背景',
     bodyInterface: 'その他',
     outfit: '衣装', outfitDetail: '衣装詳細', pose: 'ポーズ',
     situation: '状況', lighting: '光演出', artStyle: '画風', cameraAngle: 'アングル',
