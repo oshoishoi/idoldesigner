@@ -1,7 +1,7 @@
 // config.js
-const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev";
+window.proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev";
 
-const FIELD_KEYS = [
+window.FIELD_KEYS = [
     'hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture',
     'faceOutline', 'facePlacement', 'eyeShape', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyebrowShape',
     'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs',
@@ -12,7 +12,7 @@ const FIELD_KEYS = [
     'additionalNotes'
 ];
 
-const LABEL_MAP = {
+window.LABEL_MAP = {
     hairStyle: '髪型', hairBangs: '前髪', hairColor: '髪色', hairAccessory: '飾り', hairTexture: '髪質',
     faceOutline: '輪郭', facePlacement: '配置・特徴', eyeShape: '目の形', eyeColor: '瞳色', eyelidType: 'まぶた', tearBags: '涙袋', eyelashes: 'まつ毛', eyeSparkle: '瞳の輝き', eyebrowShape: '眉の形',
     noseShape: '鼻の形', mouthShape: '口の形', lipTexture: '唇の質感', teeth: '歯の印象', cheekStyle: 'ほっぺ',
