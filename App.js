@@ -53,6 +53,25 @@ const safetySettings = [
     { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
 ];
 
+// ⚠️ さっき消えてしまっていたIconコンポーネントを完全に復活！
+const Icon = ({ name, className = "" }) => {
+    const svgs = {
+        sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
+        refresh: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
+        undo: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 7V5c0-1.1.9-2 2-2h2"/><path d="M17 3h2c1.1 0 2 .9 2 2v2"/><path d="M21 17v2c0 1.1-.9 2-2 2h-2"/><path d="M7 21H5c-1.1 0-2-.9-2-2v-2"/><path d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2Z"/><path d="M12 16v2"/><path d="M12 8V6"/><path d="M8 12H6"/><path d="M18 12h-2"/></svg>,
+        target: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+        plus: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+        check: <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>,
+        save: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+        zap: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+        brain: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>,
+        x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+        copy: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
+        info: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    };
+    return svgs[name] || null;
+};
+
 function App() {
     const createEmptyState = () => {
         const obj = { orientation: 'portrait', ratio: '9:16', aesthetic: '' };
@@ -206,7 +225,7 @@ function App() {
 【輪郭内パーツ配置(facePlacement)監査】
 - facePlacement: **「顔全体の画像内位置（中央など）」の記述は絶対禁止。**
   **「輪郭領域内における、目・鼻・口・眉の配置・間隔比率」**を美容・整形理論で記述。
-  - 縦比率：額 of 比率、中顔面の長さ（例:中顔面が短く幼い、中顔面が程よくある大人びた黄金比等）、人中、顎の長さ。
+  - 縦比率：額の比率、中顔面の長さ（例:中顔面が短く幼い、中顔面が程よくある大人びた黄金比等）、人中、顎の長さ。
   - 横比率：目と目の間隔（例:目1つ分空いた遠心顔、求心顔など）。
   - 全体配置：下半分に集中したベビーフェイス顔か、等間隔の大人の黄金比率配置か。
 
@@ -344,12 +363,12 @@ function App() {
 - 綿・リブニット・麻素材の部屋着化を完全に防ぐため、「sleek high-gloss wet-look spandex-nylon material」などの高光沢の化学繊維素材記述を優先させ、普通の部屋着（lounge, loungewear, ribbed cotton）は一切禁止、およびネガティブプロンプトで完全に排除（camisole, pajamas, loungewear, loose cotton fabric を記載）せよ。`;
             } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|はおり|羽織|ローブ|ガウン|シャツ|着崩|kimono|yukata|robe|draped off|slid down)/i)) {
                 routeSpecificInstruction = `
-- 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 浴衣、着物、シャツ、カーディガンなどの羽織りものが「はだけている」「ずり落ちている（draped off/slid down）」描写がある場合、画像生成AIが勝手に衣服の位置を持ち上げて肩にかけ直したり保存されている上半身を隠したりするのを物理的に完全阻止。プロンプト内に「the outer garment (yukata, kimono, or shirt) is strictly and flawlessly locked in its low-draped position, slithered completely down off her shoulders and resting low around her lower hips, buttocks, or elbows, leaving her entire upper body, torso, chest, shoulders, and back completely bare-skinned, exposed, and unobstructed, with absolutely no vertical shifting, rising, or simplification of the draping layout」という厳格な位置固定ロック指示文を必ずポジティブプロンプトに組み込め。
+- 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 浴衣、着物、シャツ、カーディガンなどの羽織りものが「はだけている」「ずり落ちている（draped off/slid down）」描写がある場合、画像生成AIが勝手に衣服の位置を持ち上げて肩にかけ直したり上半身を隠したりするのを物理的に完全阻止。プロンプト内に「the outer garment (yukata, kimono, or shirt) is strictly and flawlessly locked in its low-draped position, slithered completely down off her shoulders and resting low around her lower hips, buttocks, or elbows, leaving her entire upper body, torso, chest, shoulders, and back completely bare-skinned, exposed, and unobstructed, with absolutely no vertical shifting, rising, or simplification of the draping layout」という厳格な位置固定ロック指示文を必ずポジティブプロンプトに組み込め。
 - 無理なストラップ食い込み記述（spaghetti shoulder straps, multi-strap halter-neck 等）は衣装と矛盾して不自然になるため自動的に抑制し、和服本来の素材、帯、染め模様（large polka dots, traditional floral motifs など）の美しさと質感描写にフォーカスさせよ。`;
             } else {
                 routeSpecificInstruction = `
 - 衣装デザインの物理カッティング（例: plunging V-neckline, side slit, asymmetric drape, high-low hemline）の美しさを幾何学的かつ具体的に美しく英語へ英訳。
-- 衣装と矛盾する「1mm spaghetti straps」や「high-cut side-tie strings」といった食い込み記述の強制挿入は行わず、対象となる衣服のテクスチャ（silk, satin, chiffon, dense knit, structured denim 等）やドレープラインの表現に美しくフォーカスせよ。`;
+- 衣装と矛盾する「1mm spaghetti straps'] や「high-cut side-tie strings」といった食い込み記述の強制挿入は行わず、対象となる衣服のテクスチャ（silk, satin, chiffon, dense knit, structured denim 等）やドレープラインの表現に美しくフォーカスせよ。`;
             }
 
             const artStyleText = ((selections.artStyle || "") + " " + (selections.ratio || "")).toLowerCase();
@@ -366,7 +385,7 @@ function App() {
 - 【チェキ風画質の完全排除】: プロンプトの冒頭に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。`;
             }
 
-            const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質の英語プロンプトに変換してください。
+            const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質 of 英語プロンプトに変換してください。
 
 【出力形式】
 純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
@@ -382,11 +401,11 @@ function App() {
 8. 顔のパーツ配置バランス（facePlacement）の厳格英訳再現:
    - 日本語の輪郭内パーツ比率分析を、AIが最高精度で理解できる幾何学的表現に変換。「centered face」等のフレーミング描写は禁止。
    - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them" などの表現を用いよ。
-9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" 等の表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person Regel」は絶対に使用禁止。
+9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" などの表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person」は絶対に使用禁止。
 10. 地域・文化的背景(region): 
    - 「region」が設定されている場合、その背景キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
 11. 印象補正(aesthetic): 
-   - 「cute」時は先頭や自然な位置に "cute"、「beautiful」時は "beautiful" を追加し、顔立ちの魅力を極限に高めよ。`;
+   - "cute"時は先頭や自然な位置に "cute"、"beautiful"時は "beautiful" を追加し、顔立ちの力を極限に高めよ。`;
 
             for (let attempt = 0; attempt < 5; attempt++) {
                 try {
@@ -395,7 +414,7 @@ function App() {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプトを作成し、末尾に比率 "${arTag}" 含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
+                            contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプトを作成し、末尾に比率 "${arTag}" を含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
                             systemInstruction: { parts: [{ text: promptSystemInstruction }] },
                             safetySettings,
                             generationConfig: { responseMimeType: "application/json" }
