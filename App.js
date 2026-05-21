@@ -154,8 +154,8 @@ function App() {
             });
             if (!response.ok) throw new Error("HTTP " + response.status);
             const res = await response.json();
-            const rawText = res.candidates?.?.content?.parts?.?.text || "{}";
-            const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?. || "{}");
+            const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
 
             if (mode === 'base') {
                 setSelections(prev => {
