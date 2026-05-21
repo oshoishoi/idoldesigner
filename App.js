@@ -221,7 +221,7 @@ function App() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: `以下のデータから最高峰の画像生成プロンプトを作成し、JSON {"positive": "...", "negative": "..."} で出力。肉感、FACS(AU/AD)、地域背景を反映。${frameInst}\n\nデータ:\n${activeText}` }] }],
-                    system_instruction: { parts: [{ text: "実写・高画質。lounge, athletic activewear使用禁止。CG, character, virtual, imaginary person等禁止。非実在の明記(non-existent person等)必須。衣装の形状改変厳禁(sleek stretch-nylon等活用)。JSON形式。" }] },
+                    systemInstruction: { parts: [{ text: "実写・高画質。lounge, athletic activewear使用禁止。CG, character, virtual, imaginary person等禁止。非実在の明記(non-existent person等)必須。衣装の形状改変厳禁(sleek stretch-nylon等活用)。JSON形式。" }] },
                     generationConfig: { response_mime_type: "application/json", temperature: 0.1 }
                 }),
             });
