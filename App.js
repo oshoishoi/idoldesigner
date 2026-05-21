@@ -1,6 +1,12 @@
 // App.js
 const { useState, useEffect, useRef, useMemo } = React;
 
+// windowオブジェクトから安全に展開
+const FIELD_KEYS = window.FIELD_KEYS || [];
+const LABEL_MAP = window.LABEL_MAP || {};
+const getApiUrl = window.getApiUrl;
+const safetySettings = window.safetySettings || [];
+
 const Icon = ({ name, className = "" }) => {
     const svgs = {
         sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
@@ -12,7 +18,7 @@ const Icon = ({ name, className = "" }) => {
         save: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
         zap: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
         brain: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>,
-        x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+        x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" h="6" x2="18" y2="18"/></svg>,
         copy: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
         info: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
     };
@@ -20,13 +26,6 @@ const Icon = ({ name, className = "" }) => {
 };
 
 function App() {
-    // ⚠️ windowから定数を安全にフックし、Babel特有の遅延読み込みラグを完全回避
-    const FIELD_KEYS = useMemo(() => window.FIELD_KEYS || [], [window.FIELD_KEYS]);
-    const LABEL_MAP = useMemo(() => window.LABEL_MAP || {}, [window.LABEL_MAP]);
-    const getApiUrl = window.getApiUrl;
-    const safetySettings = window.safetySettings || [];
-    const proxyBaseUrl = window.proxyBaseUrl || "";
-
     const createEmptyState = () => {
         const obj = { orientation: 'portrait', ratio: '9:16', aesthetic: '' };
         FIELD_KEYS.forEach(k => obj[k] = '');
@@ -51,17 +50,6 @@ function App() {
     const baseInputRef = useRef(null);
     const plusInputRef = useRef(null);
     const resultRef = useRef(null);
-
-    // ⚠️ FIELD_KEYSの展開完了を待って selections の初期状態を安全に再補正
-    useEffect(() => {
-        if (FIELD_KEYS.length > 0) {
-            setSelections(prev => {
-                const next = { ...prev };
-                FIELD_KEYS.forEach(k => { if (next[k] === undefined) next[k] = ''; });
-                return next;
-            });
-        }
-    }, [FIELD_KEYS]);
 
     useEffect(() => {
         try {
@@ -171,44 +159,22 @@ function App() {
         let response;
         let success = false;
         
+        // ⚠️ 他の項目がサボるのを徹底防御し、45項目すべてを均等に出力させる無敵のプロンプトへ完全復元
         const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼身体物理監査官です。
-画像を精密分析し、指定JSON形式のみで回答。解説不可。
+与えられた画像を隅々まで精密にスキャンし、指定されたすべての項目について分析結果を出力してください。
 
-【身体境界の最優先監査】
-1. 衣装の端（脇口、ストラップ、ウエスト、境界）と肌の接点を走査。
-2. 紐の幅（ミリ単位）を特定。
-3. 食い込み(squish)、盛り上がり(bulge)、圧迫(indentation)を日本語で詳細に言語化。
-4. 衣装と肌の「すき間(gaps/loose fit)」を特定し、必ず「bodyInterface」に記述。
+【出力の絶対ルール】
+1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdownの装飾は一切含めないこと。
+2. データ形式の平滑化：JSONのすべてのフィールド（Key）に対する値（Value）は、ネストさせず、必ずプレーンな「1つの文字列（String）」としてフラットに出力すること。オブジェクト「{}」や配列「[]」を値に含めることは厳禁とする。
+3. 画像から読み取れない項目、あるいは該当しない項目がある場合は、勝手に項目自体を削除せず、値を ""（空文字）または "なし" として必ずすべてのキー（Key）を漏れなく出力すること。
 
-【着崩し位置の監査】
-1. 浴衣、シャツ、ガウン等が肩からはだけている場合、アウターが「肩/胸/お腹/腰/ヒップ」のどこまでずり下がっているかを厳密監査。
-2. 上半身が完全露出している場合、留まっている境界線(例:「腰とお尻までずり下がり肘で留まる」)を「outfitDetail」に極限まで克明に明記。
+【重要監査項目】
+- facePlacement（顔のパーツ配置比率）：顔全体の画像内位置ではなく、輪郭領域内における目・鼻・口・眉の間隔や配置比率（中顔面の長さ、求心・遠心顔、ベビーフェイス配置等）を記述せよ。
+- bodyInterface（その他(すき間等)）：衣装の端やストラップと肌の接点を精密監査し、食い込み、盛り上がり、あるいは衣装と肌のすき間（緩み）を詳細に言語化せよ。
+- molesFreckles（特徴）：ホクロ、そばかす、あるいは特筆すべき肌の特徴や着崩し位置の境界線を記述せよ。
+- facs（FACS (動作符号/強度)）：表情をAction Unit（AU）およびAction Descriptor（AD）のコードと強度（例: AU12C, AD19, AU51B）の組み合わせで精密判定せよ。
 
-【地域背景特定】
-1. メイク、顔、髪、衣装、背景調度品から「地域背景」を特定し、「region」に日本語で記述（例: 日本/和風、韓国/K-POP風、欧米風など）。
-
-【輪郭内パーツ配置(facePlacement)監査】
-- facePlacement: **「顔全体の画像内位置（中央など）」の記述は絶対禁止。**
-  **「輪郭領域内における、目・鼻・口・眉の配置・間隔比率」**を美容・整形理論で記述。
-  - 縦比率：額の比率、中顔面の長さ（例:中顔面が短く幼い、中顔面が程よくある大人びた黄金比等）、人中、顎の長さ。
-  - 横比率：目と目の間隔（例:目1つ分空いた遠心顔、求心顔など）。
-  - 全体配置：下半分に集中したベビーフェイス顔か、等間隔の大人の黄金比率配置か。
-
-【衣装カット・形状監査】
-- outfit / outfitDetail:
-  カッティング（胸元のハートシェイプ深さ、カップのスカラップ波形状、ハイカット、極小面積比）、ストラップの這わせ方（クロス、ダブル、細さ、交差構造）を物理「形状」で極限まで言語化。ランジェリーでも、シースルー網、カップフチ形状、紐レイアウトを詳細な日本語で記録。
-
-【体型監査（スリーサイズ言い換え）】
-- threeSizes: スリーサイズ数値(B85/W58など)は絶対禁止。砂時計のようなメリハリ、豊かなバスト、くびれたウエスト、張りのあるヒップ等、肉付きの質感を日本語で言い換えて出力。
-
-【顔・表情・FACS監査】
-1. FACS: AUおよびADコードと強度(A〜E)、補助動作(AU51〜64：頭部姿勢、視線)の組み合わせで精密判定。
-   - 「AD」は「AU」の誤字ではない。AUとAD（例: AD19、AD38など）の両方を正確に区別して「AU12C, AD19, AU51B」のように判定せよ。
-2. 目元：左右対称性、黒目比率、目頭（蒙古襞）、目尻角度、アイライン太さ、目尻跳ね上げ。
-
-【出力ルール】
-- 形式: 純粋JSONのみ。
-- データの平滑化：各フィールドの値（Value）はすべてプレーンなフラット文字列（String）のみで出力せよ。ネストしたオブジェクト「{}」や子配列「[]」を出力することは絶対厳禁とする。`;
+上記項目を含め、髪型、髪色、瞳色、衣装、背景状況、ライティング、画風にいたるまで、定義されているすべてのキーに対して均等に最高解像度の日本語で分析を記述すること。`;
 
         for (let attempt = 0; attempt < 5; attempt++) {
             try {
@@ -322,7 +288,7 @@ function App() {
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|紐ショーツ|tバック|チューブトップ|ビスチェ|ブラ|下着|ナイロン|swimwear|bikini|strappy|thong)/i)) {
                 routeSpecificInstruction = `
 - 【露出領域の物理的ロック】: 腕の隙間を勝手に布地で塞がれるのを防ぐため、「leaving the shoulders completely bare and the midriff fully exposed」（完全に露出した肩と、遮るもののないお腹）という上下セパレート構造を確定させる物理指示フレーズを、衣服記述の冒頭部分に必ず配置。また、「a wide and continuous expanse of bare skin is completely visible on her flat stomach between the top and bottom pieces」を盛り込め。
-- 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密描写せよ。
+- 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles slums」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密描写せよ。
 - 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIが衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込め。
 - コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。
 - 綿・リブニット・麻素材の部屋着化を完全に防ぐため、「sleek high-gloss wet-look spandex-nylon material」などの高光沢の化学繊維素材記述を優先させ、普通の部屋着（lounge, loungewear, ribbed cotton）は一切禁止、およびネガティブプロンプトで完全に排除（camisole, pajamas, loungewear, loose cotton fabric を記載）せよ。`;
@@ -342,12 +308,12 @@ function App() {
             if (artStyleText.match(/(54:86|cheki|polaroid|instant|analog|vintage|トイカメラ|ポラロイド|チェキ)/i)) {
                 const borderSide = selections.orientation === 'landscape' ? 'RIGHT' : 'BOTTOM';
                 artStyleSpecificInstruction = `
-- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風（instant camera film）」が指定されています。AIが「Photorealistic」「RAW photo」「high-fidelity」「studio lighting」「DSLR」「high resolution」「high-quality skin gradation」などの高画質化・スタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止（絶対厳禁）】せよ。
+- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風（instant camera film）」が指定されています。AIが「Photorealistic」「RAW photo環境」「high-fidelity」「studio lighting」「DSLR」「high resolution」「high-quality skin gradation」などの高画質化・スタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止（絶対厳禁）】せよ。
 - 代わりに、プロンプトの冒頭から「Lo-fi analog instant camera film, highly grainy texture, vintage Polaroid aesthetic, soft details, slight motion blur, harsh camera-mounted direct flash, heavy contrast shadows immediately behind the model」をメイン画質トーンとして強制適用せよ。
 - また、チェキの伝統的な余白レイアウトを再現するため、「Classic white instant photo frame with a wide, thick white border on the ${borderSide} side」というフレーム記述を英語プロンプトの文中に正確に盛り込むこと。`;
             } else {
                 artStyleSpecificInstruction = `
-- 【チェキ風画質の完全排除】: プロンプトの冒頭に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。`;
+- 【チェキ風画質の完全排除】: プロンプトの冒頭に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores Fluss」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。`;
             }
 
             const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質の英語プロンプトに変換してください。
@@ -360,7 +326,7 @@ function App() {
 2. 衣服特性に応じた動的プロンプトルーティング設計:${routeSpecificInstruction}
 3. 画風特性に応じた動的プロンプトルーティング設計:${artStyleSpecificInstruction}
 4. セーフティ置換：元の衣服が「ランジェリー」等を含む場合は、必ず安全な表現（delicate strappy set, form-fitting strappy top 等）に置き換えよ。
-5. FACSコードクリーン化: AUおよびADは「AU12C」「AD19assign」のようにコードと強度のみを反映し、名称説明は含めない。
+5. FACSコードクリーン化: AUおよびADは「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は含めない。
 6. 目元：対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映。
 7. 禁則：プロンプト内での「CG」というワード使用は絶対禁止。
 8. 顔のパーツ配置バランス（facePlacement）の厳格英訳再現:
@@ -368,7 +334,7 @@ function App() {
    - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them" などの表現を用いよ。
 9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" などの表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person」は絶対に使用禁止。
 10. 地域・文化的背景(region): 
-   - 「region」が設定されている場合、その背景キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
+   - 「region」が設定されている場合、その background キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
 11. 印象補正(aesthetic): 
    - "cute"時は先頭や自然な位置に "cute"、"beautiful"時は "beautiful" を追加し、顔立ちの魅力を極限に高めよ。`;
 
@@ -435,13 +401,12 @@ function App() {
         copyText(combinedText, 'both');
     };
 
-    // ⚠️ FIELD_KEYSの変更に完璧に連動するリアクティブなセクションマッピング
-    const sections = useMemo(() => [
-        { title: "髪のデザイン", fields: FIELD_KEYS.filter(k => ['hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture'].includes(k)) },
-        { title: "顔・表情・目の極限監査", fields: FIELD_KEYS.filter(k => ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs'].includes(k)) },
-        { title: "身体・肌・詳細", fields: FIELD_KEYS.filter(k => ['skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'].includes(k)) },
-        { title: "衣装・演出・地域設定", fields: FIELD_KEYS.filter(k => ['outfit', 'outfitDetail', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'region', 'additionalNotes'].includes(k)) }
-    ], [FIELD_KEYS]);
+    const sections = [
+        { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture'] },
+        { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs'] },
+        { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 'makeupStyle', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'] },
+        { title: "衣装・演出・地域設定", fields: ['outfit', 'outfitDetail', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'region', 'additionalNotes'] }
+    ];
 
     return (
         <div className="min-h-[100dvh] bg-[#FFF8FA] text-slate-800 font-sans pb-40 overflow-x-hidden text-[12px]">
@@ -687,7 +652,6 @@ function App() {
     );
 }
 
-// 外部保存・復元ロジック
 const saveToSlot = (index, memorySlots, selections, previews, setMemorySlots, setStatusMessage) => {
     const newSlots = [...memorySlots];
     const existingPreview = memorySlots[index]?.preview || null;
