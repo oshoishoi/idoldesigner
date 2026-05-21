@@ -18,7 +18,7 @@ const Icon = ({ name, className = "" }) => {
         save: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
         zap: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
         brain: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>,
-        x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" h="6" x2="18" y2="18"/></svg>,
+        x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
         copy: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
         info: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
     };
@@ -159,22 +159,26 @@ function App() {
         let response;
         let success = false;
         
-        // ⚠️ 他の項目がサボるのを徹底防御し、45項目すべてを均等に出力させる無敵のプロンプトへ完全復元
-        const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼身体物理監査官です。
-与えられた画像を隅々まで精密にスキャンし、指定されたすべての項目について分析結果を出力してください。
+        // ⚠️ 【完全同期マジック】 window.FIELD_KEYS の配列文字をテキストとしてプロンプトに直結
+        const keyListString = FIELD_KEYS.join(', ');
 
-【出力の絶対ルール】
-1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdownの装飾は一切含めないこと。
-2. データ形式の平滑化：JSONのすべてのフィールド（Key）に対する値（Value）は、ネストさせず、必ずプレーンな「1つの文字列（String）」としてフラットに出力すること。オブジェクト「{}」や配列「[]」を値に含めることは厳禁とする。
-3. 画像から読み取れない項目、あるいは該当しない項目がある場合は、勝手に項目自体を削除せず、値を ""（空文字）または "なし" として必ずすべてのキー（Key）を漏れなく出力すること。
+        const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼身体物理監査官です。
+与えられた画像をミリ単位で超精密にスキャンし、指定されたすべての項目について分析結果を出力してください。
+
+【出力の絶対ルール（対応関係ロック）】
+1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdownの装飾（\`\`\`json等）は一切含めないこと。
+2. JSONの「キー名（Key）」は、下部に指定された【対象フィールドキーリスト】の文字列と1文字も違わぬ同一の英語キー名を使用すること。大文字小文字、スペルミスは厳禁とする。
+3. データ形式の平滑化：すべてのキーに対する値（Value）は、ネストさせず、必ずプレーンな「1つの文字列（String）」としてフラットに出力すること。オブジェクト「{}」や配列「[]」を値に含めることは絶対厳禁とする。
+4. 画像から読み取れない項目、あるいは該当しない項目がある場合も、勝手に項目自体を削除せず、値を ""（空文字）または "なし" として、必ず指定された45個すべてのキーを漏れなく出力すること。
 
 【重要監査項目】
-- facePlacement（顔のパーツ配置比率）：顔全体の画像内位置ではなく、輪郭領域内における目・鼻・口・眉の間隔や配置比率（中顔面の長さ、求心・遠心顔、ベビーフェイス配置等）を記述せよ。
-- bodyInterface（その他(すき間等)）：衣装の端やストラップと肌の接点を精密監査し、食い込み、盛り上がり、あるいは衣装と肌のすき間（緩み）を詳細に言語化せよ。
-- molesFreckles（特徴）：ホクロ、そばかす、あるいは特筆すべき肌の特徴や着崩し位置の境界線を記述せよ。
-- facs（FACS (動作符号/強度)）：表情をAction Unit（AU）およびAction Descriptor（AD）のコードと強度（例: AU12C, AD19, AU51B）の組み合わせで精密判定せよ。
+- facePlacement：顔全体の画像内位置ではなく、輪郭領域内における目・鼻・口・眉の間隔や配置比率（中顔面の長さ、求心・遠心顔、ベビーフェイス配置等）を正確な日本語で記述。
+- bodyInterface：衣装の端やストラップと肌の接点を精密監査し、食い込み、盛り上がり、あるいは衣装と肌のすき間（緩み）を詳細に言語化。
+- molesFreckles：ホクロ、そばかす、あるいは特筆すべき肌の特徴や着崩し位置の境界線を記述。
+- facs：表情をAction Unit（AU）およびAction Descriptor（AD）のコードと強度（例: AU12C, AD19, AU51B）の組み合わせで精密判定。
 
-上記項目を含め、髪型、髪色、瞳色、衣装、背景状況、ライティング、画風にいたるまで、定義されているすべてのキーに対して均等に最高解像度の日本語で分析を記述すること。`;
+【対象フィールドキーリスト（この通りにJSONを生成せよ）】
+${keyListString}`;
 
         for (let attempt = 0; attempt < 5; attempt++) {
             try {
@@ -299,7 +303,7 @@ function App() {
             } else {
                 routeSpecificInstruction = `
 - 衣装デザインの物理カッティング（例: plunging V-neckline, side slit, asymmetric drape, high-low hemline）の美しさを幾何学的かつ具体的に美しく英語へ英訳。
-- 衣装と矛盾する「1mm spaghetti straps」や「high-cut side-tie strings」といった食い込み記述の強制挿入は行わず、対象となる衣服のテクスチャ（silk, satin, chiffon, dense knit, structured denim 等）やドレープラインの表現に美しくフォーカスせよ。`;
+- 衣装と矛盾する「1mm spaghetti straps」や「high-cut side-tie strings」といった食い込み記述の強制挿入は行わず、対象となる衣服のテクスチャ（silk, satin, chiffon, denim 等）やドレープラインの表現に美しくフォーカスせよ。`;
             }
 
             const artStyleText = ((selections.artStyle || "") + " " + (selections.ratio || "")).toLowerCase();
@@ -308,12 +312,12 @@ function App() {
             if (artStyleText.match(/(54:86|cheki|polaroid|instant|analog|vintage|トイカメラ|ポラロイド|チェキ)/i)) {
                 const borderSide = selections.orientation === 'landscape' ? 'RIGHT' : 'BOTTOM';
                 artStyleSpecificInstruction = `
-- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風（instant camera film）」が指定されています。AIが「Photorealistic」「RAW photo環境」「high-fidelity」「studio lighting」「DSLR」「high resolution」「high-quality skin gradation」などの高画質化・スタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止（絶対厳禁）】せよ。
+- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風（instant camera film）」が指定されています。AIが「Photorealistic」「RAW photo」「high-fidelity」「studio lighting」「DSLR」「high resolution」「high-quality skin gradation」などの高画質化・スタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止（絶対厳禁）】せよ。
 - 代わりに、プロンプトの冒頭から「Lo-fi analog instant camera film, highly grainy texture, vintage Polaroid aesthetic, soft details, slight motion blur, harsh camera-mounted direct flash, heavy contrast shadows immediately behind the model」をメイン画質トーンとして強制適用せよ。
 - また、チェキの伝統的な余白レイアウトを再現するため、「Classic white instant photo frame with a wide, thick white border on the ${borderSide} side」というフレーム記述を英語プロンプトの文中に正確に盛り込むこと。`;
             } else {
                 artStyleSpecificInstruction = `
-- 【チェキ風画質の完全排除】: プロンプトの冒頭に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores Fluss」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。`;
+- 【チェキ風画質の完全排除】: プロンプトの冒頭に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。`;
             }
 
             const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質の英語プロンプトに変換してください。
@@ -332,9 +336,9 @@ function App() {
 8. 顔のパーツ配置バランス（facePlacement）の厳格英訳再現:
    - 日本語の輪郭内パーツ比率分析を、AIが最高精度で理解できる幾何学的表現に変換。「centered face」等のフレーミング描写は禁止。
    - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them" などの表現を用いよ。
-9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" などの表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person」は絶対に使用禁止。
+9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" などの表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person shadow」は絶対に使用禁止。
 10. 地域・文化的背景(region): 
-   - 「region」が設定されている場合、その background キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
+   - 「region」が設定されている場合、その背景キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
 11. 印象補正(aesthetic): 
    - "cute"時は先頭や自然な位置に "cute"、"beautiful"時は "beautiful" を追加し、顔立ちの魅力を極限に高めよ。`;
 
