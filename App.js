@@ -3,8 +3,7 @@
         // --- 🔒 セキュリティ・環境設定 🔒 ---
         const isPreview = typeof __app_id !== 'undefined';
         const apiKey = ""; 
-        const proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
-
+        
         const getApiUrl = (endpoint) => {
             // 【429根本治療】無料枠でも最もレート制限（RPM/TPM）が緩く安定稼働するプロダクション安定モデル「gemini-2.5-flash」に完全統一
             const model = "gemini-2.5-flash";
