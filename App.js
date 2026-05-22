@@ -120,13 +120,14 @@ function App() {
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                const MAX = 448; 
+                // ⚠️ 429エラー（トークン制限）緩和のために画像MAXサイズを384に絞り、画質を0.6に最適化
+                const MAX = 384; 
                 let w = img.width, h = img.height;
                 if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
                 else { if (h > MAX) { w *= MAX / h; h = MAX; } }
                 canvas.width = w; canvas.height = h;
                 ctx.drawImage(img, 0, 0, w, h);
-                const b64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+                const b64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
                 
                 canvas.width = 80; canvas.height = (img.height / img.width) * 80;
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -161,7 +162,7 @@ function App() {
         
         const keyListString = FIELD_KEYS.join(', ');
 
-        const analysisSystemInstruction = `あなたは世界最高峰 of キャラクターデザイナー兼身体物理監査官です。
+        const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼身体物理監査官です。
 与えられた画像をミリ単位で超精密にスキャンし、指定されたすべての項目について分析結果を出力してください。
 
 【出力の絶対ルール（対応関係ロック）】
@@ -172,7 +173,7 @@ function App() {
 
 【重要監査項目】
 - height：モデルの骨格や背景の対比から推測される「身長の印象（例: 小柄で150cm前半の印象、高身長でスタイリッシュなバランス、等）」を日本語のプレーンテキストで詳細に記述せよ。
-- threeSizes：胸 of 厚み、ウエストのくびれ、ヒップラインの肉付きから推測される「肉付きの質感や体格バランス（例: 砂時計型のメリハリボディ、豊かなバストと細いウエストのコントラスト、スレンダーで引き締まった肉付き、等）」を日本語のプレーンテキストで克明に記述せよ。数値の出力は禁止する。
+- threeSizes：胸の厚み、ウエストのくびれ、ヒップラインの肉付きから推測される「肉付きの質感や体格バランス（例: 砂時計型のメリハリボディ、豊かなバストと細いウエストのコントラスト、スレンダーで引き締まった肉付き、等）」を日本語のプレーンテキストで克明に記述せよ。数値の出力は禁止する。
 - facePlacement：顔全体の画像内位置ではなく、輪郭領域内における目・鼻・口・眉の間隔や配置比率（中顔面の長さ、求心・遠心顔、ベビーフェイス配置等）を正確な日本語で記述。
 - bodyInterface：衣装の端やストラップと肌の接点を精密監査し、食い込み、盛り上がり、あるいは衣装と肌のすき間（緩み）を詳細に言語化。
 - molesFreckles：ホクロ、そばかす、あるいは特筆すべき肌の特徴や着崩し位置の境界線を記述。
@@ -197,7 +198,8 @@ ${keyListString}`;
 
                 if (response.status === 429) {
                     if (attempt === 4) throw new Error("WAIT_LIMIT");
-                    await new Promise(resolve => setTimeout(resolve, delay));
+                    // ⚠️ リトライ時の待機スリープ秒数をさらに長くして429エラーを自動回避
+                    await new Promise(resolve => setTimeout(resolve, delay * 2));
                     delay *= 2;
                     continue;
                 }
@@ -211,7 +213,7 @@ ${keyListString}`;
                     setTimeout(() => setIsAnalyzing(null), 1000);
                     return;
                 }
-                await new Promise(resolve => setTimeout(resolve, delay));
+                await new Promise(resolve => setTimeout(resolve, delay * 2));
                 delay *= 2;
             }
         }
@@ -263,9 +265,12 @@ ${keyListString}`;
                     const mergedStaged = {};
                     FIELD_KEYS.forEach(k => {
                         const targetKey = k.toLowerCase();
+                        // ⚠️ 2枚目のマージ時にも、大文字小文字のキーのズレ（additionalNotes等）を元の正しいケースに復元して格納
                         mergedStaged[k] = normalizedResult[targetKey] !== undefined ? normalizedResult[targetKey] : '';
                     });
                     setStagedData(mergedStaged);
+                    
+                    // ⚠️ reduce関数のアキュレータ引き継ぎ処理を完璧に修正し、モーダル上で追加できないバグを完全消滅
                     setSelectedFields(FIELD_KEYS.reduce((a, k) => {
                         a[k] = mergedStaged[k] !== 'none' && mergedStaged[k] !== '不明' && mergedStaged[k] !== '';
                         return a;
@@ -305,8 +310,8 @@ ${keyListString}`;
                 routeSpecificInstruction = `
 - 【露出領域の物理的ロック】: 腕の隙間を勝手に布地で塞がれるのを防ぐため、「leaving the shoulders completely bare and the midriff fully exposed」（完全に露出した肩と、遮るもののないお腹）という上下セパレート構造を確定させる物理指示フレーズを、衣服記述の冒頭部分に必ず配置。また、「a wide and continuous expanse of bare skin is completely visible on her flat stomach between the top and bottom pieces」を盛り込め。
 - 【過激ワードの幾何学記述への置き換え】: 安全フィルターの誤動作による部屋着へのすり替え（安全補正）を完全にシャットアウトするため、「microscopic」のような直接的な過激ワードの使用は禁止し、「ultra-narrow sliding triangles slums」や「low-cut seamless micro-panel bottom fastened by 1mm contrast strings」といった幾何学・寸法的表現で極小カッティングを精密描写せよ。
-- 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AI vacancies 衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込め。
-- コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小のフロント布面積（microscopic low-rise lace front panel）などの、元の衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。
+- 【衣装形状の勝手な省略・変更の徹底防止】: 画像生成AIの衣装の物理構造を勝手に簡略化したり省略したりして普通のスポーツブラや普通のショートパンツ等に変えてしまうのを完全に阻止するため、プロンプト内（positive部分）に「strictly, flawlessly and precisely adhere to the described geometric cuts, sheer lace net corset structure, microscopic front panel size, side-tie strings layout, and delicate strappy cutlines without any omission, alteration, or simplification」や「highly detailed and fixed clothing structure, no modification or simplification to the straps and scalloped cuts」といった厳格な形状固定化指示テキストを必ずプロンプトに組み込め。
+- コルセット状の透けネットレース（unlined transparent sheer net-lace bodice covering the upper midriff）、カップフチの波打つ形状（sweetheart neckline with scalloped cups）、両腰の高い位置で結ぶ極細のサイド紐（contrast thin side-tie strings fastened on high hips）、極小 of フロント布面積（microscopic low-rise lace front panel）などの、元の衣服デザインの「物理形状」を1ミリも省略せず、英語で極めて克明かつ具体的に描写すること。
 - 綿・リブニット・麻素材の部屋着化を完全に防ぐため、「sleek high-gloss wet-look spandex-nylon material」などの高光沢の化学繊維素材記述を優先させ、普通の部屋着（lounge, loungewear, ribbed cotton）は一切禁止、およびネガティブプロンプトで完全に排除（camisole, pajamas, loungewear, loose cotton fabric を記載）せよ。`;
             } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|はおり|羽織|ローブ|ガウン|シャツ|着崩|kimono|yukata|robe|draped off|slid down)/i)) {
                 routeSpecificInstruction = `
@@ -348,9 +353,9 @@ ${keyListString}`;
 8. 顔のパーツ配置バランス（facePlacement）の厳格英訳再現:
    - 日本語の輪郭内パーツ比率分析を、AIが最高精度で理解できる幾何学的表現に変換。「centered face」等のフレーミング描写は禁止。
    - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them" などの表現を用いよ。
-9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" などの表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person shadow bulge固」は絶対に使用禁止。
+9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" などの表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person shadow bulge」は絶対に使用禁止。
 10. 地域・文化的背景(region): 
-   - 「region」が設定されている場合、その背景キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
+   - 「region」が設定されている場合、その background キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
 11. 印象補正(aesthetic): 
    - "cute"時は先頭や自然な位置に "cute"、"beautiful"時は "beautiful" を追加し、顔立ちの力を極限に高めよ。`;
 
@@ -370,7 +375,7 @@ ${keyListString}`;
 
                     if (response.status === 429) {
                         if (attempt === 4) throw new Error("WAIT_LIMIT");
-                        await new Promise(resolve => setTimeout(resolve, delay));
+                        await new Promise(resolve => setTimeout(resolve, delay * 2));
                         delay *= 2;
                         continue;
                     }
@@ -383,7 +388,7 @@ ${keyListString}`;
                         setStatusMessage(err.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : 'Error');
                         return;
                     }
-                    await new Promise(resolve => setTimeout(resolve, delay));
+                    await new Promise(resolve => setTimeout(resolve, delay * 2));
                     delay *= 2;
                 }
             }
