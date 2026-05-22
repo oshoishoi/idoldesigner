@@ -3,30 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDOL Designer v1.6.4</title>
-    <!-- React, Babel, Tailwind CDN -->
+    <title>IDOL Designer v1.9.5 PRO Production</title>
+    <!-- React, ReactDOM, Babel, Tailwind CSS の読み込み -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+        body { 
+            font-family: 'Inter', 'Noto Sans JP', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 10px; }
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.25s ease-out forwards; }
     </style>
 </head>
 <body class="bg-[#FFF8FA]">
     <div id="root"></div>
 
-    <!-- 外部設定ファイルを読み込み -->
+    <!-- 1. 定数・設定オブジェクトが記述された外部設定ファイルをロード -->
     <script src="./config.js"></script>
-    <!-- メインアプリケーションを読み込み -->
-   <!-- index.htmlの最下部をこう書き換えるだけ -->
-<script type="text/babel" src="./App.js?v=1.6.4_final"></script>
+    
+    <!-- 2. Reactアプリケーションロジックを読み込み（Babelでリアルタイムパース） -->
+    <script type="text/babel" src="./App.js"></script>
 </body>
 </html>
