@@ -172,7 +172,7 @@ function App() {
 
 【重要監査項目】
 - height：モデルの骨格や背景の対比から推測される「身長の印象（例: 小柄で150cm前半の印象、高身長でスタイリッシュなバランス、等）」を日本語のプレーンテキストで詳細に記述せよ。
-- threeSizes：胸の厚み、ウエストのくびれ、ヒップラインの肉付きから推測される「肉付きの質感や体格バランス（例: 砂時計型のメリハリボディ、豊かなバストと細いウエストのコントラスト、スレンダーで引き締まった肉付き、等）」を日本語のプレーンテキストで克明に記述せよ。数値の出力は禁止する。
+- threeSizes：胸の厚み、ウエストのくびれ、ヒップライン of 肉付きから推測される「肉付きの質感や体格バランス（例: 砂時計型のメリハリボディ、豊かなバストと細いウエストのコントラスト、スレンダーで引き締まった肉付き、等）」を日本語のプレーンテキストで克明に記述せよ。数値の出力は禁止する。
 - facePlacement：顔全体の画像内位置ではなく、輪郭領域内における目・鼻・口・眉の間隔や配置比率（中顔面の長さ、求心・遠心顔、ベビーフェイス配置等）を正確な日本語で記述。
 - bodyInterface：衣装の端やストラップと肌の接点を精密監査し、食い込み、盛り上がり、あるいは衣装と肌のすき間（緩み）を詳細に言語化。
 - molesFreckles：ホクロ、そばかす、あるいは特筆すべき肌の特徴や着崩し位置の境界線を記述。
@@ -324,15 +324,15 @@ ${keyListString}`;
             if (artStyleText.match(/(54:86|cheki|polaroid|instant|analog|vintage|トイカメラ|ポラロイド|チェキ)/i)) {
                 const borderSide = selections.orientation === 'landscape' ? 'RIGHT' : 'BOTTOM';
                 artStyleSpecificInstruction = `
-- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風（instant camera film）」が指定されています。AIが「Photorealistic」「RAW photo環境」「high-fidelity」「studio lighting」「DSLR」「high resolution」「high-quality skin gradation」などの高画質化・スタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止（絶対厳禁）】せよ。
+- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風（instant camera film）」が指定されています。AIが「Photorealistic」「RAW photo」「high-fidelity」「studio lighting」「DSLR」「high resolution」「high-quality skin gradation」などの高画質化・スタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止（絶対厳禁）】せよ。
 - 代わりに、プロンプトの冒頭から「Lo-fi analog instant camera film, highly grainy texture, vintage Polaroid aesthetic, soft details, slight motion blur, harsh camera-mounted direct flash, heavy contrast shadows immediately behind the model」をメイン画質トーンとして強制適用せよ。
-- また、チェキの伝統的な余白レイアウトを再現するため、「Classic white instant photo frame with a wide, thick white border on the ${borderSide} side slide」というフレーム記述を英語プロンプトの文中に正確に盛り込むこと。`;
+- また、チェキの伝統的な余白レイアウトを再現するため、「Classic white instant photo frame with a wide, thick white border on the ${borderSide} side」というフレーム記述を英語プロンプトの文中に正確に盛り込むこと。`;
             } else {
                 artStyleSpecificInstruction = `
 - 【チェキ風画質の完全排除】: プロンプトの冒頭に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。`;
             }
 
-            const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質の英語プロンプトに変換してください。
+            const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質 of 英語プロンプトに変換してください。
 
 【出力形式】
 純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
@@ -346,9 +346,9 @@ ${keyListString}`;
 6. 目元：対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映。
 7. 禁則：プロンプト内での「CG」というワード使用は絶対禁止。
 8. 顔のパーツ配置バランス（facePlacement）の厳格英訳再現:
-   - 日本語の輪郭内パーツ比率分析を、AIが最高精度で理解できる幾何学的表現に変換。「centered face」等のフレーミング描写は禁止。
+   - 日本語の輪郭内パーツ比率分析を、AIが最高精度で理解できる幾何学的表現に変換。「centered face」等のフレーミング描写は禁止.
    - 例: "compact mid-face", "facial features beautifully concentrated on the lower half of the face for a youthful, cute baby-face ratio", "perfect symmetrical eyes with exactly one-eye-width distance between them" などの表現を用いよ。
-9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" などの表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person shadow bulge」は絶対に使用禁止。
+9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" などの表現を自然に組み込め。ただし「character」「virtual」「imaginary woman項目」「imaginary person shadow bulge」は絶対に使用禁止。
 10. 地域・文化的背景(region): 
    - 「region」が設定されている場合、その背景キーワード（例: "Japanese aesthetic, Tokyo modern room backdrop" など）を自然に組み込み、ロケーションに確固たる説得力を持たせよ。
 11. 印象補正(aesthetic): 
