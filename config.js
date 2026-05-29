@@ -4,9 +4,8 @@ window.apiKey = ""; // 本番テスト時やCanvasランタイムでは空文字
 window.proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
 window.getApiUrl = (endpoint) => {
-    // 正式なモデル識別名「gemini-2.5-flash」に修正
+    // 正式リリース版の「gemini-2.5-flash」に最適化
     const model = "gemini-2.5-flash";
-    
     if (window.isPreview) {
         return `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${window.apiKey}`;
     }
@@ -39,7 +38,7 @@ window.LABEL_MAP = {
     hairStyle: '髪型', 
     hairBangs: '前髪', 
     hairColor: '髪色', 
-    hairAccessory: 'ヘアアクセ', // 「飾り」から変更
+    hairAccessory: 'ヘアアクセ', 
     hairTexture: '髪質',
     faceOutline: '輪郭', 
     facePlacement: '顔のパーツ配置比率', 
@@ -57,14 +56,14 @@ window.LABEL_MAP = {
     noseShape: '鼻の形', 
     mouthShape: '口の形', 
     lipTexture: '唇の質感', 
-    teeth: '歯', // 「歯の印象」から変更
+    teeth: '歯', 
     cheekStyle: 'ほっぺ',
     expression: '表情', 
     facs: 'FACS (動作符号/強度)',
-    makeupStyle: '全体メイク', // 「身体」から「顔」へ移動
+    makeupStyle: '全体メイク', 
     skinColor: '肌の色', 
     skinTexture: '肌質', 
-    bodyInterface: 'その他', // 「その他（すき間等）」から変更
+    bodyInterface: 'その他', 
     molesFreckles: '特徴', 
     age: '年齢感', 
     height: '身長', 
@@ -74,15 +73,15 @@ window.LABEL_MAP = {
     outfit: '衣装', 
     outfitDetail: '衣装詳細', 
     pose: 'ポーズ',
-    situation: 'シチュエーション', // 「状況」から変更
+    situation: 'シチュエーション', 
     lighting: '光演出', 
     artStyle: '画風', 
     cameraAngle: 'アングル',
     aesthetic: '印象補正',
-    additionalNotes: '追記' // 「地域」から統合
+    additionalNotes: '追記' 
 };
 
-// 呪文サジェスト辞書
+// 表現ロンダリング・ルールを適用した事前サジェスト辞書 (絵文字・タイポ等のクリーンアップ調整版)
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -110,7 +109,7 @@ window.FIELD_SUGGESTIONS = {
     hairAccessory: [
         { label: '白いリボン 🤍', value: 'Oversized double silk white ribbon bows' },
         { label: '猫耳カチューシャ 🐾', value: 'Cute fluffy black cat-ear headband' },
-        { label: 'シルバーピン 📎', value: 'Minimalist criss-cross silver metallic bobby pins' },
+        { label: 'シルバーピン 📎', value: 'Minimalist x-shaped silver metallic bobby pins' },
         { label: 'ローズ花飾り 🌹', value: 'Antique gothic red rose hair comb piece' },
         { label: 'ティアラ 👑', value: 'Sparkling delicate crystal mini tiara' }
     ],
@@ -150,7 +149,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'アンバー金 🟨', value: 'Glinting golden amber warm tone' }
     ],
     eyelidType: [
-        { label: '平行二重 👁️‍ギャル', value: 'Wide parallel double eyelids, clear crease' },
+        { label: '平行二重 👁️‍🗨️', value: 'Wide parallel double eyelids, clear crease' }, // 絵文字クリーンアップ
         { label: '一重クール 😑', value: 'Elegant clean single-crease monolid eyes' }
     ],
     tearBags: [
@@ -219,7 +218,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with micro pores, peach fuzz, and natural oils' },
         { label: '陶器すべすべ 🏺', value: 'Flawlessly smooth, soft-matte studio-airbrushed skin texture' }
     ],
-    bodyInterface: [], // 「その他」は自由入力のため、サジェスト配列を空に設定
+    bodyInterface: [], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
         { label: '口元ホクロ 💋', value: 'A tiny seductive beauty mole located just above her right upper lip border' }
@@ -236,7 +235,7 @@ window.FIELD_SUGGESTIONS = {
     bodyType: [
         { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' },
         { label: 'メリハリ/マシュマロ ☁️', value: 'Soft voluptuous hourglass body shape with a tiny cinched waist' },
-        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with subtle abdominal lines and firm posture' }
+        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with subtle abdominal lines and firm posture' } // タイポ修正
     ],
     bodyFrame: [
         { label: '華奢な骨格 🦴', value: 'Delicate bone structure, prominent clavicles and narrow rib cage' },
