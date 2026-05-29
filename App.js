@@ -494,7 +494,7 @@ ${keyListString}`;
                 const borderSide = selections.orientation === 'landscape' ? 'RIGHT' : 'BOTTOM';
                 artStyleSpecificInstruction = `\n- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風（instant camera film）」が指定されています。AIが「Photorealistic」「RAW photo」「high-fidelity」「studio lighting」「DSLR」「high resolution」「high-quality skin gradation」などの高画質化・スタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止（絶対厳禁）】せよ。\n- 代わりに、プロンプトの冒頭から「Lo-fi analog instant camera film, highly grainy texture, vintage Polaroid aesthetic, soft details, slight motion blur, harsh camera-mounted direct flash, heavy contrast shadows immediately behind the model」をメイン画質トーンとして強制適用せよ。\n- また、チェキの伝統的な余白レイアウトを再現するため、「Classic white instant photo frame with a wide, thick white border on the ${borderSide} side nudge」というフレーム記述を英語プロンプトの文中に正確に盛り込むこと。`;
             } else {
-                artStyleSpecificInstruction = "\n- 【チェキ風画質の完全排除】: プロンプトの冒件に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。";
+                artStyleSpecificInstruction = "\n- 【チェキ風画質の完全排除】: プロンプトの特定の条件に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。";
             }
 
             const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質の英語プロンプトに変換してください。
@@ -522,7 +522,7 @@ ${keyListString}`;
 6. FACSコードクリーン化: AUおよびADは「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は含めない。
 7. 目元：対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映。
 8. 禁則：プロンプト内での「CG」というワード使用は絶対禁止。
-9. 非実在性の明記: AIによる架空 of 創作であることを示すため、"non-existent person" などの表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person」は絶対に使用禁止。
+9. 非実在性の明記: AIによる架空の創作であることを示すため、"non-existent person" などの表現を自然に組み込め。ただし「character」「virtual」「imaginary woman」「imaginary person」は絶対に使用禁止。
 10. 追記(additionalNotes)の精緻な反映:
    - 「additionalNotes」に文化的背景やスタジオロケーション、追記指示が設定されている場合は、それらを考慮して背景やシーンに確固たる説得力を持たせるようポジティブプロンプトへ美しく精緻に反映せよ。
 11. 印象補正(aesthetic): 
@@ -858,6 +858,7 @@ ${keyListString}`;
                                                         <label className="text-[7px] font-black text-slate-400 uppercase ml-1 block">{LABEL_MAP[id] || id}</label>
                                                         
                                                         <div className="flex items-center gap-1.5">
+                                                            {/* 🔎 大画面編集起動ボタン */}
                                                             <button
                                                                 type="button"
                                                                 onClick={() => startFocusEdit(id)}
@@ -890,6 +891,7 @@ ${keyListString}`;
                                                         </div>
                                                     </div>
 
+                                                    {/* FACSモードのときのお助けパッチパネル */}
                                                     {id === 'facs' && (
                                                         <div className="mb-2 bg-slate-50 p-2 rounded-xl border border-slate-100 space-y-1">
                                                             <span className="text-[7px] text-slate-400 font-bold uppercase block">FACSクイックインサート:</span>
@@ -914,6 +916,7 @@ ${keyListString}`;
                                                         </div>
                                                     )}
 
+                                                    {/* 複数行テキストエリア */}
                                                     <textarea 
                                                         rows="2"
                                                         placeholder="未設定（手入力 or 以下から選択）"
@@ -922,6 +925,7 @@ ${keyListString}`;
                                                         onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} 
                                                     />
 
+                                                    {/* 候補ワード・チップスパネル */}
                                                     {suggestions && suggestions.length > 0 && (
                                                         <div className="mt-1.5 flex gap-1 overflow-x-auto no-scrollbar py-0.5 px-0.5 whitespace-nowrap scroll-smooth">
                                                             {suggestions.map((sug, sIdx) => {
