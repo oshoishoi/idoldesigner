@@ -505,7 +505,7 @@ ${keyListString}`;
 【最優先・鉄の掟（表現ロンダリング・ガイドライン）】
 1. 身体・肉体ボリューム表現の完全ロンダリング:
    - \`bust volume\`, \`rich bust\`, \`prominent bust\`, \`rich hip line\`, \`feminine curves\` などの直接的・解剖学的な記述を【絶対に使用禁止】とする。
-   - 代わりに、\`graceful feminine silhouette\`, \`balanced proportions\`, \`stronger body contouring\`, \`defined curves in upper and lower torso\` といった抽象的・芸術的・デッサン工学的なアパレル用語に完全変換して美しく肉体美を言い換えること。
+   - 代わりに、\`graceful feminine silhouette\`, \`balanced proportions\`, \`stronger body contouring\`, \`defined curves in upper and lower torso\` といった抽象逆・芸術的・デッサン工学的なアパレル用語に完全変換して美しく肉体美を言い換えること。
 2. セクシー系形容詞のロンダリング:
    - \`sexy\`, \`slightly sexy\` といった直接的な表現を【絶対に使用禁止】とする。
    - 代わりに、\`alluring presence\`, \`captivating aura\`, \`alluring\`, \`graceful\`, \`captivating\` などの芸術的・写真批評的な佇まいのオーラ表現に昇華させること。
@@ -1063,7 +1063,7 @@ ${keyListString}`;
                 </div>
             </main>
 
-            /* 大画面フォーカスエディタ */
+            {/* 大画面フォーカスエディタ */}
             {focusField && (
                 <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-[1000] flex flex-col justify-between p-4 animate-fade-in">
                     <div className="flex justify-between items-center pb-3 border-b border-pink-100/10">
@@ -1161,7 +1161,7 @@ ${keyListString}`;
                                     onClick={() => setSugMode('append')} 
                                     className={`px-2 py-0.5 rounded ${sugMode === 'append' ? 'bg-pink-500 text-white' : 'text-slate-500'}`}
                                 >
-                                    末尾追加 ➕
+                                    $\text{末尾追加}$ ➕
                                 </button>
                             </div>
                         </div>
