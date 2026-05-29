@@ -334,7 +334,7 @@ function App() {
 与えられた画像をミリ単位で超精密にスキャンし、指定されたすべての項目について分析結果を出力してください。
 
 【出力の絶対ルール（対応関係ロック）】
-1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdownの装飾（\`\`\`json等）は一切含めないこと。
+1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdown of 装飾（\`\`\`json等）は一切含めないこと。
 2. JSONの「キー名（Key）」は、下部に指定された【対象フィールドキーリスト】の文字列と1文字も違わぬ同一の英語キー名を使用すること。大文字小文字、スペルミスは厳禁とする。
 3. データ形式の平滑化：すべてのキーに対する値（Value）は、ネストさせず、必ずプレーンな「1つの文字列（String）」としてフラットに出力すること。オブジェクト「{}」や配列「[]」を値に含めることは絶対厳禁とする。
 4. 画像から読み取れない項目、あるいは該当しない項目がある場合も、勝手に項目自体を削除せず、値を ""（空文字）または "なし" として、必ず指定されたすべてのキーを漏れなく出力すること。
@@ -345,7 +345,7 @@ function App() {
   - 画像上のモデルがウインクをしたり口を開けたり、眉を動かしたりしていても、「もしモデルが真顔・無表情（ニュートラル）に戻ったとした場合の、本来の静的・物理的なパーツの造形、形状、配置関係」のみを逆算して、極めて端的な英語の1フレーズで出力せよ。
   - 例：片目を閉じるウインクをしていても、eyeShapeには "large doe-like eyes" や "almond-shaped eyes" のように、両目が本来持っている無表情時の形のみを出力し、"wink" や "closed" などの動的変化を混ぜてはならない。口が開いていても、mouthShapeには "natural m-shaped lips" や "small cupids-bow mouth" のように、本来の静的造形のみを端的に出力せよ。
 - height：モデルの骨格や背景の対比から推測される「身長の印象（例: 小柄で150cm前半の印象、高身長でスタイリッシュなバランス、等）」を日本語のプレーンテキストで詳細に記述せよ。
-- threeSizes：胸の厚み、ウエストのくびれ、ヒップライン of 肉付きから推測される「肉付きの質感や体格バランス（例: 砂時計型のメリハリボディ、豊かなバストと細いウエストのコントラスト、スレンダーで引き締まった肉付き、等）」を日本語のプレーンテキストで刻明に記述せよ。数値の出力は禁止する。
+- threeSizes：胸の厚み、ウエストのくびれ、ヒップラインの肉付きから推測される「肉付きの質感や体格バランス（例: 砂時計型のメリハリボディ、豊かなバストと細いウエストのコントラスト、スレンダーで引き締まった肉付き、等）」を日本語のプレーンテキストで刻明に記述せよ。数値の出力は禁止する。
 - facePlacement：顔全体の画像内位置ではなく、輪郭領域内における目・鼻・口・眉の間隔や配置比率（中顔面の長さ、求心・遠心顔、ベビーフェイス配置等）を正確な日本語で記述。
 - bodyInterface：衣装の端やストラップと肌の接点を精密監査し、食い込み、盛り上がり、あるいは衣装と肌のすき間（緩み）を詳細に言語化。
 - molesFreckles：ホクロ、そばかす、あるいは特筆すべき肌の特徴や着崩し位置の境界線を記述.
@@ -484,7 +484,7 @@ ${keyListString}`;
             } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|haori|羽織|ローブ|ガウン|シャツ|着崩|kimono|yukata|robe|draped off|slid down)/i)) {
                 routeSpecificInstruction = "\n- 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 浴衣、着物、シャツ、カーディガンなどの羽織りものが「はだけている」「ずり落ちている（draped off/slid down）」描写がある場合、画像生成AIが勝手に衣服の位置を持ち上げて肩にかけ直したり状態を隠したりするのを物理的に完全阻止。プロンプト内に「the outer garment (yukata, kimono, or shirt) is strictly and flawlessly locked in its low-draped position, slithered completely down off her shoulders and resting low around her lower hips, buttocks, or elbows, leaving her entire upper body, torso, chest, shoulders, and back completely bare-skinned, exposed, and unobstructed, with absolutely no vertical shifting, rising, or simplification of the draping layout」という厳格な位置固定ロック指示文を必ずポジティブプロンプトに組み込め。";
             } else {
-                routeSpecificInstruction = "\n- 衣装デザイン of 物理カッティング（例: plunging V-neckline, side slit, asymmetric drape, high-low hemline）の美しさを幾何学的かつ具体的に美しく英語へ英訳。\n- 衣装と矛盾する「1mm spaghetti straps」や「high-cut side-tie strings」といった食い込み記述の強制挿入は行わず、対象となる衣服のテクスチャ（silk, satin, chiffon, denim 等）やドレープラインの表現に美しくフォーカスせよ。";
+                routeSpecificInstruction = "\n- 衣装デザインの物理カッティング（例: plunging V-neckline, side slit, asymmetric drape, high-low hemline）の美しさを幾何学的かつ具体的に美しく英語へ英訳。\n- 衣装と矛盾する「1mm spaghetti straps」や「high-cut side-tie strings」といった食い込み記述の強制挿入は行わず、対象となる衣服のテクスチャ（silk, satin, chiffon, denim 等）やドレープラインの表現に美しくフォーカスせよ。";
             }
 
             const artStyleText = selections.artStyle && (selections.artStyle || selections.ratio) ? ((selections.artStyle || "") + " " + (selections.ratio || "")).toLowerCase() : "";
@@ -494,10 +494,10 @@ ${keyListString}`;
                 const borderSide = selections.orientation === 'landscape' ? 'RIGHT' : 'BOTTOM';
                 artStyleSpecificInstruction = `\n- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風（instant camera film）」が指定されています。AIが「Photorealistic」「RAW photo」「high-fidelity」「studio lighting」「DSLR」「high resolution」「high-quality skin gradation」などの高画質化・スタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止（絶対厳禁）】せよ。\n- 代わりに、プロンプトの冒頭から「Lo-fi analog instant camera film, highly grainy texture, vintage Polaroid aesthetic, soft details, slight motion blur, harsh camera-mounted direct flash, heavy contrast shadows immediately behind the model」をメイン画質トーンとして強制適用せよ。\n- また、チェキの伝統的な余白レイアウトを再現するため、「Classic white instant photo frame with a wide, thick white border on the ${borderSide} side nudge」というフレーム記述を英語プロンプトの文中に正確に盛り込むこと。`;
             } else {
-                artStyleSpecificInstruction = "\n- 【チェキ風画質の完全排除】: プロンプトの冒頭に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。";
+                artStyleSpecificInstruction = "\n- 【チェキ風画質の完全排除】: プロンプトの冒件に「Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k, detailed skin pores」を適用し、ライティングや演出（studio lighting, volumetric rim light, soft natural window light 等）を美しく精緻に反映せよ。非実在性を明記せよ（non-existent person などの表現）。";
             }
 
-            const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質 of 英語プロンプトに変換してください。
+            const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質の英語プロンプトに変換してください。
 
 【出力形式】
 純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
@@ -518,7 +518,7 @@ ${keyListString}`;
    - 代わりに、ポロリ等不自然な肌露出を防ぐために \`inappropriate attire\` を、モザイク状のボケノイズを防ぐために \`unpolished composition\`, \`distorted composition\` を使用せよ。
 5. ネガティブプロンプトの影表現の言い換え:
    - 身体の凹凸を検閲に誤認されるのを防ぐため、ネガティブプロンプトで \`shadow bulge\` の記述を【絶対に使用禁止】とする。
-   - 代わりに、衣装自体の不自然な描画エラーや歪みを防ぐために、\`artifacts on clothes\`, \`unnatural fabric folds\` をネガティブプロンプトに必ず含めること。
+   - 代わりに、栽培自体の不自然な描画エラーや歪みを防ぐために、\`artifacts on clothes\`, \`unnatural fabric folds\` をネガティブプロンプトに必ず含めること。
 6. FACSコードクリーン化: AUおよびADは「AU12C」「AD19」のようにコードと強度のみを反映し、名称説明は含めない。
 7. 目元：対称性、黒目比率、目頭・目尻の造形、アイラインの筆致を精密に反映。
 8. 禁則：プロンプト内での「CG」というワード使用は絶対禁止。
