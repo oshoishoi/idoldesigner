@@ -402,7 +402,7 @@ function App() {
 与えられた画像をミリ単位で超精密にスキャンし、指定されたすべての項目について分析結果を出力してください。
 
 【出力の絶対ルール（対応関係ロック）】
-1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdown of 装飾は一切含めないこと。
+1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdownの装飾は一切含めないこと。
 2. JSONの「キー名（Key）」は、下部に指定された【対象フィールドキーリスト】の文字列と1文字も違わぬ同一の英語キー名を使用すること。大文字小文字、スペルミスは厳禁とする。
 3. データ形式の平滑化：すべてのキーに対する値（Value）は、ネストさせず、必ずプレーンな「1つの文字列（String）」としてフラットに出力すること。オブジェクトや配列を値に含めることは絶対厳禁とする。
 4. 画像から読み取れない項目、あるいは該当しない項目がある場合も、勝手に項目自体を削除せず、値を ""（空文字）または "なし" として、必ず指定されたすべてのキーを漏れなく出力すること。
@@ -510,7 +510,7 @@ ${keyListString}`;
                 setStatusMessage('');
             } catch (e) {
                 setStatusMessage('解析失敗');
-            } themeFinally {
+            } finally {
                 setTimeout(() => setIsAnalyzing(null), 1000);
             }
         }
@@ -574,7 +574,7 @@ ${keyListString}`;
    - 解剖学的な直接描写を【絶対に使用禁止】とする。
    - 代わりに、"graceful feminine silhouette", "defined curves" といった抽象的・芸術的・デッサン工学的なアパレル用語に完全変換して肉体美を言い換えること。
 2. セクシー系形容詞のロンダリング:
-   - "sexy" といった直接的な表現を【絶対に使用禁止】とする。代わりに "alluring presence", "captivating aura" などの佇まいのオーラ表現に昇華させること。
+   - "sexy" といった直接的な表現を【絶対に使用禁止】とする。代わりに "alluring presence", "captivating aura" などの佇まいのオーラ表現に昇華させること陷。
 3. ネガティブプロンプトのメタ単語排除・言い換え:
    - ネガティブ内に "nsfw", "censorship", "shadow bulge" を含めることを【絶対に使用禁止】とする。不自然な肌露出を防ぐために "inappropriate attire" を、不自然な描画歪みを防ぐために "artifacts on clothes" を使用せよ。
 4. FACSコードクリーン化:
@@ -978,6 +978,12 @@ ${artStyleSpecificInstruction}`;
                         <button type="button" onClick={() => setFocusField(null)} className="flex-1 bg-slate-800 text-white py-4 rounded-xl font-bold">キャンセル</button>
                         <button type="button" onClick={saveFocusEdit} className="flex-1 bg-pink-500 text-white py-4 rounded-xl font-black">適用する ✓</button>
                     </div>
+                </div>
+            )}
+            
+            {copyFeedback && !FIELD_KEYS.includes(copyFeedback) && (
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-full shadow-2xl text-[10px] font-black z-[110] border border-slate-700 animate-in fade-in slide-in-from-bottom-4 tracking-widest uppercase">
+                    Copied
                 </div>
             )}
         </div>
