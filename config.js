@@ -33,7 +33,7 @@ window.FIELD_KEYS = [
     'aesthetic', 'additionalNotes'
 ];
 
-// 最新のラベルマッピング定義（表向きはシンプルな「その他」を維持）
+// 最新のラベルマッピング定義
 window.LABEL_MAP = {
     hairStyle: '髪型', 
     hairBangs: '前髪', 
@@ -149,7 +149,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'アンバー金 🟨', value: 'Glinting golden amber warm tone' }
     ],
     eyelidType: [
-        { label: '平行二重 👁️‍ギャル', value: 'Wide parallel double eyelids, clear crease' },
+        { label: '平行二重 👁️‍g', value: 'Wide parallel double eyelids, clear crease' }, 
         { label: '一重クール 😑', value: 'Elegant clean single-crease monolid eyes' }
     ],
     tearBags: [
@@ -212,17 +212,17 @@ window.FIELD_SUGGESTIONS = {
     skinColor: [
         { label: '透明感美白 ❄️', value: 'Pale porcelain ivory skin, translucent texture with blue undertones' },
         { label: '桃肌 🍑', value: 'Healthy soft rosy-peach warm undertone skin' },
-        { label: '小麦肌 ☀️', value: 'Healthy sun-kissed glowing golden bronze skin' }
+        { label: '小麦肌 ☀️', value: 'Healthy sun-kissed glowing glowing golden bronze skin' }
     ],
     skinTexture: [
         { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with micro pores, peach fuzz, and natural oils' },
         { label: '陶器すべすべ 🏺', value: 'Flawlessly smooth, soft-matte studio-airbrushed skin texture' }
     ],
-    bodyInterface: [ // 表記は「その他」のまま、はみ出し・露出・食い込みに特化した極上ロンダリングチップスを配備
-        { label: 'アンダーはみ出し 👙', value: 'soft physical overspill of natural skin contour peaking beneath the supportive under-bust seam line' },
-        { label: 'サイドはみ出し 📐', value: 'subtle skin contour overspill peaking along the side-panel fabric borders' },
-        { label: 'ストラップ食い込み 🎽', value: 'delicate skin pressure and soft overspill under the tight cross-back straps' },
-        { label: '腰まわりはみ出し ⏳', value: 'graceful slight skin overspill curving gently over the snug seamless waistband' }
+    bodyInterface: [ // ユーザー入力時の一元管理性を高めるため、値をすべて美しくローカライズされた日本語にアップデート！
+        { label: 'アンダーはみ出し 👙', value: 'アンダーバストの布地境界線から柔らかい肉の輪郭がわずかにはみ出している' },
+        { label: 'サイドはみ出し 📐', value: '衣装の脇のサイドパネルの境界から覗く、繊細な肌ラインの起伏とわずかな盛り上がり' },
+        { label: 'ストラップ食い込み 🎽', value: 'きついゴム製ストラップの締め付けによって、肌に物理的なくぼみと柔らかい肉の食い込みが生じている' },
+        { label: '腰まわりはみ出し ⏳', value: 'シームレスなウエストバンドの布端から押し出される、なめらかな腰まわりの肉感と境界の起伏' }
     ], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
@@ -276,7 +276,7 @@ window.FIELD_SUGGESTIONS = {
     ],
     lighting: [
         { label: 'スタジオ照明 💡', value: 'Cinematic key studio light with a soft volumetric hair backlight' },
-        { label: '木漏れ日 ☀️', value: 'Soft warm dappled sunlight filtering through summer tree leaves' },
+        { label: '木漏れ日 ☀️', value: 'Soft warm dappled sunlight filtering through summer tree leaves in forest' },
         { label: '夜間直フラッシュ 📸', value: 'Harsh raw camera-mounted direct hard flash, high contrast dark shadows behind her' },
         { label: 'サイバーネオン 🔮', value: 'Dramatic cyber neon underglow casting vivid pink and teal reflections on her skin' }
     ],
