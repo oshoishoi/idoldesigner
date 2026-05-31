@@ -33,7 +33,7 @@ window.FIELD_KEYS = [
     'aesthetic', 'additionalNotes'
 ];
 
-// 最新のラベルマッピング定義
+// 最新のラベルマッピング定義（表向きはシンプルな「その他」を維持）
 window.LABEL_MAP = {
     hairStyle: '髪型', 
     hairBangs: '前髪', 
@@ -63,7 +63,7 @@ window.LABEL_MAP = {
     makeupStyle: '全体メイク', 
     skinColor: '肌の色', 
     skinTexture: '肌質', 
-    bodyInterface: 'その他', 
+    bodyInterface: 'その他', // 表向きの項目名「その他」をそのまま維持
     molesFreckles: '特徴', 
     age: '年齢感', 
     height: '身長', 
@@ -81,7 +81,7 @@ window.LABEL_MAP = {
     additionalNotes: '追記' 
 };
 
-// 表現ロンダリング・ルールを適用した事前サジェスト辞書 (絵文字・タイポ等のクリーンアップ調整版)
+// 表現ロンダリング・ルールを適用した事前サジェスト辞書
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -149,7 +149,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'アンバー金 🟨', value: 'Glinting golden amber warm tone' }
     ],
     eyelidType: [
-        { label: '平行二重 👁️‍🗨️', value: 'Wide parallel double eyelids, clear crease' }, // 絵文字クリーンアップ
+        { label: '平行二重 👁️‍ギャル', value: 'Wide parallel double eyelids, clear crease' },
         { label: '一重クール 😑', value: 'Elegant clean single-crease monolid eyes' }
     ],
     tearBags: [
@@ -218,7 +218,12 @@ window.FIELD_SUGGESTIONS = {
         { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with micro pores, peach fuzz, and natural oils' },
         { label: '陶器すべすべ 🏺', value: 'Flawlessly smooth, soft-matte studio-airbrushed skin texture' }
     ],
-    bodyInterface: [], 
+    bodyInterface: [ // 表記は「その他」のまま、はみ出し・露出・食い込みに特化した極上ロンダリングチップスを配備
+        { label: 'アンダーはみ出し 👙', value: 'soft physical overspill of natural skin contour peaking beneath the supportive under-bust seam line' },
+        { label: 'サイドはみ出し 📐', value: 'subtle skin contour overspill peaking along the side-panel fabric borders' },
+        { label: 'ストラップ食い込み 🎽', value: 'delicate skin pressure and soft overspill under the tight cross-back straps' },
+        { label: '腰まわりはみ出し ⏳', value: 'graceful slight skin overspill curving gently over the snug seamless waistband' }
+    ], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
         { label: '口元ホクロ 💋', value: 'A tiny seductive beauty mole located just above her right upper lip border' }
@@ -235,7 +240,7 @@ window.FIELD_SUGGESTIONS = {
     bodyType: [
         { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' },
         { label: 'メリハリ/マシュマロ ☁️', value: 'Soft voluptuous hourglass body shape with a tiny cinched waist' },
-        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with subtle abdominal lines and firm posture' } // タイポ修正
+        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with subtle abdominal lines and firm posture' }
     ],
     bodyFrame: [
         { label: '華奢な骨格 🦴', value: 'Delicate bone structure, prominent clavicles and narrow rib cage' },

@@ -22,11 +22,11 @@ const Icon = ({ name, className = "" }) => {
         zap: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
         brain: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>,
         x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-        copy: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
+        copy: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/><path d="M12 11h4"/><path d="M14 9v4"/></svg>,
         info: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" h1="8" x2="12.01" y2="8"/></svg>,
         chevronDown: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"/></svg>,
         chevronUp: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="18 15 12 9 6 15"/></svg>,
-        zoom: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>,
+        zoom: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" h1="11" x2="14" y2="11"/></svg>,
         paste: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/><path d="M12 11h4"/><path d="M14 9v4"/></svg>
     };
     return svgs[name] || null;
@@ -53,6 +53,7 @@ function App() {
     const [previews, setPreviews] = useState({ base: null, plus: null, baseStored: null, plusStored: null });
     const [memorySlots, setMemorySlots] = useState(Array(10).fill(null));
 
+    // アコーディオン開閉トグルの状態
     const [openSections, setOpenSections] = useState({
         0: true,  
         1: false, 
@@ -60,6 +61,7 @@ function App() {
         3: false  
     });
 
+    // 大画面フォーカス編集用ステート
     const [focusField, setFocusField] = useState(null); 
     const [focusTempText, setFocusTempText] = useState(''); 
     const [sugMode, setSugMode] = useState('append'); 
@@ -69,6 +71,7 @@ function App() {
     const resultRef = useRef(null);
     const focusTextAreaRef = useRef(null);
 
+    // ローカルストレージからメモリスロットを復元
     useEffect(() => {
         try {
             const saved = localStorage.getItem('idol_designer_slots_v195');
@@ -85,6 +88,7 @@ function App() {
         } catch (e) { console.error("Restore failed:", e); }
     }, []);
 
+    // 安定コピー処理（writeText優先 ➔ textareaフォールバック）
     const copyText = (text, type) => {
         if (!text) return;
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -195,16 +199,48 @@ function App() {
 
     const applySuggestionInFocus = (val) => {
         const ta = focusTextAreaRef.current;
-        const start = ta ? ta.selectionStart : focusTempText.length;
-        
-        const nextVal = applySuggestionInternal(focusTempText, val);
+        if (!ta) {
+            setFocusTempText(prev => applySuggestionInternal(prev, val));
+            return;
+        }
+
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const currentText = ta.value;
+
+        let nextVal = "";
+        let newCursorPos = 0;
+
+        if (sugMode === 'replace') {
+            nextVal = currentText === val ? '' : val;
+            newCursorPos = nextVal.length;
+        } else {
+            if (currentText.includes(val)) {
+                nextVal = currentText
+                    .split(',')
+                    .map(x => x.trim())
+                    .filter(x => x !== val && x !== '')
+                    .join(', ');
+                newCursorPos = Math.min(start, nextVal.length);
+            } else {
+                const before = currentText.substring(0, start).trim();
+                const after = currentText.substring(end).trim();
+                
+                let insertStr = val;
+                if (before && !before.endsWith(',')) insertStr = ', ' + insertStr;
+                if (after && !after.startsWith(',')) insertStr = insertStr + ', ';
+
+                nextVal = currentText.substring(0, start) + insertStr + currentText.substring(end);
+                newCursorPos = start + insertStr.length;
+            }
+        }
+
         setFocusTempText(nextVal);
         
         setTimeout(() => {
-            if (ta) {
-                ta.focus();
-                const offset = nextVal.length - focusTempText.length;
-                ta.setSelectionRange(start + offset, start + offset);
+            if (focusTextAreaRef.current) {
+                focusTextAreaRef.current.focus();
+                focusTextAreaRef.current.setSelectionRange(newCursorPos, newCursorPos);
             }
         }, 50);
     };
@@ -361,15 +397,30 @@ function App() {
         let success = false;
         
         const keyListString = FIELD_KEYS.join(', ');
+
         const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼身体物理監査官です。
 与えられた画像をミリ単位で超精密にスキャンし、指定されたすべての項目について分析結果を出力してください。
 
-【出力の絶対ルール】
-1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdownの装飾は一切含めないこと。
-2. JSONの「キー名（Key）」は、指定された英語キー名を使用すること。
-3. すべてのキーに対する値（Value）は、必ずプレーンな「1つの文字列（String）」としてフラットに出力すること。オブジェクトや配列を値に含めることは絶対厳禁とする。
+【出力の絶対ルール（対応関係ロック）】
+1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdown of 装飾は一切含めないこと。
+2. JSONの「キー名（Key）」は、下部に指定された【対象フィールドキーリスト】の文字列と1文字も違わぬ同一の英語キー名を使用すること。大文字小文字、スペルミスは厳禁とする。
+3. データ形式の平滑化：すべてのキーに対する値（Value）は、ネストさせず、必ずプレーンな「1つの文字列（String）」としてフラットに出力すること。オブジェクトや配列を値に含めることは絶対厳禁とする。
+4. 画像から読み取れない項目、あるいは該当しない項目がある場合も、勝手に項目自体を削除せず、値を ""（空文字）または "なし" として、必ず指定されたすべてのキーを漏れなく出力すること。
 
-【対象フィールドキーリスト】
+【重要監査項目・顔の静動デカップリング（表情・造形分離ルール）】
+- expression, facs: ウインク、大笑い、驚き、口を開けてはにかむ、叫び、すぼめ口、片眉上げなど、「表情筋の運動や一時的な動的変化・ジェスチャー」はすべてこの2つの項目（expression/facs）に完全一元化・集約して出力せよ。
+- eyeShape, eyeSymmetry, eyelidType, mouthShape, lipTexture, eyebrowShape 等の顔パーツ造形項目:
+  - 画像上のモデルがウインクをしたり口を開けたり、眉を動かしたりしていても、「もしモデルが真顔・無表情（ニュートラル）に戻ったとした場合の、本来の静的・物理的なパーツの造形、形状、配置関係」のみを逆算して、極めて端的な英語の1フレーズで出力せよ。
+  - 例：片目を閉じるウインクをしていても、eyeShapeには "large doe-like eyes" や "almond-shaped eyes" のように、両目が本来持っている無表情時の形のみを出力し、"wink" や "closed" などの動的変化を混ぜてはならない。口が開いていても、mouthShapeには "natural m-shaped lips" や "small cupids-bow mouth" のように、本来の静的造形のみを端的に出力せよ。
+- height：モデルの骨格や背景の対比から推測される「身長の印象（例: 小柄で150cm前半の印象、高身長でスタイリッシュなバランス、等）」を日本語のプレーンテキストで詳細に記述せよ。
+- threeSizes：胸の厚み、ウエストのくびれ、ヒップラインの肉付きから推測される「肉付きの質感や体格バランス（例: 砂時計型のメリハリボディ、豊かなバストと細いウエストのコントラスト、スレンダーで引き締まった肉付き、等）」を日本語のプレーンテキストで刻明に記述せよ。数値の出力は禁止する。
+- facePlacement：顔全体の画像内位置ではなく、輪郭領域内における目・鼻・口・眉の間隔や配置比率（中顔面の長さ、求心・遠心顔、ベビーフェイス配置等）を正確な日本語で記述。
+- bodyInterface (その他): 
+  - 衣装の布地境界線（シームライン）やストラップ、ウエストバンド、袖口と肌が干渉する物理境界線について超精緻なミリ単位スキャンを実行せよ。
+  - 「アンダーバストの布端からどの程度皮膚（肉）がはみ出して(peeking/overspill)露出しているか」「サイドバストやヒップの布の境界から肉感の起伏がどれくらい溢れ出ているか(conspicuously overspill)」「きついゴムバンドや交差ストラップによって肌がどの程度食い込み、物理的な盛り上がり起伏(soft bulge)が形成されているか」といった衣装から身体パーツのはみ出し・露出度合いを極めて克明かつ客観的な英語文字列として出力せよ。
+- molesFreckles：ホクロ、そばかす、あるいは特筆すべき肌の特徴や着崩し位置の境界線を記述.
+
+【対象フィールドキーリスト（この通りにJSONを生成せよ）】
 ${keyListString}`;
 
         for (let attempt = 0; attempt < 5; attempt++) {
@@ -459,7 +510,7 @@ ${keyListString}`;
                 setStatusMessage('');
             } catch (e) {
                 setStatusMessage('解析失敗');
-            } finally {
+            } themeFinally {
                 setTimeout(() => setIsAnalyzing(null), 1000);
             }
         }
@@ -489,7 +540,7 @@ ${keyListString}`;
             // 衣服特性に応じた動的プロンプトルーティング設計
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
                 routeSpecificInstruction = `
-- 【露出領域の物理的ロック】: 腕の隙間を勝手に布地で塞がれるのを防ぐため、肩や胴体を完全に露出させる工学的アパレル表現を冒頭部分に必ず配置すること。
+- 【露出領域の物理的ロック】: 腕性デザインの隙間を勝手に布地で塞がれるのを防ぐため、肩や胴体を完全に露出させる工学的アパレル表現を冒頭部分に必ず配置すること。
 - 【過激ワードの幾何学記述への完全置き換え（ロンダリング）】: セーフティフィルターを回避するため、"micro" や "high-cut" などの過激語はプロンプトでの使用を完全に禁止・排除せよ。代わりに "minimal seamless inner briefs" などのアパレル工学的・テクスチャ幾何学的表現を用いて精緻に描写すること。
 - 【衣装形状の勝手な省略の徹底防止】: AIが勝手に衣装構造を簡略化するのを阻止するため、形状固定化指示テキストを必ずプロンプトに組み込め。`;
             } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|kimono|yukata|着崩)/i)) {
@@ -666,7 +717,7 @@ ${artStyleSpecificInstruction}`;
                                 >
                                     {slot ? (
                                         <>
-                                            <img src={slot.preview} className="w-full h-full object-cover opacity-80" />
+                                            <img src={slot.preview} className="w-full h-full object-cover opacity-80 animate-fade-in" />
                                             <div className="absolute inset-0 flex items-center justify-center font-black text-[9px] text-pink-600 bg-white/20">{i+1}</div>
                                         </>
                                     ) : (
@@ -717,10 +768,12 @@ ${artStyleSpecificInstruction}`;
 
                 <section className={`bg-white rounded-3xl p-5 shadow-sm border border-pink-50 flex gap-4 ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}>
                     <div onClick={() => !isAnalyzing && baseInputRef.current?.click()} className="flex-1 aspect-square border-2 border-dashed border-blue-100 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 relative cursor-pointer">
-                        {previews.base ? <img src={previews.base} className="w-full h-full object-cover" /> : <span className="text-[8px] font-bold text-blue-400">BASE MODEL</span>}
+                        {previews.base ? <img src={previews.base} className="w-full h-full object-cover animate-fade-in" /> : <span className="text-[8px] font-bold text-blue-400">BASE MODEL</span>}
+                        {isAnalyzing === 'base' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>}
                     </div>
                     <div onClick={() => !isAnalyzing && plusInputRef.current?.click()} className="flex-1 aspect-square border-2 border-dashed border-pink-100 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 relative cursor-pointer">
-                        {previews.plus ? <img src={previews.plus} className="w-full h-full object-cover" /> : <span className="text-[8px] font-bold text-pink-400">ADDITIONAL (PLUS)</span>}
+                        {previews.plus ? <img src={previews.plus} className="w-full h-full object-cover animate-fade-in" /> : <span className="text-[8px] font-bold text-pink-400">ADDITIONAL (PLUS)</span>}
+                        {isAnalyzing === 'plus' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center"><div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div></div>}
                     </div>
                     <input type="file" ref={baseInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'base')} />
                     <input type="file" ref={plusInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'plus')} />
@@ -763,10 +816,10 @@ ${artStyleSpecificInstruction}`;
                         const fillCount = getSectionFillCount(section.fields);
                         const totalCount = section.fields.length;
                         return (
-                            <div key={idx} className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                            <div key={idx} className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm animate-fade-in">
                                 <div className="w-full px-4 py-3 bg-slate-50/60 text-left flex justify-between items-center font-black cursor-pointer" onClick={() => toggleSection(idx)}>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] text-slate-600 uppercase">{idx + 1}. {section.title}</span>
+                                        <span className="text-[10px] font-black text-slate-600 uppercase">{idx + 1}. {section.title}</span>
                                         <span className="text-[8px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-400">{fillCount} / {totalCount}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -787,6 +840,7 @@ ${artStyleSpecificInstruction}`;
                                     <div className="p-4 bg-white grid grid-cols-2 gap-3.5">
                                         {section.fields.map((id) => {
                                             const hasVal = selections[id] && selections[id].trim() !== '';
+                                            const suggestions = FIELD_SUGGESTIONS[id] || [];
                                             return (
                                                 <div key={id} className={id === 'additionalNotes' || id === 'outfitDetail' || id === 'situation' ? 'col-span-2' : ''}>
                                                     <div className="flex justify-between items-center mb-1">
@@ -794,23 +848,23 @@ ${artStyleSpecificInstruction}`;
                                                         <div className="flex items-center gap-1.5">
                                                             <button type="button" onClick={() => startFocusEdit(id)} className="text-pink-500 bg-pink-50 p-1 rounded text-[8px] font-bold"><Icon name="zoom" /> ズーム</button>
                                                             {hasVal && (
-                                                                <div className="flex gap-1">
+                                                                <div className="flex gap-1 animate-fade-in">
                                                                     <button type="button" onClick={() => copySingleField(id)} className="text-[8px] text-slate-400">コピー</button>
                                                                     <button type="button" onClick={() => clearSingleField(id)} className="text-[8px] text-red-400">✕</button>
                                                                 </div>
                                                             )}
                                                         </div>
                                                     </div>
-                                                    <textarea rows="2" className="w-full p-2.5 border rounded-xl bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:border-pink-200 transition-colors" value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
+                                                    <textarea rows="2" className="w-full p-2.5 border rounded-xl bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:border-pink-200 transition-colors resize-none" value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
                                                     <div className="mt-1.5 flex gap-1 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap">
-                                                        {(FIELD_SUGGESTIONS[id] || []).map((sug, sIdx) => {
+                                                        {suggestions.map((sug, sIdx) => {
                                                             const isSelected = selections[id] && (selections[id] === sug.value || selections[id].includes(sug.value));
                                                             return (
                                                                 <button 
                                                                     type="button" 
                                                                     key={sIdx} 
                                                                     onClick={() => applySuggestion(id, sug.value)} 
-                                                                    className={`text-[8.5px] font-bold px-2.5 py-1 rounded-full border transition-all shrink-0 select-none ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-sm scale-95' : 'bg-white hover:bg-pink-50 text-slate-500 border-slate-200/60'}`}
+                                                                    className={`text-[8.5px] font-bold px-2.5 py-1 rounded-full border transition-all shrink-0 select-none ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-sm scale-95 font-extrabold' : 'bg-white hover:bg-pink-50 text-slate-500 border-slate-200/60'}`}
                                                                 >
                                                                     {sug.label}
                                                                 </button>
@@ -834,7 +888,7 @@ ${artStyleSpecificInstruction}`;
                         </div>
                         <div className="grid grid-cols-4 gap-2">
                             {['1:1', '3:4', '9:16', '54:86'].map((r) => (
-                                <button key={r} type="button" onClick={() => setSelections(p=>({...p, ratio: r}))} className={`p-3 rounded-2xl border-2 ${selections.ratio === r ? 'bg-pink-50 border-pink-200 text-pink-600' : 'bg-slate-50 text-slate-400'}`}>{r}</button>
+                                <button key={r} type="button" onClick={() => setSelections(p=>({...p, ratio: r}))} className={`p-3 rounded-2xl border-2 transition-all ${selections.ratio === r ? 'bg-pink-50 border-pink-200 text-pink-600' : 'bg-slate-50 text-slate-400'}`}>{r}</button>
                             ))}
                         </div>
                         <button type="button" onClick={generatePrompt} disabled={isProcessing || isAnalyzing} className="w-full py-6 rounded-3xl bg-slate-900 text-white font-black text-sm uppercase italic">
@@ -843,23 +897,24 @@ ${artStyleSpecificInstruction}`;
                     </div>
                 </div>
 
-                <div ref={resultRef} className="pb-40 space-y-4">
+                <div ref={resultRef} className="pb-40 space-y-4 animate-fade-in">
                     {englishPrompt && (
                         <div className="space-y-4">
-                            <div className="bg-slate-900 rounded-[2.5rem] p-6 text-white relative">
+                            <div className="bg-slate-900 rounded-[2.5rem] p-6 text-white relative border border-slate-800 shadow-2xl">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500"></div>
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="text-pink-400 text-[10px] font-black uppercase">Master Prompt</span>
+                                    <span className="text-pink-400 text-[10px] font-black uppercase tracking-[0.2em]">Master Prompt</span>
                                     <div className="flex gap-2">
-                                        <button type="button" onClick={copyBothPrompts} className="bg-blue-600 text-white text-[9px] px-3 py-1.5 rounded-xl">BOTH COPY</button>
-                                        <button type="button" onClick={() => copyText(englishPrompt, 'pos')} className="bg-slate-700 text-white text-[9px] px-3 py-1.5 rounded-xl">COPY POS</button>
+                                        <button type="button" onClick={copyBothPrompts} className={`text-white text-[9px] font-black px-3 py-1.5 rounded-xl transition-all shadow-md ${copyFeedback === 'both' ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-500'}`}>BOTH COPY</button>
+                                        <button type="button" onClick={() => copyText(englishPrompt, 'pos')} className={`text-white text-[9px] font-black px-3 py-1.5 rounded-xl transition-all shadow-md ${copyFeedback === 'pos' ? 'bg-green-500' : 'bg-slate-700 hover:bg-slate-600'}`}>COPY POS</button>
                                     </div>
                                 </div>
-                                <p className="text-pink-100 font-mono text-[10px] p-2 bg-slate-950 rounded-2xl">{englishPrompt}</p>
+                                <p className="text-pink-100 font-mono text-[10px] p-2 bg-slate-950 rounded-2xl border border-slate-850 italic">{englishPrompt}</p>
                             </div>
-                            <div className="bg-white rounded-[2.5rem] p-6 border">
+                            <div className="bg-white rounded-[2.5rem] p-6 border shadow-sm">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-slate-400 text-[10px]">Negative</span>
-                                    <button type="button" onClick={() => copyText(negativePrompt, 'neg')} className="bg-slate-100 text-[9px] px-3 py-1.5 rounded-xl">COPY NEG</button>
+                                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Negative</span>
+                                    <button type="button" onClick={() => copyText(negativePrompt, 'neg')} className={`text-[9px] font-black px-4 py-1.5 rounded-xl ${copyFeedback === 'neg' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-250'}`}>COPY NEG</button>
                                 </div>
                                 <p className="text-slate-400 font-mono text-[9px] p-2 bg-slate-50 rounded-2xl">{negativePrompt}</p>
                             </div>
@@ -870,33 +925,53 @@ ${artStyleSpecificInstruction}`;
 
             {/* 大画面フォーカスエディタ */}
             {focusField && (
-                <div className="fixed inset-0 bg-slate-950/95 z-[1000] flex flex-col justify-between p-4">
+                <div className="fixed inset-0 bg-slate-950/95 z-[1000] flex flex-col justify-between p-4 animate-fade-in">
                     <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-                        <h2 className="text-white text-base font-black">{LABEL_MAP[focusField]} の詳細編集</h2>
+                        <div className="flex flex-col">
+                            <span className="text-pink-500 text-[9px] font-black uppercase tracking-widest italic">🔎 Focusing Editor</span>
+                            <h2 className="text-white text-base font-black">{LABEL_MAP[focusField]} の詳細編集</h2>
+                        </div>
                         <button type="button" onClick={() => setFocusField(null)} className="p-2 bg-slate-800 text-white rounded-full">✕</button>
                     </div>
                     <div className="flex gap-2 py-2">
                         <button type="button" onClick={handlePasteIntoFocus} className="bg-slate-800 text-pink-400 text-[10px] px-3 py-1.5 rounded-xl border border-slate-700">ペースト</button>
                         <button type="button" onClick={() => setFocusTempText('')} className="bg-slate-800 text-red-400 text-[10px] px-3 py-1.5 rounded-xl border border-slate-700">クリア</button>
                     </div>
-                    <div className="flex-1 my-4 bg-slate-900 rounded-2xl p-4">
-                        <textarea ref={focusTextAreaRef} value={focusTempText} onChange={(e) => setFocusTempText(e.target.value)} className="w-full h-full bg-transparent text-white text-sm focus:outline-none resize-none" placeholder="詳細を入力するか、下のサジェストチップを選択してください..." />
+                    <div className="flex-1 my-4 bg-slate-900 rounded-2xl p-4 relative flex flex-col">
+                        <textarea ref={focusTextAreaRef} value={focusTempText} onChange={(e) => setFocusTempText(e.target.value)} className="w-full h-full bg-transparent text-white text-sm focus:outline-none resize-none custom-scrollbar font-bold leading-relaxed" placeholder="詳細を入力するか、下のサジェストチップを選択してください..." />
+                        
+                        <div className="absolute bottom-3 right-3 flex bg-slate-950 border border-slate-800 p-1 rounded-2xl gap-1">
+                            <span className="text-[7px] text-slate-500 font-bold uppercase py-1 px-2 self-center tracking-widest italic">Cursor</span>
+                            <button type="button" onClick={() => handleCursorMove('left')} className="w-8 h-8 bg-slate-800 hover:bg-pink-600 text-white rounded-xl flex items-center justify-center font-bold text-base active:scale-90 transition-all">◀</button>
+                            <button type="button" onClick={() => handleCursorMove('right')} className="w-8 h-8 bg-slate-800 hover:bg-pink-600 text-white rounded-xl flex items-center justify-center font-bold text-base active:scale-90 transition-all">▶</button>
+                        </div>
                     </div>
-                    <div className="py-2.5">
-                        <div className="flex flex-wrap gap-1.5 max-h-[20vh] overflow-y-auto custom-scrollbar">
-                            {(FIELD_SUGGESTIONS[focusField] || []).map((sug, sIdx) => {
-                                const isSelected = focusTempText && (focusTempText === sug.value || focusTempText.includes(sug.value));
-                                return (
-                                    <button 
-                                        type="button" 
-                                        key={sIdx} 
-                                        onClick={() => applySuggestionInFocus(sug.value)} 
-                                        className={`text-[10px] font-bold px-3 py-1.5 rounded-full border ${isSelected ? 'bg-pink-500 text-white border-pink-500' : 'bg-slate-800 text-slate-300 border-slate-700'}`}
-                                    >
-                                        {sug.label}
-                                    </button>
-                                );
-                            })}
+                    <div className="py-2.5 space-y-2">
+                        <div className="flex items-center justify-between text-[8px] text-slate-400 font-bold uppercase tracking-widest">
+                            <span>🔮 Quick Tags Suggestions</span>
+                            <div className="flex bg-slate-900 p-0.5 rounded border border-slate-800 text-[8px] font-bold">
+                                <button type="button" onClick={() => setSugMode('replace')} className={`px-2 py-0.5 rounded ${sugMode === 'replace' ? 'bg-pink-500 text-white' : 'text-slate-500'}`}>上書き 🔁</button>
+                                <button type="button" onClick={() => setSugMode('append')} className={`px-2 py-0.5 rounded ${sugMode === 'append' ? 'bg-pink-500 text-white' : 'text-slate-500'}`}>末尾追加 ➕</button>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 max-h-[20vh] overflow-y-auto custom-scrollbar p-1 bg-slate-900/50 rounded-xl">
+                            {(FIELD_SUGGESTIONS[focusField] || []).length > 0 ? (
+                                (FIELD_SUGGESTIONS[focusField] || []).map((sug, sIdx) => {
+                                    const isSelected = focusTempText && (focusTempText === sug.value || focusTempText.includes(sug.value));
+                                    return (
+                                        <button 
+                                            type="button" 
+                                            key={sIdx} 
+                                            onClick={() => applySuggestionInFocus(sug.value)} 
+                                            className={`text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-md font-black' : 'bg-slate-800 text-slate-300 border-slate-700'}`}
+                                        >
+                                            {sug.label}
+                                        </button>
+                                    );
+                                })
+                            ) : (
+                                <span className="text-[10px] text-slate-500 italic px-2 font-bold">この項目にはプリセット候補がありません。直接入力して美しく詳細を肉付けしてください。</span>
+                            )}
                         </div>
                     </div>
                     <div className="flex gap-2">
