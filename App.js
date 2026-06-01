@@ -21,7 +21,7 @@ const Icon = ({ name, className = "" }) => {
         save: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
         zap: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
         brain: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>,
-        x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" h1="6" x2="18" y2="18"/></svg>,
+        x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
         copy: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/><path d="M12 11h4"/><path d="M14 9v4"/></svg>,
         info: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
         chevronDown: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"/></svg>,
@@ -420,7 +420,7 @@ function App() {
 - 必ず正しく美しい「日本語のみ」を使用して、詳細、質感、輪郭を客観的かつ美麗に言語化・日本語翻訳して出力せよ。英語での出力は重大なバグ・不具合とみなす。
 
 【重要監査項目・顔の静動デカップリング（表情・造形分離ルール）】
-- expression, facs: 表情筋の運動や一時的な動的変化・ジェスチャーはすべてこの2つの項目（expression/facs）に完全一元化・集約して出力せよ。
+- expression, facs: ウインク、大笑い、驚き、口を開けてはにかむ、叫び、すぼめ口、片眉上げなど、「表情筋の運動や一時的な動的変化・ジェスチャー」はすべてこの2つの項目（expression/facs）に完全一元化・集約して出力せよ。
 - eyeShape, eyeSymmetry, eyelidType, mouthShape, lipTexture, eyebrowShape 等の顔パーツ造形項目:
   - 画像上のモデルがウインクをしたり口を開けたり、眉を動かしたりしていても、「もしモデルが真顔・無表情（ニュートラル）に戻ったとした場合の、本来の静的・物理的なパーツの造形、形状、配置関係」のみを逆算して、極めて端的な日本語で出力せよ。
 - height：モデルの骨格や背景の対比から推測される「身長の印象」を日本語のプレーンテキストで詳細に記述せよ。
@@ -428,8 +428,8 @@ function App() {
 - facePlacement：顔全体の画像内位置ではなく、輪郭領域内における目・鼻・口・眉の間隔や配置比率（中顔面の長さ、求心・遠心顔、ベビーフェイス配置等）を正確な日本語で記述。
 - bodyInterface (その他): 
   - 衣装の布地境界線（シームライン）やストラップ、ウエストバンド、袖口と肌が干渉する物理境界線について超精緻なミリ単位スキャンを実行せよ。
-  - 「アンダーバストの布端からどの程度皮膚（肉）がはみ出して(peeking/overspill)露出しているか」「サイドバストやヒップの布の境界から肉感の起伏がどれくらい溢れ出ているか(conspicuously overspill)」「きついゴムバンドや交差ストラップによって肌がどの程度食い込み、物理的な盛り上がり起伏(soft bulge)が形成されているか」といった衣装から身体パーツのはみ出し・露出度合いを極めて克明かつ客観的な「日本語」の文章として出力せよ。
-  - 特に、ショーツや水着がハイカット(high-cut)形状の場合、ヒップ（お尻）の露出している部分の多さ、お尻の下部からサイドにかけてはみ出している柔らかな肉感のボリューム、およびお尻の割れ目（お尻の谷間）が影になっている繊細なコントラスト（シャドウ）についても、美術デッサンのように日本語で極めて精密に記述せよ。
+  - 「アンダーバストの布端からどの程度皮膚（肉）がはみ出して(peeking/overspill)露出しているか」「サイドバストやヒップの布の境界から肉感の起伏がどれくらい溢れ出ているか(conspicuously overspill)」「きついゴムバンドや交差ストラップによって肌がどの程度食い込み、物理的な盛り上がり起伏(soft bulge)が形成されているか」といった衣装から身体パーツのはみ出し・露出度合いを極めて克明かつ客観的な「日本語」の文章として出力せよ。英語での出力は厳禁とする。
+- molesFreckles：ホクロ、そばかす、あるいは特筆すべき肌の特徴や着崩し位置の境界線を記述.
 
 【対象フィールドキーリスト（この通りにJSONを生成せよ）】
 ${keyListString}`;
@@ -522,6 +522,7 @@ ${keyListString}`;
             } catch (e) {
                 setStatusMessage('解析失敗');
             } finally {
+                // 非同期例外時におけるローディング永続フリーズ回避（ルール遵守）
                 setTimeout(() => setIsAnalyzing(null), 1000);
             }
         }
@@ -589,7 +590,7 @@ ${keyListString}`;
 3. ネガティブプロンプトのメタ単語排除・言い換え:
    - ネガティブ内に "nsfw", "censorship", "shadow bulge" を含めることを【絶対に使用禁止】とする。不自然な肌露出を防ぐために "inappropriate attire" を、不自然な描画歪みを防ぐために "artifacts on clothes" を使用せよ。
 4. 「その他(bodyInterface)」項目に入力された日本語のはみ出し・露出物理の高級アパレル・彫刻用語ロンダリング:
-   - 「その他(bodyInterface)」に日本語で詳細に入力された、シームライン、ウエストバンド、袖口、クロスストラップなどからのはみ出し・露出・肉の盛り上がり物理情報（例：「アンダーバストの布地境界から覗く柔らかい肉の起伏」「ストラップの食い込み隆起」等）を読み込み、直接的なエロティシズム表現を完全に回避せよ。
+   - 「その他(bodyInterface)」に日本語で詳細に入力された、シームライン、ウエストバンド、袖口、クロスストラップなどからのはみ出し・露出・肉の盛り上がり物理情報を読み込み、直接的なエロティシズム表現を完全に回避せよ。
    - 代わりに "soft physical overspill beneath the supportive under-bust seam line" や "subtle skin contour overspill peaking along the side-panel fabric borders", "delicate skin pressure and soft overspill under the tight straps" などの、デッサン・オートクチュール・解剖学としての物理的干渉（Torso Contour & Fabric Pressure）を際立たせる安全で精緻な芸術的英語表現に100%ロンダリング（言い換え）してポジティブプロンプトに高精度に英訳・反映させよ。
 5. FACSコードクリーン化:
    - AUおよびADは "AU12C" のようにコードと強度のみを反映し、名称説明は含めない。
@@ -646,6 +647,7 @@ ${artStyleSpecificInstruction}`;
         } catch (e) {
             setStatusMessage('Error');
         } finally {
+            // 例外発生時であっても確実にフラグをリセットしてUIロックの永続フリーズを防止
             setIsProcessing(false);
         }
     };
@@ -691,7 +693,7 @@ ${artStyleSpecificInstruction}`;
                         }} 
                         disabled={!!isAnalyzing || isProcessing}
                         className={`p-2 text-slate-400 hover:text-red-500 transition-colors ${(isAnalyzing || isProcessing) ? 'opacity-30 pointer-events-none' : ''}`}
-                        title="リreset"
+                        title="リセット"
                     >
                         <Icon name="refresh" />
                     </button>
@@ -1124,7 +1126,7 @@ ${artStyleSpecificInstruction}`;
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <button type="button" onClick={() => setFocusField(null)} className="flex-1 bg-slate-800 text-slate-400 hover:text-white py-4 rounded-xl font-bold">キャンセル</button>
+                        <button type="button" onClick={() => setFocusField(null)} className="flex-1 bg-slate-800 text-white py-4 rounded-xl font-bold">キャンセル</button>
                         <button type="button" onClick={saveFocusEdit} className="flex-1 bg-pink-500 text-white py-4 rounded-xl font-black">適用する ✓</button>
                     </div>
                 </div>

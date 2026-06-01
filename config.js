@@ -22,23 +22,24 @@ window.safetySettings = [
 
 // 44項目定義 (regionを削除)
 window.FIELD_KEYS = [
-    'hairStyle', 'hairBangs', 'hairColor', 'hairAccessory', 'hairTexture',
+    'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', // hairAccessoryを移動
     'faceOutline', 'facePlacement', 
     'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape',
     'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle',
-    'skinColor', 'skinTexture', 'bodyInterface', 'molesFreckles', 
+    'skinColor', 'skinTexture', 'molesFreckles', 
     'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes',
-    'outfit', 'outfitDetail', 'pose',
+    'hairAccessory', // 衣装グループの先頭に移動
+    'outfit', 'outfitDetail', 'bodyInterface', 'pose', // bodyInterface(その他)を衣装詳細の直後に移動
     'situation', 'lighting', 'artStyle', 'cameraAngle',
     'aesthetic', 'additionalNotes'
 ];
 
-// 最新のラベルマッピング定義（表向きはシンプルな「その他」を維持）
+// 最新のラベルマッピング定義
 window.LABEL_MAP = {
     hairStyle: '髪型', 
     hairBangs: '前髪', 
     hairColor: '髪色', 
-    hairAccessory: 'ヘアアクセ', 
+    hairAccessory: 'ヘアアクセ', // 「飾り」から名称変更し衣装セクションへ
     hairTexture: '髪質',
     faceOutline: '輪郭', 
     facePlacement: '顔のパーツ配置比率', 
@@ -63,7 +64,7 @@ window.LABEL_MAP = {
     makeupStyle: '全体メイク', 
     skinColor: '肌の色', 
     skinTexture: '肌質', 
-    bodyInterface: 'その他', // 表向きの項目名「その他」をそのまま維持
+    bodyInterface: 'その他', // 表向きの項目名「その他」を維持
     molesFreckles: '特徴', 
     age: '年齢感', 
     height: '身長', 
@@ -81,7 +82,7 @@ window.LABEL_MAP = {
     additionalNotes: '追記' 
 };
 
-// 表現ロンダリング・ルールを適用した事前サジェスト辞書
+// 表現ロンダリング・ルールを100%適用した極上の事前サジェスト辞書 (その他：日本語ローカライズ完了)
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -149,7 +150,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'アンバー金 🟨', value: 'Glinting golden amber warm tone' }
     ],
     eyelidType: [
-        { label: '平行二重 👁️‍g', value: 'Wide parallel double eyelids, clear crease' }, 
+        { label: '平行二重 👁️‍g', value: 'Wide parallel double eyelids, clear crease' },
         { label: '一重クール 😑', value: 'Elegant clean single-crease monolid eyes' }
     ],
     tearBags: [
@@ -186,7 +187,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'マシュマロマット 🍑', value: 'Soft velvety matte peach lipstick texture' }
     ],
     teeth: [
-        { label: '八重歯 🦷', value: 'Charming tiny single vampire-like fangs poking out over her lower lip' },
+        { label: '八重歯 🦷', value: 'Charming tiny single vampire-like fang poking out over her lower lip' },
         { label: '綺麗な並び ✨', value: 'Flawlessly aligned pearly white teeth' }
     ],
     cheekStyle: [
@@ -212,17 +213,18 @@ window.FIELD_SUGGESTIONS = {
     skinColor: [
         { label: '透明感美白 ❄️', value: 'Pale porcelain ivory skin, translucent texture with blue undertones' },
         { label: '桃肌 🍑', value: 'Healthy soft rosy-peach warm undertone skin' },
-        { label: '小麦肌 ☀️', value: 'Healthy sun-kissed glowing glowing golden bronze skin' }
+        { label: '小麦肌 ☀️', value: 'Healthy sun-kissed glowing golden bronze skin' }
     ],
     skinTexture: [
         { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with micro pores, peach fuzz, and natural oils' },
         { label: '陶器すべすべ 🏺', value: 'Flawlessly smooth, soft-matte studio-airbrushed skin texture' }
     ],
-    bodyInterface: [ // ユーザー入力時の一元管理性を高めるため、値をすべて美しくローカライズされた日本語にアップデート！
-        { label: 'アンダーはみ出し 👙', value: 'アンダーバストの布地境界線から柔らかい肉の輪郭がわずかにはみ出している' },
-        { label: 'サイドはみ出し 📐', value: '衣装の脇のサイドパネルの境界から覗く、繊細な肌ラインの起伏とわずかな盛り上がり' },
-        { label: 'ストラップ食い込み 🎽', value: 'きついゴム製ストラップの締め付けによって、肌に物理的なくぼみと柔らかい肉の食い込みが生じている' },
-        { label: '腰まわりはみ出し ⏳', value: 'シームレスなウエストバンドの布端から押し出される、なめらかな腰まわりの肉感と境界の起伏' }
+    bodyInterface: [ // 表現ロンダリングを完全適用した、日本語でのはみ出し・露出起伏の極上サジェストチップス
+        { label: 'アンダーはみ出し 👙', value: 'アンダーバストのシームラインの下側から柔らかい肉の輪郭がわずかに覗き、美しくはみ出している' },
+        { label: 'サイドはみ出し 📐', value: '衣装の脇のシーム境界線に沿って、なめらかなお尻や胴体の柔らかな起伏がわずかに押し出されはみ出している' },
+        { label: 'お尻のハイカット露出 🍑', value: 'ショーツの極めて高いハイカットレッグラインに沿って、お尻の広い領域が大胆に露出し、なめらかなお尻の曲線が際立っている' },
+        { label: 'お尻の谷間の深い陰影 ⏳', value: 'お尻のふくよかな丸みの重なりによって、お尻の谷間（中央の割れ目）に沿って自然でリアルな深いグラデーション陰影が綺麗に落ちている' },
+        { label: 'ストラップ食い込み 🎽', value: 'タイトなクロスストラップやウエストゴムの締め付けによって、肌にミリ単位の不自然でない柔らかい肉の食い込み起伏が生じている' }
     ], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
