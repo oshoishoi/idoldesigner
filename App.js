@@ -21,7 +21,7 @@ const Icon = ({ name, className = "" }) => {
         save: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
         zap: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
         brain: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.54Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.54Z"/></svg>,
-        x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" h1="6" x2="18" y2="18"/></svg>,
+        x: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
         copy: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/><path d="M12 11h4"/><path d="M14 9v4"/></svg>,
         info: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>, // 不正属性h1をy1へ監査検知により一発機械的修正(デバッグ4順守)
         chevronDown: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"/></svg>,
@@ -61,7 +61,7 @@ function App() {
         3: false  // 衣装・演出設定
     });
 
-    // 2枚目画像重ね合わせ（マージ）用モーダルのアコーディオン開閉ステート
+    // 2枚目画像重ね合わせ（マージ）用モーダルのアコーディオン開閉ステート（新規追加）
     const [mergeOpenSections, setMergeOpenSections] = useState({
         0: true,  // 髪のデザイン
         1: false, // 顔・表情・目
@@ -79,7 +79,6 @@ function App() {
     const resultRef = useRef(null);
     const focusTextAreaRef = useRef(null);
 
-    // ローカルストレージからメモリスロットを復元
     useEffect(() => {
         try {
             const saved = localStorage.getItem('idol_designer_slots_v195');
@@ -653,7 +652,7 @@ ${artStyleSpecificInstruction}`;
     // ヘアアクセ(hairAccessory)を髪デザインから衣装・演出設定アコーディオン（第4グループ）の衣装直前へスマートスライド移動！
     const sections = [
         { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
-        { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle', 'aesthetic'] },
+        { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle'] },
         { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'] },
         { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'outfitDetail', 'bodyInterface', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
     ];
@@ -816,7 +815,7 @@ ${artStyleSpecificInstruction}`;
                                     if (sectionTotalCount === 0) return null; // マージできる項目がないアコーディオンは非表示
                                     
                                     return (
-                                        <div key={sIdx} className="border border-slate-200/60 rounded-xl overflow-hidden shadow-sm bg-white">
+                                        <div key={sIdx} className="border border-slate-200/60 rounded-xl overflow-hidden shadow-sm bg-white font-bold">
                                             {/* モーダル内アコーディオンヘッダー */}
                                             <button
                                                 type="button"
@@ -908,11 +907,40 @@ ${artStyleSpecificInstruction}`;
 
                                 {openSections[idx] && (
                                     <div className="p-4 bg-white grid grid-cols-2 gap-3.5">
+                                        {/* 顔セクション(idx === 1)の先頭に、通常表情とFACS強度切り替えの極上セパレートスイッチを復元・実装！ */}
+                                        {idx === 1 && (
+                                            <div className="col-span-2 pb-3 mb-1 border-b border-pink-50">
+                                                <span className="text-pink-400 uppercase tracking-[0.2em] block text-[8px] font-black mb-1.5">Expression Control Mode (表情指定モードスイッチ)</span>
+                                                <div className="flex bg-slate-50 p-1 rounded-2xl gap-1 border border-pink-100/30">
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => { setExpressionMode('standard'); setStatusMessage('通常表情指定モード 🔁'); setTimeout(() => setStatusMessage(''), 1500); }} 
+                                                        className={`flex-1 py-2.5 rounded-xl transition-all font-black text-[10px] ${expressionMode === 'standard' ? 'bg-pink-500 text-white shadow-md' : 'text-slate-400'}`}
+                                                    >
+                                                        STANDARD 表情 🎭
+                                                    </button>
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => { setExpressionMode('facs'); setStatusMessage('FACS動作符号強度モード 🔁'); setTimeout(() => setStatusMessage(''), 1500); }} 
+                                                        className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 font-black text-[10px] ${expressionMode === 'facs' ? 'bg-slate-900 text-white shadow-lg animate-pulse' : 'text-slate-400'}`}
+                                                    >
+                                                        <Icon name="brain" /> FACS 強度指定 🧠
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {section.fields.map((id) => {
                                             const hasVal = selections[id] && selections[id].trim() !== '';
                                             const suggestions = FIELD_SUGGESTIONS[id] || [];
+                                            
+                                            // 表情モードの選択状態に応じて、他方を無効化・グレーアウト風にするUX最適化
+                                            const isStandardExpr = id === 'expression';
+                                            const isFacsExpr = id === 'facs';
+                                            const isDisabled = (isStandardExpr && expressionMode === 'facs') || (isFacsExpr && expressionMode === 'standard');
+
                                             return (
-                                                <div key={id} className={id === 'additionalNotes' || id === 'outfitDetail' || id === 'situation' || id === 'bodyInterface' || id === 'facs' ? 'col-span-2' : ''}>
+                                                <div key={id} className={`transition-all ${id === 'additionalNotes' || id === 'outfitDetail' || id === 'situation' || id === 'bodyInterface' || id === 'facs' ? 'col-span-2' : ''} ${isDisabled ? 'opacity-35 pointer-events-none scale-[0.98]' : ''}`}>
                                                     <div className="flex justify-between items-center mb-1">
                                                         <label className="text-[7px] font-black text-slate-400 uppercase">{LABEL_MAP[id] || id}</label>
                                                         <div className="flex items-center gap-1.5">
@@ -926,25 +954,86 @@ ${artStyleSpecificInstruction}`;
                                                             )}
                                                         </div>
                                                     </div>
-                                                    <textarea rows="2" className="w-full p-2.5 border rounded-xl bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:border-pink-200 transition-colors resize-none custom-scrollbar" value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
-                                                    <div className="mt-1.5 flex gap-1 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap">
-                                                        {suggestions.map((sug, sIdx) => {
-                                                            const isSelected = selections[id] && (selections[id] === sug.value || selections[id].includes(sug.value));
-                                                            return (
-                                                                <button 
-                                                                    type="button" 
-                                                                    key={sIdx} 
-                                                                    onClick={() => applySuggestion(id, sug.value)} 
-                                                                    className={`text-[8.5px] font-bold px-2.5 py-1 rounded-full border transition-all shrink-0 select-none ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-sm scale-95 font-extrabold' : 'bg-white hover:bg-pink-50 text-slate-500 border-slate-200/60'}`}
-                                                                >
-                                                                    {sug.label}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
+                                                    
+                                                    {/* FACSモード時のクイックインサート補完パネル */}
+                                                    {id === 'facs' && !isDisabled && (
+                                                        <div className="mb-2 bg-slate-50 p-2 rounded-xl border border-slate-100 space-y-1 animate-fade-in">
+                                                            <span className="text-[7px] text-slate-400 font-bold uppercase block">FACSクイックインサート:</span>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {FACS_PRESETS.map((preset, pIdx) => (
+                                                                    <button
+                                                                        key={pIdx}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const nextVal = applySuggestionInternal(selections.facs || '', preset.code);
+                                                                            setSelections(prev => ({ ...prev, facs: nextVal }));
+                                                                            setStatusMessage(`FACS: ${preset.label} を適用`);
+                                                                            setTimeout(() => setStatusMessage(''), 1500);
+                                                                        }}
+                                                                        className="bg-white hover:bg-slate-900 hover:text-white border border-slate-200 text-[8px] font-bold px-1.5 py-0.5 rounded transition-all active:scale-95 text-slate-600"
+                                                                        title={preset.desc}
+                                                                    >
+                                                                        {preset.label}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <textarea disabled={isDisabled} rows="2" className={`w-full p-2.5 border rounded-xl text-xs font-bold transition-colors resize-none custom-scrollbar ${selections[id] ? 'bg-pink-50/30 text-pink-700 border-pink-200' : 'bg-slate-50 border-slate-100 focus:bg-white focus:border-pink-200'}`} value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
+                                                    
+                                                    {/* サジェストチップスパネル */}
+                                                    {suggestions.length > 0 && (
+                                                        <div className="mt-1.5 flex gap-1 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap">
+                                                            {suggestions.map((sug, sIdx) => {
+                                                                const isSelected = selections[id] && (selections[id] === sug.value || selections[id].includes(sug.value));
+                                                                return (
+                                                                    <button 
+                                                                        type="button" 
+                                                                        key={sIdx} 
+                                                                        onClick={() => applySuggestion(id, sug.value)} 
+                                                                        className={`text-[8.5px] font-bold px-2.5 py-1 rounded-full border transition-all shrink-0 select-none ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-sm scale-95 font-extrabold' : 'bg-white hover:bg-pink-50 text-slate-500 border-slate-200/60'}`}
+                                                                    >
+                                                                        {sug.label}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}
+
+                                        {/* 顔アコーディオン(idx === 1)の全体メイクの直後に、「かわいい 🔁 美人」の印象補正(aesthetic)スイッチを復元合流！ */}
+                                        {idx === 1 && (
+                                            <div className="col-span-2 pt-3 mt-1 border-t border-pink-50">
+                                                <span className="text-pink-400 uppercase tracking-[0.2em] block text-[8px] font-black mb-1.5">Aesthetic Filter (顔立ち印象補正トグル)</span>
+                                                <div className="flex gap-3 justify-center px-1">
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelections(p => ({ ...p, aesthetic: p.aesthetic === 'cute' ? '' : 'cute' }));
+                                                            setStatusMessage(selections.aesthetic === 'cute' ? '印象補正オフ' : 'かわいい系フィルタ適用 💕');
+                                                            setTimeout(() => setStatusMessage(''), 1500);
+                                                        }} 
+                                                        className={`flex-1 py-3 rounded-full border text-[10px] font-black transition-all ${selections.aesthetic === 'cute' ? 'bg-pink-400 text-white border-pink-400 shadow-md scale-[1.02]' : 'bg-white text-slate-400 border-slate-150 hover:border-pink-200'}`}
+                                                    >
+                                                        かわいい系 💕 (cute)
+                                                    </button>
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelections(p => ({ ...p, aesthetic: p.aesthetic === 'beautiful' ? '' : 'beautiful' }));
+                                                            setStatusMessage(selections.aesthetic === 'beautiful' ? '印象補正オフ' : '美人系フィルタ適用 🔮');
+                                                            setTimeout(() => setStatusMessage(''), 1500);
+                                                        }} 
+                                                        className={`flex-1 py-3 rounded-full border text-[10px] font-black transition-all ${selections.aesthetic === 'beautiful' ? 'bg-purple-500 text-white border-purple-500 shadow-md scale-[1.02]' : 'bg-white text-slate-400 border-slate-150 hover:border-pink-200'}`}
+                                                    >
+                                                        美人/きれい系 🔮 (beautiful)
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -997,7 +1086,7 @@ ${artStyleSpecificInstruction}`;
             {/* 大画面フォーカスエディタ */}
             {focusField && (
                 <div className="fixed inset-0 bg-slate-950/95 z-[1000] flex flex-col justify-between p-4 animate-fade-in">
-                    <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+                    <div className="flex justify-between items-center pb-3 border-b border-pink-100/10">
                         <div className="flex flex-col">
                             <span className="text-pink-500 text-[9px] font-black uppercase tracking-widest italic">🔎 Focusing Editor</span>
                             <h2 className="text-white text-base font-black">{LABEL_MAP[focusField]} の詳細編集</h2>
@@ -1009,7 +1098,7 @@ ${artStyleSpecificInstruction}`;
                         <button type="button" onClick={() => setFocusTempText('')} className="bg-slate-800 text-red-400 text-[10px] px-3 py-1.5 rounded-xl border border-slate-700">クリア</button>
                     </div>
                     <div className="flex-1 my-4 bg-slate-900 rounded-2xl p-4 relative flex flex-col">
-                        {/* モーダル textarea に対する ref={focusTextAreaRef} の紐付けを厳重に確認・マウント（ルール6順守） */}
+                        {/* 独立したモーダル textarea に ref={focusTextAreaRef} を確実にアタッチ（ルール6結合保証順守） */}
                         <textarea ref={focusTextAreaRef} value={focusTempText} onChange={(e) => setFocusTempText(e.target.value)} className="w-full flex-1 bg-transparent text-white text-sm focus:outline-none resize-none custom-scrollbar font-bold leading-relaxed" placeholder="詳細を入力するか、下のサジェストチップを選択してください..." />
                         
                         <div className="absolute bottom-3 right-3 flex bg-slate-950 border border-slate-800 p-1 rounded-2xl gap-1">
@@ -1083,8 +1172,13 @@ const loadFromSlot = (index, memorySlots, setSelections, setPreviews, setStatusM
     const slot = memorySlots[index];
     if (!slot) return;
     setSelections(slot.data);
+    
     if (slot.preview) {
-        setPreviews(prev => ({ ...prev, base: slot.preview, baseStored: slot.preview }));
+        setPreviews(prev => ({
+            ...prev,
+            base: slot.preview,
+            baseStored: slot.preview
+        }));
     }
     setStatusMessage(`Slot ${index + 1} Loaded`);
     setTimeout(() => setStatusMessage(''), 2000);
