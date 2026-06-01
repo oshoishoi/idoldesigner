@@ -186,7 +186,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'マシュマロマット 🍑', value: 'Soft velvety matte peach lipstick texture' }
     ],
     teeth: [
-        { label: '八重歯 🦷', value: 'Charming tiny single vampire-like fang poking out over her lower lip' },
+        { label: '八重歯 🦷', value: 'Charming tiny single vampire-like fangs poking out over her lower lip' },
         { label: '綺麗な並び ✨', value: 'Flawlessly aligned pearly white teeth' }
     ],
     cheekStyle: [
