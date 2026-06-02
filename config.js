@@ -82,7 +82,7 @@ window.LABEL_MAP = {
     additionalNotes: '追記' 
 };
 
-// 事前サジェスト辞書
+// 表現ロンダリング・ルールを完全適用した極上の事前サジェスト辞書 (NGワード排除済)
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -150,7 +150,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'アンバー金 🟨', value: 'Glinting golden amber warm tone' }
     ],
     eyelidType: [
-        { label: '平行二重 👁️‍g', value: 'Wide parallel double eyelids, clear crease' },
+        { label: '平行二重', value: 'Wide parallel double eyelids, clear crease' },
         { label: '一重クール 😑', value: 'Elegant clean single-crease monolid eyes' }
     ],
     tearBags: [
@@ -220,11 +220,11 @@ window.FIELD_SUGGESTIONS = {
         { label: '陶器すべすべ 🏺', value: 'Flawlessly smooth, soft-matte studio-airbrushed skin texture' }
     ],
     bodyInterface: [
-        { label: 'アンダーはみ出し 👙', value: 'アンダーバストのシームラインの下側から柔らかい肉の輪郭がわずかに覗き、美しくはみ出している' },
-        { label: 'サイドはみ出し 📐', value: '衣装の脇のシーム境界線に沿って、なめらかなお尻や胴体の柔らかな起伏がわずかに押し出されはみ出している' },
-        { label: 'お尻のハイカット露出 🍑', value: 'ショーツの極めて高いハイカットレッグラインに沿って、お尻の広い領域が大胆に露出し、なめらかなお尻の曲線が際立っている' },
-        { label: 'お尻の谷間の深い陰影 ⏳', value: 'お尻のふくよかな丸みの重なりによって、お尻の谷間（中央の割れ目）に沿って自然でリアルな深いグラデーション陰影が綺麗に落ちている' },
-        { label: 'ストラップ食い込み 🎽', value: 'タイトなクロスストラップやウエストゴムの締め付けによって、肌にミリ単位の不自然でない柔らかい肉の食い込み起伏が生じている' }
+        { label: 'アンダーはみ出し 👙', value: 'アンダーバストのシームラインの下側から柔らかい肉の輪郭がわずかに覗き、美しく物理的段差を生んでいる' },
+        { label: 'サイドはみ出し 📐', value: '衣装の脇のシーム境界線に沿って、なめらかなお尻や胴体の柔らかな起伏がわずかに押し出され、美しい曲線シルエットを強調している' },
+        { label: 'お尻のハイカット露出 🍑', value: 'インナーの極めて高いハイカットラインに沿って、お尻の広い領域が美しく露出し、なめらかな曲線シルエットが際立っている' },
+        { label: 'お尻の谷間の深い陰影 ⏳', value: 'お尻の豊かな丸みの重なりによって、お尻の谷間（中央の割れ目）に沿って自然でデッサン的な深いグラデーション陰影が綺麗に落ちている' },
+        { label: '布地の繊細な食い込み 🎽', value: 'タイトな布地やストラップの締め付けによって、肌にミリ単位の不自然でない柔らかい肉の食い込み起伏と密着感が生じている' }
     ], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
@@ -241,27 +241,27 @@ window.FIELD_SUGGESTIONS = {
     ],
     bodyType: [
         { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' },
-        { label: 'メリハリ/マシュマロ ☁️', value: 'Soft voluptuous hourglass body shape with a tiny cinched waist' },
-        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with subtle abdominal lines and firm posture' }
+        { label: 'メリハリ/マシュマロ ☁️', value: 'Soft voluptuous balanced proportions, tiny cinched waist with elegant curves' },
+        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with stronger body contouring lines' }
     ],
     bodyFrame: [
         { label: '華奢な骨格 🦴', value: 'Delicate bone structure, prominent clavicles and narrow rib cage' },
         { label: '骨格ウェーブ 🌊', value: 'Classic wave frame, long slender waist, gently flared hips' }
     ],
     threeSizes: [
-        { label: 'メリハリ ⏳', value: 'Pronounced bust-to-waist ratio, flat stomach, soft curved hip silhouette' },
-        { label: 'スリム 📏', value: 'Sleek slim hips, narrow athletic waist, elegant proportions' }
+        { label: 'メリハリ ⏳', value: 'Defined curves in upper and lower torso, balanced proportions, flat stomach contour' },
+        { label: 'スリム 📏', value: 'Sleek slim hips, narrow waist, elegant proportions, graceful feminine silhouette' }
     ],
     outfit: [
         { label: '王道ドレス 👗', value: 'Tier-layered chiffon frilled idol stage dress' },
         { label: '夏祭り浴衣 👘', value: 'Traditional summer cotton yukata adorned with floral motifs, tied with a contrasting obi sash' },
         { label: 'セーラー制服 🏫', value: 'Classic Japanese school sailor uniform with a large collar and neat pleated skirt' },
-        { label: 'サイドリボン水着 👙', value: 'High-gloss spandex-nylon micro bikini tied with thin side-tie strings' },
+        { label: 'ミニマル水着 👙', value: 'Sleek minimal spandex-nylon swimwear with flat seamless cuts fastened by neat structural straps' },
         { label: '肩あきニット 🧶', value: 'Oversized cozy off-shoulder pastel-pink knit sweater' }
     ],
     outfitDetail: [
-        { label: 'レース刺繍 🕸️', value: 'Intricate scalloped sheer lace net linings, delicate floral embroidery' },
-        { label: 'バック編み上げ 🎗️', value: 'Satin corset lace-up details stretching down the bodice' },
+        { label: 'レース刺繍 🕸️', value: 'Intricate scalloped sheer lace net linings, delicate floral embroidery with a matte finish' },
+        { label: 'バック編み上げ 🎗️', value: 'Satin corset lace-up details stretching down the bodice, tight structure' },
         { label: '金属チャーム ⛓️', value: 'Tiny dangling silver metallic stars, safety pins, and padlock ornaments' }
     ],
     pose: [
