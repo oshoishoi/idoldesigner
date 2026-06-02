@@ -241,27 +241,27 @@ window.FIELD_SUGGESTIONS = {
     ],
     bodyType: [
         { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' },
-        { label: 'メリハリ/マシュマロ ☁️', value: 'Soft voluptuous balanced proportions, tiny cinched waist with elegant curves' },
-        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with stronger body contouring lines' }
+        { label: 'メリハリ/マシュマロ ☁️', value: 'Soft voluptuous hourglass body shape with a tiny cinched waist' },
+        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with subtle abdominal lines and firm posture' }
     ],
     bodyFrame: [
         { label: '華奢な骨格 🦴', value: 'Delicate bone structure, prominent clavicles and narrow rib cage' },
         { label: '骨格ウェーブ 🌊', value: 'Classic wave frame, long slender waist, gently flared hips' }
     ],
     threeSizes: [
-        { label: 'メリハリ ⏳', value: 'Defined curves in upper and lower torso, balanced proportions, flat stomach contour' },
-        { label: 'スリム 📏', value: 'Sleek slim hips, narrow waist, elegant proportions, graceful feminine silhouette' }
+        { label: 'メリハリ ⏳', value: 'Pronounced bust-to-waist ratio, flat stomach, soft curved hip silhouette' },
+        { label: 'スリム 📏', value: 'Sleek slim hips, narrow athletic waist, elegant proportions' }
     ],
     outfit: [
         { label: '王道ドレス 👗', value: 'Tier-layered chiffon frilled idol stage dress' },
         { label: '夏祭り浴衣 👘', value: 'Traditional summer cotton yukata adorned with floral motifs, tied with a contrasting obi sash' },
         { label: 'セーラー制服 🏫', value: 'Classic Japanese school sailor uniform with a large collar and neat pleated skirt' },
-        { label: 'ミニマル水着 👙', value: 'Sleek minimal spandex-nylon swimwear with flat seamless cuts fastened by neat structural straps' },
+        { label: 'ミニマル水着 👙', value: 'Sleek minimal spandex-nylon two-piece swimwear with flat seamless cuts fastened by neat structural straps' },
         { label: '肩あきニット 🧶', value: 'Oversized cozy off-shoulder pastel-pink knit sweater' }
     ],
     outfitDetail: [
-        { label: 'レース刺繍 🕸️', value: 'Intricate scalloped sheer lace net linings, delicate floral embroidery with a matte finish' },
-        { label: 'バック編み上げ 🎗️', value: 'Satin corset lace-up details stretching down the bodice, tight structure' },
+        { label: 'レース刺繍 🕸️', value: 'Intricate scalloped sheer lace net linings, delicate floral embroidery' },
+        { label: 'バック編み上げ 🎗️', value: 'Satin corset lace-up details stretching down the bodice' },
         { label: '金属チャーム ⛓️', value: 'Tiny dangling silver metallic stars, safety pins, and padlock ornaments' }
     ],
     pose: [
