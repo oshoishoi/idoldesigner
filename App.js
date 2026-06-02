@@ -33,6 +33,13 @@ const Icon = ({ name, className = "" }) => {
 };
 
 function App() {
+    const sections = [
+        { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
+        { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle', 'aesthetic'] },
+        { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'] },
+        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'outfitDetail', 'bodyInterface', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
+    ];
+
     const createEmptyState = () => {
         const obj = { orientation: 'portrait', ratio: '9:16', aesthetic: '' };
         FIELD_KEYS.forEach(k => obj[k] = '');
@@ -53,7 +60,6 @@ function App() {
     const [previews, setPreviews] = useState({ base: null, plus: null, baseStored: null, plusStored: null });
     const [memorySlots, setMemorySlots] = useState(Array(10).fill(null));
 
-    // アコーディオン開閉トグルの状態
     const [openSections, setOpenSections] = useState({
         0: true,  
         1: false, 
@@ -61,15 +67,10 @@ function App() {
         3: false  
     });
 
-    // 2枚目画像重ね合わせ（マージ）用モーダルのアコーディオン開閉ステート
     const [mergeOpenSections, setMergeOpenSections] = useState({
-        0: true,  
-        1: false, 
-        2: false, 
-        3: false  
+        0: true, 1: true, 2: true, 3: true
     });
 
-    // 大画面フォーカス編集用ステート
     const [focusField, setFocusField] = useState(null); 
     const [focusTempText, setFocusTempText] = useState(''); 
     const [sugMode, setSugMode] = useState('append'); 
@@ -79,7 +80,6 @@ function App() {
     const resultRef = useRef(null);
     const focusTextAreaRef = useRef(null);
 
-    // ローカルストレージからメモリスロットを復元
     useEffect(() => {
         try {
             const saved = localStorage.getItem('idol_designer_slots_v195');
@@ -96,7 +96,6 @@ function App() {
         } catch (e) { console.error("Restore failed:", e); }
     }, []);
 
-    // 安定コピー処理（writeText優先 ➔ textareaフォールバック）
     const copyText = (text, type) => {
         if (!text) return;
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -384,7 +383,7 @@ function App() {
         const file = e.target.files?.[0];
         if (!file || isAnalyzing) return;
         setIsAnalyzing(mode);
-        setStatusMessage('分析中');
+        setStatusMessage('分析中...');
         try {
             const { b64, pUrl, b64Preview } = await safeProcessImage(file);
             setPreviews(prev => ({ 
@@ -399,9 +398,9 @@ function App() {
         } finally { if(e.target) e.target.value = ''; }
     };
 
+    // ＝＝＝ 画像分析エンジンリクエスト（自動フォールバック対応） ＝＝＝
     const runAnalysis = async (base64, mode) => {
-        // APIレートリミット(429)対策: 初期遅延を2秒に設定し、安全にバックオフする
-        let delay = 2000;
+        let delay = 1000;
         let response;
         let success = false;
         
@@ -416,16 +415,13 @@ function App() {
 3. データ形式の平滑化：すべてのキーに対する値（Value）は、ネストさせず、必ずプレーンな「1つの文字列（String）」としてフラットに出力すること。オブジェクトや配列を値に含めることは絶対厳禁とする。
 4. 画像から読み取れない項目、あるいは該当しない項目がある場合も、勝手に項目自体を削除せず、値を ""（空文字）または "なし" として、必ず指定されたすべてのキーを漏れなく出力すること。
 
-【最重要・完全日本語化指令（英語出力の徹底的禁止）】
-- 髪型、顔、身体、衣装、演出などのすべての分析結果（値：Value）は、いかなる場合であっても英語フレーズ（例: "Long twin-tails", "doe-like eyes"など）をそのまま出力することを【徹底的に禁止】する。
-- 必ず正しく美しい「日本語のみ」を使用して、詳細、質感、輪郭を客観的かつ美麗に言語化・日本語翻訳して出力せよ。英語での出力は重大なバグ・不具合とみなす。
-
 【重要監査項目・顔の静動デカップリング（表情・造形分離ルール）】
 - expression, facs: ウインク、大笑い、驚き、口を開けてはにかむ、叫び、すぼめ口、片眉上げなど、「表情筋の運動や一時的な動的変化・ジェスチャー」はすべてこの2つの項目（expression/facs）に完全一元化・集約して出力せよ。
 - eyeShape, eyeSymmetry, eyelidType, mouthShape, lipTexture, eyebrowShape 等の顔パーツ造形項目:
-  - 画像上のモデルがウインクをしたり口を開けたり、眉を動かしたりしていても、「もしモデルが真顔・無表情（ニュートラル）に戻ったとした場合の、本来の静的・物理的なパーツの造形、形状、配置関係」のみを逆算して、極めて端的な日本語で出力せよ。
-- height：モデルの骨格や背景の対比から推測される「身長の印象」を日本語のプレーンテキストで詳細に記述せよ。
-- threeSizes：胸の厚み、ウエストのくびれ、ヒップラインの肉付きから推測される「肉付きの質感や体格バランス」を日本語のプレーンテキストで刻明に記述せよ。数値の出力は禁止する。
+  - 画像上のモデルがウインクをしたり口を開けたり、眉を動かしたりしていても、「もしモデルが真顔・無表情（ニュートラル）に戻ったとした場合の、本来の静的・物理的なパーツの造形、形状、配置関係」のみを逆算して、極めて端的な英語の1フレーズで出力せよ。
+  - 例：片目を閉じるウインクをしていても、eyeShapeには "large doe-like eyes" や "almond-shaped eyes" のように、両目が本来持っている無表情時の形のみを出力し、"wink" や "closed" などの動的変化を混ぜてはならない。口が開いていても、mouthShapeには "natural m-shaped lips" や "small cupids-bow mouth" のように、本来の静的造形のみを端的に出力せよ。
+- height：モデルの骨格や背景の対比から推測される「身長の印象（例: 小柄で150cm前半の印象、高身長でスタイリッシュなバランス、等）」を日本語のプレーンテキストで詳細に記述せよ。
+- threeSizes：胸の厚み、ウエストのくびれ、ヒップラインの肉付きから推測される「肉付きの質感や体格バランス（例: 砂時計型のメリハリボディ、豊かなバストと細いウエストのコントラスト、スレンダーで引き締まった肉付き、等）」を日本語のプレーンテキストで刻明に記述せよ。数値の出力は禁止する。
 - facePlacement：顔全体の画像内位置ではなく、輪郭領域内における目・鼻・口・眉の間隔や配置比率（中顔面の長さ、求心・遠心顔、ベビーフェイス配置等）を正確な日本語で記述。
 - bodyInterface (その他): 
   - 衣装の布地境界線（シームライン）やストラップ、ウエストバンド、袖口と肌が干渉する物理境界線について超精緻なミリ単位スキャンを実行せよ。
@@ -436,106 +432,119 @@ function App() {
 ${keyListString}`;
 
         try {
-            for (let attempt = 0; attempt < 5; attempt++) {
-                try {
-                    setStatusMessage(attempt > 0 ? `再試行中 (${attempt}/5)...` : '分析中');
-                    response = await fetch(getApiUrl("generateContent"), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ 
-                                parts: [
-                                    { text: "添付された画像キャラクターのビジュアル要素を精密にスキャンし、指示されたフィールドキーリストに対応する日本語のJSONデータを出力してください。" },
-                                    { inlineData: { mimeType: "image/jpeg", data: base64 } }
-                                ] 
-                            }],
-                            systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
-                            safetySettings,
-                            generationConfig: { responseMimeType: "application/json" }
-                        }),
-                    });
+            const FALLBACK_MODELS = ['gemini-3.5-flash', 'gemini-3.0-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+            let attempt = 0;
 
-                    if (response.status === 429) {
-                        if (attempt === 4) throw new Error("WAIT_LIMIT");
-                        // 429エラー時は少し長めに待つ(2s -> 3s -> 4.5s -> 6.7s)
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 1.5;
+            while (attempt < 5 && !success) {
+                for (let i = 0; i < FALLBACK_MODELS.length; i++) {
+                    const currentModel = FALLBACK_MODELS[i];
+                    const shortName = currentModel.replace('gemini-', '');
+                    
+                    try {
+                        setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '分析中...');
+                        response = await fetch(getApiUrl("generateContent", currentModel), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ 
+                                    parts: [
+                                        { text: "添付された画像キャラクターのビジュアル要素を精密にスキャンし、指示されたフィールドキーリストに対応する日本語のJSONデータを出力してください。" },
+                                        { inlineData: { mimeType: "image/jpeg", data: base64 } }
+                                    ] 
+                                }],
+                                systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
+                                safetySettings,
+                                generationConfig: { responseMimeType: "application/json" }
+                            }),
+                        });
+
+                        if (response.ok) {
+                            success = true;
+                            break;
+                        } else if (response.status === 404 || response.status === 429 || response.status === 503) {
+                            // 未実装・制限・混雑時は即座に次のモデルへフォールバック
+                            continue;
+                        } else {
+                            throw new Error("HTTP " + response.status);
+                        }
+                    } catch (err) {
                         continue;
                     }
+                }
 
-                    if (!response.ok) throw new Error("HTTP " + response.status);
-                    success = true;
-                    break;
-                } catch (err) {
-                    // 通信エラー等
-                    if (attempt === 4 || err.message === "WAIT_LIMIT") {
-                        throw err;
-                    }
+                if (success) break;
+
+                attempt++;
+                if (attempt < 5) {
+                    setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 1.5;
+                    delay *= 2;
                 }
             }
 
-            if (success) {
-                const res = await response.json();
-                const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-                const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
+            if (!success) {
+                setStatusMessage('制限中: 1分待ってください');
+                return;
+            }
 
-                const safeStringifyValue = (val) => {
-                    if (val === null || val === undefined) return '';
-                    if (typeof val === 'object') {
-                        if (Array.isArray(val)) {
-                            return val.map(v => typeof v === 'object' ? JSON.stringify(v) : String(v)).join('、');
-                        }
-                        return Object.entries(val).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`).join('、');
+            const res = await response.json();
+            const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+            const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
+
+            const safeStringifyValue = (val) => {
+                if (val === null || val === undefined) return '';
+                if (typeof val === 'object') {
+                    if (Array.isArray(val)) {
+                        return val.map(v => typeof v === 'object' ? JSON.stringify(v) : String(v)).join('、');
                     }
-                    return String(val);
-                };
-
-                const normalizedResult = {};
-                Object.keys(result).forEach(rawKey => {
-                    normalizedResult[rawKey.trim().toLowerCase()] = safeStringifyValue(result[rawKey]);
-                });
-
-                if (mode === 'base') {
-                    setSelections(prev => {
-                        const next = createEmptyState();
-                        next.orientation = prev.orientation;
-                        next.ratio = prev.ratio;
-                        FIELD_KEYS.forEach(k => { 
-                            const aiVal = normalizedResult[k.toLowerCase()];
-                            if (aiVal !== undefined && aiVal !== null) next[k] = aiVal; 
-                        });
-                        return next;
-                    });
-                } else {
-                    const mergedStaged = {};
-                    FIELD_KEYS.forEach(k => {
-                        mergedStaged[k] = normalizedResult[k.toLowerCase()] !== undefined ? normalizedResult[k.toLowerCase()] : '';
-                    });
-                    setStagedData(mergedStaged);
-                    setSelectedFields(FIELD_KEYS.reduce((a, k) => {
-                        a[k] = mergedStaged[k] !== 'none' && mergedStaged[k] !== '不明' && mergedStaged[k] !== '';
-                        return a;
-                    }, {}));
+                    return Object.entries(val).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`).join('、');
                 }
-                setStatusMessage('');
+                return String(val);
+            };
+
+            const normalizedResult = {};
+            Object.keys(result).forEach(rawKey => {
+                normalizedResult[rawKey.trim().toLowerCase()] = safeStringifyValue(result[rawKey]);
+            });
+
+            if (mode === 'base') {
+                setSelections(prev => {
+                    const next = createEmptyState();
+                    next.orientation = prev.orientation;
+                    next.ratio = prev.ratio;
+                    FIELD_KEYS.forEach(k => { 
+                        const aiVal = normalizedResult[k.toLowerCase()];
+                        if (aiVal !== undefined && aiVal !== null) next[k] = aiVal; 
+                    });
+                    return next;
+                });
+            } else {
+                const mergedStaged = {};
+                FIELD_KEYS.forEach(k => {
+                    mergedStaged[k] = normalizedResult[k.toLowerCase()] !== undefined ? normalizedResult[k.toLowerCase()] : '';
+                });
+                setStagedData(mergedStaged);
+                setSelectedFields(FIELD_KEYS.reduce((a, k) => {
+                    a[k] = mergedStaged[k] !== 'none' && mergedStaged[k] !== '不明' && mergedStaged[k] !== '';
+                    return a;
+                }, {}));
             }
+            setStatusMessage('');
         } catch (e) {
-            setStatusMessage(e.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : '解析失敗');
+            setStatusMessage('解析失敗');
         } finally {
-            // 例外時でも必ずローディング（isAnalyzing）を解除する
+            // 例外発生時であっても確実にフラグをリセットしてUIロック(永続フリーズ)を防止
             setTimeout(() => setIsAnalyzing(null), 1000);
         }
     };
 
+    // ＝＝＝ プロンプト生成エンジンリクエスト（自動フォールバック対応） ＝＝＝
     const generatePrompt = async () => {
         if (isProcessing) return;
         setIsProcessing(true);
-        setStatusMessage('生成中');
+        setStatusMessage('生成中...');
         
-        // APIレートリミット対策: 初期遅延を2秒に設定
-        let delay = 2000;
+        let delay = 1000;
         let response;
         let success = false;
 
@@ -551,10 +560,9 @@ ${keyListString}`;
             const outfitText = selections.outfit ? String(selections.outfit).toLowerCase() : "";
             let routeSpecificInstruction = "";
 
-            // 衣服特性に応じた動的プロンプトルーティング設計
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
                 routeSpecificInstruction = `
-- 【露出領域の物理的ロック】: 腕の隙間を勝手に布地で塞がれるのを防ぐため、肩や胴体を完全に露出させる工学的アパレル表現を冒頭部分に必ず配置すること。
+- 【露出領域の物理的ロック】: デザインの隙間を勝手に布地で塞がれるのを防ぐため、肩や胴体を完全に露出させる工学的アパレル表現を冒頭部分に必ず配置すること。
 - 【過激ワードの幾何学記述への完全置き換え（ロンダリング）】: セーフティフィルターを回避するため、"micro" や "high-cut" などの過激語はプロンプトでの使用を完全に禁止・排除せよ。代わりに "minimal seamless inner briefs" などのアパレル工学的・テクスチャ幾何学的表現を用いて精緻に描写すること。
 - 【衣装形状の勝手な省略の徹底防止】: AIが勝手に衣装構造を簡略化するのを阻止するため、形状固定化指示テキストを必ずプロンプトに組み込め。`;
             } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|kimono|yukata|着崩)/i)) {
@@ -603,63 +611,70 @@ ${keyListString}`;
 ${routeSpecificInstruction}
 ${artStyleSpecificInstruction}`;
 
-            for (let attempt = 0; attempt < 5; attempt++) {
-                try {
-                    setStatusMessage(attempt > 0 ? `再試行中 (${attempt}/5)...` : '生成中');
-                    response = await fetch(getApiUrl("generateContent"), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプトを作成し、末尾に比率 "${arTag}" 含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
-                            systemInstruction: { parts: [{ text: promptSystemInstruction }] },
-                            safetySettings,
-                            generationConfig: { responseMimeType: "application/json" }
-                        }),
-                    });
+            const FALLBACK_MODELS = ['gemini-3.5-flash', 'gemini-3.0-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+            let attempt = 0;
 
-                    if (response.status === 429) {
-                        if (attempt === 4) throw new Error("WAIT_LIMIT");
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 1.5;
+            while (attempt < 5 && !success) {
+                for (let i = 0; i < FALLBACK_MODELS.length; i++) {
+                    const currentModel = FALLBACK_MODELS[i];
+                    const shortName = currentModel.replace('gemini-', '');
+                    
+                    try {
+                        setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '生成中...');
+                        response = await fetch(getApiUrl("generateContent", currentModel), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプトを作成し、末尾に比率 "${arTag}" 含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
+                                systemInstruction: { parts: [{ text: promptSystemInstruction }] },
+                                safetySettings,
+                                generationConfig: { responseMimeType: "application/json" }
+                            }),
+                        });
+
+                        if (response.ok) {
+                            success = true;
+                            break;
+                        } else if (response.status === 404 || response.status === 429 || response.status === 503) {
+                            // 未実装・制限・混雑時は即座に次のモデルへフォールバック
+                            continue;
+                        } else {
+                            throw new Error("HTTP " + response.status);
+                        }
+                    } catch (err) {
                         continue;
                     }
+                }
 
-                    if (!response.ok) throw new Error("HTTP " + response.status);
-                    success = true;
-                    break;
-                } catch (err) {
-                    if (attempt === 4 || err.message === "WAIT_LIMIT") {
-                        throw err;
-                    }
+                if (success) break;
+
+                attempt++;
+                if (attempt < 5) {
+                    setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 1.5;
+                    delay *= 2;
                 }
             }
 
-            if (success) {
-                const res = await response.json();
-                const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-                const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
-                setEnglishPrompt(result.positive || "");
-                setNegativePrompt(result.negative || "");
-                setStatusMessage('');
-                setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
+            if (!success) {
+                setStatusMessage('制限中: 1分待ってください');
+                return;
             }
+
+            const res = await response.json();
+            const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+            const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
+            setEnglishPrompt(result.positive || "");
+            setNegativePrompt(result.negative || "");
+            setStatusMessage('');
+            setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
         } catch (e) {
-            setStatusMessage(e.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : 'Error');
+            setStatusMessage('Error');
         } finally {
-            // いかなるエラー時もフリーズを防ぐため確実にステートを解除する
+            // 例外発生時であっても確実にフラグをリセットしてUIロックを永続フリーズを防止
             setIsProcessing(false);
         }
     };
-
-    // ヘアアクセ(hairAccessory)を髪デザインから衣装・演出設定アコーディオン（第4グループ）の衣装直前へスマートスライド移動！
-    const sections = [
-        { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
-        { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle'] }, 
-        { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'] }, 
-        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'outfitDetail', 'bodyInterface', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] } 
-    ];
 
     return (
         <div className="min-h-[100dvh] bg-[#FFF8FA] text-slate-800 font-sans pb-40 overflow-x-hidden text-[12px] antialiased">
@@ -786,67 +801,77 @@ ${artStyleSpecificInstruction}`;
 
                 <section className={`bg-white rounded-3xl p-5 shadow-sm border border-pink-50 flex gap-4 ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}>
                     <div onClick={() => !isAnalyzing && baseInputRef.current?.click()} className="flex-1 aspect-square border-2 border-dashed border-blue-100 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 relative cursor-pointer">
-                        {previews.base ? <img src={previews.base} className="w-full h-full object-cover animate-fade-in" /> : <span className="text-[8px] font-bold text-blue-400">ベース画像</span>}
-                        {isAnalyzing === 'base' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center animate-spin"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>}
+                        {previews.base ? <img src={previews.base} className="w-full h-full object-cover animate-fade-in" /> : <span className="text-[8px] font-bold text-blue-400">BASE MODEL</span>}
+                        {isAnalyzing === 'base' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>}
                     </div>
                     <div onClick={() => !isAnalyzing && plusInputRef.current?.click()} className="flex-1 aspect-square border-2 border-dashed border-pink-100 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 relative cursor-pointer">
-                        {previews.plus ? <img src={previews.plus} className="w-full h-full object-cover animate-fade-in" /> : <span className="text-[8px] font-bold text-pink-400">プラス画像 (重ね合わせ)</span>}
+                        {previews.plus ? <img src={previews.plus} className="w-full h-full object-cover animate-fade-in" /> : <span className="text-[8px] font-bold text-pink-400">ADDITIONAL (PLUS)</span>}
                         {isAnalyzing === 'plus' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center animate-spin"><div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div></div>}
                     </div>
                     <input type="file" ref={baseInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'base')} />
                     <input type="file" ref={plusInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'plus')} />
                 </section>
 
+                {/* 2枚目画像のグループ別一括マージ選択画面 (アコーディオンUI版) */}
                 {stagedData && (
-                    <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-pink-100">
-                            <div className="p-4 bg-pink-500 text-white font-bold text-xs flex justify-between items-center italic tracking-widest uppercase">
-                                <span>要素の重ね合わせマージ</span> 
-                                <button type="button" onClick={() => setStagedData(null)}><Icon name="x" className="w-4 h-4" /></button>
+                    <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+                        <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+                            <div className="p-4 bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold text-xs flex justify-between items-center italic tracking-widest uppercase">
+                                Merge Components 
+                                <button type="button" onClick={() => setStagedData(null)} className="p-1 hover:bg-white/20 rounded-full transition-colors"><Icon name="x" className="w-4 h-4" /></button>
                             </div>
-                            
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 custom-scrollbar">
-                                <p className="text-[7.5px] text-slate-400 font-bold leading-normal uppercase block border-b border-slate-200 pb-2 mb-2 italic">※マージしたいグループを開き、重ね合わせたい要素にチェックを入れてください。</p>
-                                {sections.map((section, sIdx) => {
-                                    const availableMergeFields = section.fields.filter(key => stagedData[key] && stagedData[key] !== 'none' && stagedData[key] !== '不明' && stagedData[key] !== '');
-                                    const sectionCheckedCount = availableMergeFields.filter(key => selectedFields[key]).length;
-                                    const sectionTotalCount = availableMergeFields.length;
-                                    
-                                    if (sectionTotalCount === 0) return null; 
-                                    
+                            <div className="bg-pink-50 text-[9px] text-pink-600 font-bold p-2 text-center border-b border-pink-100">
+                                抽出されたパラメータをグループごとに選択してマージできます
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50 custom-scrollbar">
+                                {sections.map((section, idx) => {
+                                    const validFields = section.fields.filter(f => stagedData[f] && stagedData[f] !== 'none' && stagedData[f] !== '不明');
+                                    if (validFields.length === 0) return null;
+
+                                    const allChecked = validFields.every(f => selectedFields[f]);
+
                                     return (
-                                        <div key={sIdx} className="border border-slate-200/60 rounded-xl overflow-hidden shadow-sm bg-white font-bold">
-                                            <button
-                                                type="button"
-                                                onClick={() => setMergeOpenSections(prev => ({ ...prev, [sIdx]: !prev[sIdx] }))}
-                                                className="w-full px-3.5 py-2.5 bg-slate-100/70 text-left flex justify-between items-center font-black transition-colors"
-                                            >
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    <span className="text-[9px] font-black text-slate-600 uppercase truncate">{section.title}</span>
-                                                    <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${sectionCheckedCount > 0 ? 'bg-pink-100 text-pink-600' : 'bg-slate-200 text-slate-400'}`}>
-                                                        {sectionCheckedCount}/{sectionTotalCount} 選択
-                                                    </span>
-                                                </div>
-                                                {mergeOpenSections[sIdx] ? <Icon name="chevronUp" className="text-pink-400" /> : <Icon name="chevronDown" className="text-slate-400" />}
-                                            </button>
-                                            
-                                            {mergeOpenSections[sIdx] && (
-                                                <div className="p-3 bg-white space-y-1.5 border-t border-slate-100 animate-fade-in">
-                                                    {availableMergeFields.map((key) => (
-                                                        <div 
-                                                            key={key} 
-                                                            onClick={() => setSelectedFields(prev => ({ ...prev, [key]: !prev[key] }))} 
-                                                            className={`p-2 rounded-lg border text-[11px] flex items-center gap-2.5 transition-all cursor-pointer ${selectedFields[key] ? 'bg-pink-50/10 border-pink-500 shadow-inner' : 'bg-white border-slate-100 hover:bg-slate-50'}`}
-                                                        >
-                                                            <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors shrink-0 ${selectedFields[key] ? 'bg-pink-500 border-pink-500 text-white' : 'bg-white border-slate-300'}`}>
-                                                                {selectedFields[key] && <Icon name="check" />}
+                                        <div key={idx} className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                                            <div className="px-3 py-2 bg-slate-100/50 border-b border-slate-100 flex justify-between items-center">
+                                                <button 
+                                                    type="button" 
+                                                    className="flex items-center gap-2 font-black text-[10px] text-slate-700 flex-1 text-left"
+                                                    onClick={() => setMergeOpenSections(prev => ({...prev, [idx]: !prev[idx]}))}
+                                                >
+                                                    {mergeOpenSections[idx] ? <Icon name="chevronUp" className="w-3 h-3 text-pink-500" /> : <Icon name="chevronDown" className="w-3 h-3 text-slate-400" />}
+                                                    {section.title}
+                                                </button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedFields(prev => {
+                                                            const next = {...prev};
+                                                            const targetState = !allChecked;
+                                                            validFields.forEach(f => next[f] = targetState);
+                                                            return next;
+                                                        });
+                                                    }}
+                                                    className={`text-[9px] font-bold px-2 py-1 rounded-lg border transition-all active:scale-95 ${allChecked ? 'bg-pink-50 text-pink-600 border-pink-200' : 'bg-white text-slate-500 border-slate-200'}`}
+                                                >
+                                                    {allChecked ? '全解除' : '一括チェック'}
+                                                </button>
+                                            </div>
+                                            {mergeOpenSections[idx] && (
+                                                <div className="p-2 space-y-1.5">
+                                                    {validFields.map(key => {
+                                                        const val = stagedData[key];
+                                                        return (
+                                                            <div key={key} onClick={() => setSelectedFields(prev => ({ ...prev, [key]: !prev[key] }))} className={`p-2.5 rounded-xl border text-xs flex items-center gap-3 transition-all cursor-pointer active:scale-[0.98] ${selectedFields[key] ? 'bg-pink-50/50 border-pink-400 shadow-sm' : 'bg-white border-slate-100 opacity-60 hover:opacity-100'}`}>
+                                                                <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${selectedFields[key] ? 'bg-pink-500 border-pink-500 text-white' : 'bg-white border-slate-300'}`}>
+                                                                    {selectedFields[key] && <Icon name="check" className="w-3 h-3" />}
+                                                                </div>
+                                                                <div className="min-w-0 flex-1">
+                                                                    <span className="text-[7px] text-slate-400 block uppercase font-black tracking-tighter">{LABEL_MAP[key]}</span>
+                                                                    <p className="font-bold truncate text-slate-800 text-[10px]">{String(val)}</p>
+                                                                </div>
                                                             </div>
-                                                            <div className="min-w-0 flex-1">
-                                                                <span className="text-[7px] text-slate-400 block uppercase font-black tracking-tighter leading-none mb-0.5">{LABEL_MAP[key]}</span>
-                                                                <p className="font-bold truncate text-slate-700 leading-tight">{String(stagedData[key])}</p>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
@@ -854,7 +879,7 @@ ${artStyleSpecificInstruction}`;
                                 })}
                             </div>
                             <div className="p-4 bg-white border-t flex gap-2">
-                                <button type="button" onClick={() => setStagedData(null)} className="w-full py-3 text-slate-400 font-bold text-xs uppercase tracking-tight hover:bg-slate-50 rounded-xl">キャンセル</button>
+                                <button type="button" onClick={() => setStagedData(null)} className="flex-1 py-3 text-slate-400 font-bold text-xs uppercase tracking-tight active:scale-95 transition-transform bg-slate-100 rounded-xl hover:bg-slate-200">CANCEL</button>
                                 <button type="button" onClick={() => {
                                     setSelections(prev => {
                                         const next = { ...prev };
@@ -862,9 +887,7 @@ ${artStyleSpecificInstruction}`;
                                         return next;
                                     });
                                     setStagedData(null);
-                                    setStatusMessage('選択された項目をマージしました');
-                                    setTimeout(() => setStatusMessage(''), 2000);
-                                }} className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-xs tracking-widest italic uppercase hover:bg-pink-600 transition-colors">マージを実行</button>
+                                }} className="flex-[2] bg-slate-900 text-white py-3 rounded-xl font-bold text-xs tracking-widest italic uppercase shadow-lg shadow-slate-900/20 active:scale-95 transition-transform hover:bg-pink-600">Merge Items</button>
                             </div>
                         </div>
                     </div>
@@ -886,7 +909,7 @@ ${artStyleSpecificInstruction}`;
                             <div key={idx} className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm animate-fade-in">
                                 <div className="w-full px-4 py-3 bg-slate-50/60 text-left flex justify-between items-center font-black cursor-pointer" onClick={() => toggleSection(idx)}>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{idx + 1}. {section.title}</span>
+                                        <span className="text-[10px] font-black text-slate-600 uppercase">{idx + 1}. {section.title}</span>
                                         <span className="text-[8px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-400">{fillCount} / {totalCount}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -905,42 +928,15 @@ ${artStyleSpecificInstruction}`;
 
                                 {openSections[idx] && (
                                     <div className="p-4 bg-white grid grid-cols-2 gap-3.5">
-                                        {idx === 1 && (
-                                            <div className="col-span-2 pb-3 mb-1 border-b border-pink-50 animate-fade-in">
-                                                <span className="text-pink-400 uppercase tracking-[0.2em] block text-[8px] font-black mb-1.5">表情コントロールスイッチ (表情筋FACS・通常表情)</span>
-                                                <div className="flex bg-slate-50 p-1 rounded-2xl gap-1 border border-pink-100/30">
-                                                    <button 
-                                                        type="button" 
-                                                        onClick={() => { setExpressionMode('standard'); setStatusMessage('通常表情指定モードに設定'); setTimeout(() => setStatusMessage(''), 1500); }} 
-                                                        className={`flex-1 py-2.5 rounded-xl transition-all font-black text-[10px] ${expressionMode === 'standard' ? 'bg-pink-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
-                                                    >
-                                                        通常表情指定 🎭
-                                                    </button>
-                                                    <button 
-                                                        type="button" 
-                                                        onClick={() => { setExpressionMode('facs'); setStatusMessage('FACS動作符号強度モードに設定'); setTimeout(() => setStatusMessage(''), 1500); }} 
-                                                        className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 font-black text-[10px] ${expressionMode === 'facs' ? 'bg-slate-900 text-white shadow-lg animate-pulse' : 'text-slate-400 hover:text-slate-600'}`}
-                                                    >
-                                                        <Icon name="brain" /> FACS強度指定 🧠
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
                                         {section.fields.map((id) => {
                                             const hasVal = selections[id] && selections[id].trim() !== '';
                                             const suggestions = FIELD_SUGGESTIONS[id] || [];
-                                            
-                                            const isStandardExpr = id === 'expression';
-                                            const isFacsExpr = id === 'facs';
-                                            const isDisabled = (isStandardExpr && expressionMode === 'facs') || (isFacsExpr && expressionMode === 'standard');
-
                                             return (
-                                                <div key={id} className={`transition-all ${id === 'additionalNotes' || id === 'outfitDetail' || id === 'situation' || id === 'bodyInterface' ? 'col-span-2' : ''} ${isDisabled ? 'opacity-35 pointer-events-none scale-[0.98]' : ''}`}>
+                                                <div key={id} className={id === 'additionalNotes' || id === 'outfitDetail' || id === 'situation' ? 'col-span-2' : ''}>
                                                     <div className="flex justify-between items-center mb-1">
                                                         <label className="text-[7px] font-black text-slate-400 uppercase">{LABEL_MAP[id] || id}</label>
                                                         <div className="flex items-center gap-1.5">
-                                                            <button type="button" onClick={() => startFocusEdit(id)} className="text-pink-500 bg-pink-50 p-1 rounded text-[8px] font-bold flex items-center gap-1 hover:bg-pink-100/50"><Icon name="zoom" /> ズーム</button>
+                                                            <button type="button" onClick={() => startFocusEdit(id)} className="text-pink-500 bg-pink-50 p-1 rounded text-[8px] font-bold"><Icon name="zoom" /> ズーム</button>
                                                             {hasVal && (
                                                                 <div className="flex gap-1 animate-fade-in">
                                                                     <button type="button" onClick={() => copySingleField(id)} className="text-[8px] text-slate-400">コピー</button>
@@ -949,83 +945,25 @@ ${artStyleSpecificInstruction}`;
                                                             )}
                                                         </div>
                                                     </div>
-                                                    
-                                                    {id === 'facs' && !isDisabled && (
-                                                        <div className="mb-2 bg-slate-50 p-2 rounded-xl border border-slate-100 space-y-1 space-x-1 animate-fade-in">
-                                                            <span className="text-[7px] text-slate-400 font-bold uppercase block">FACSクイックインサート:</span>
-                                                            <div className="flex flex-wrap gap-1">
-                                                                {FACS_PRESETS.map((preset, pIdx) => (
-                                                                    <button
-                                                                        key={pIdx}
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            const nextVal = applySuggestionInternal(selections.facs || '', preset.code);
-                                                                            setSelections(prev => ({ ...prev, facs: nextVal }));
-                                                                            setStatusMessage(`FACS: ${preset.label} を適用`);
-                                                                            setTimeout(() => setStatusMessage(''), 1500);
-                                                                        }}
-                                                                        className="bg-white hover:bg-slate-900 hover:text-white border border-slate-200 text-[8px] font-bold px-1.5 py-0.5 rounded transition-all active:scale-95 text-slate-600"
-                                                                        title={preset.desc}
-                                                                    >
-                                                                        {preset.label}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    <textarea disabled={isDisabled} rows="2" className={`w-full p-2.5 border rounded-xl text-xs font-bold transition-colors resize-none custom-scrollbar ${selections[id] ? 'bg-pink-50/30 text-pink-700 border-pink-200' : 'bg-slate-50 border-slate-100 focus:bg-white focus:border-pink-200'}`} value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
-                                                    
-                                                    {suggestions.length > 0 && (
-                                                        <div className="mt-1.5 flex gap-1 overflow-x-auto no-scrollbar py-0.5 px-0.5 whitespace-nowrap scroll-smooth">
-                                                            {suggestions.map((sug, sIdx) => {
-                                                                const isSelected = selections[id] && (selections[id] === sug.value || selections[id].includes(sug.value));
-                                                                return (
-                                                                    <button 
-                                                                        type="button" 
-                                                                        key={sIdx} 
-                                                                        onClick={() => applySuggestion(id, sug.value)} 
-                                                                        className={`text-[8.5px] font-bold px-2.5 py-1 rounded-full border transition-all shrink-0 select-none ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-sm scale-95 font-extrabold' : 'bg-white hover:bg-pink-50 text-slate-500 border-slate-200/60'}`}
-                                                                    >
-                                                                        {sug.label}
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
+                                                    <textarea rows="2" className="w-full p-2.5 border rounded-xl bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:border-pink-200 transition-colors resize-none" value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
+                                                    <div className="mt-1.5 flex gap-1 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap">
+                                                        {suggestions.map((sug, sIdx) => {
+                                                            const isSelected = selections[id] && (selections[id] === sug.value || selections[id].includes(sug.value));
+                                                            return (
+                                                                <button 
+                                                                    type="button" 
+                                                                    key={sIdx} 
+                                                                    onClick={() => applySuggestion(id, sug.value)} 
+                                                                    className={`text-[8.5px] font-bold px-2.5 py-1 rounded-full border transition-all shrink-0 select-none ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-sm scale-95 font-extrabold' : 'bg-white hover:bg-pink-50 text-slate-500 border-slate-200/60'}`}
+                                                                >
+                                                                    {sug.label}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             );
                                         })}
-
-                                        {idx === 1 && (
-                                            <div className="col-span-2 pt-3 mt-1 border-t border-pink-50 animate-fade-in">
-                                                <span className="text-pink-400 uppercase tracking-[0.2em] block text-[8px] font-black mb-1.5">顔立ち印象補正トグル (かわいい系・美人キレイ系補正)</span>
-                                                <div className="flex gap-3 justify-center px-1">
-                                                    <button 
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setSelections(p => ({ ...p, aesthetic: p.aesthetic === 'cute' ? '' : 'cute' }));
-                                                            setStatusMessage(selections.aesthetic === 'cute' ? '印象補正オフ' : 'かわいい系フィルタ適用 💕');
-                                                            setTimeout(() => setStatusMessage(''), 1500);
-                                                        }} 
-                                                        className={`flex-1 py-3 rounded-full border text-[10px] font-black transition-all ${selections.aesthetic === 'cute' ? 'bg-pink-400 text-white border-pink-400 shadow-md scale-[1.02]' : 'bg-white text-slate-400 border-slate-150 hover:border-pink-200'}`}
-                                                    >
-                                                        かわいい系 💕
-                                                    </button>
-                                                    <button 
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setSelections(p => ({ ...p, aesthetic: p.aesthetic === 'beautiful' ? '' : 'beautiful' }));
-                                                            setStatusMessage(selections.aesthetic === 'beautiful' ? '印象補正オフ' : '美人系フィルタ適用 🔮');
-                                                            setTimeout(() => setStatusMessage(''), 1500);
-                                                        }} 
-                                                        className={`flex-1 py-3 rounded-full border text-[10px] font-black transition-all ${selections.aesthetic === 'beautiful' ? 'bg-purple-500 text-white border-purple-500 shadow-md scale-[1.02]' : 'bg-white text-slate-400 border-slate-150 hover:border-pink-200'}`}
-                                                    >
-                                                        美人/きれい系 🔮
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 )}
                             </div>
@@ -1145,10 +1083,9 @@ ${artStyleSpecificInstruction}`;
 const saveToSlot = (index, memorySlots, selections, previews, setMemorySlots, setStatusMessage) => {
     try {
         const newSlots = [...memorySlots];
-        const existingPreview = memorySlots[index]?.preview || null;
         newSlots[index] = {
             data: { ...selections },
-            preview: previews.baseStored || previews.plusStored || existingPreview
+            preview: previews.baseStored || previews.plusStored || null
         };
         setMemorySlots(newSlots);
         localStorage.setItem('idol_designer_slots_v195', JSON.stringify(newSlots));
@@ -1163,13 +1100,8 @@ const loadFromSlot = (index, memorySlots, setSelections, setPreviews, setStatusM
     const slot = memorySlots[index];
     if (!slot) return;
     setSelections(slot.data);
-    
     if (slot.preview) {
-        setPreviews(prev => ({
-            ...prev,
-            base: slot.preview,
-            baseStored: slot.preview
-        }));
+        setPreviews(prev => ({ ...prev, base: slot.preview, baseStored: slot.preview }));
     }
     setStatusMessage(`Slot ${index + 1} Loaded`);
     setTimeout(() => setStatusMessage(''), 2000);

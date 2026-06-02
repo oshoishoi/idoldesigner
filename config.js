@@ -3,9 +3,9 @@ window.isPreview = typeof __app_id !== 'undefined';
 window.apiKey = ""; // 本番テスト時やCanvasランタイムでは空文字のままで動作します
 window.proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
-window.getApiUrl = (endpoint) => {
-    // 正式リリース版の「gemini-2.5-flash」に最適化
-    const model = "gemini-2.5-flash";
+window.getApiUrl = (endpoint, modelOverride) => {
+    // 優先フォールバックで指定されたモデルを使用、指定がなければデフォルト(3.5)を適用
+    const model = modelOverride || "gemini-3.5-flash";
     if (window.isPreview) {
         return `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${window.apiKey}`;
     }
@@ -20,26 +20,26 @@ window.safetySettings = [
     { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
 ];
 
-// 44項目定義 (regionを削除)
+// 44項目定義
 window.FIELD_KEYS = [
-    'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', // hairAccessoryを移動
+    'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', 
     'faceOutline', 'facePlacement', 
     'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape',
     'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle',
     'skinColor', 'skinTexture', 'molesFreckles', 
     'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes',
-    'hairAccessory', // 衣装グループの先頭に移動
-    'outfit', 'outfitDetail', 'bodyInterface', 'pose', // bodyInterface(その他)を衣装詳細の直後に移動
+    'hairAccessory', 
+    'outfit', 'outfitDetail', 'bodyInterface', 'pose', 
     'situation', 'lighting', 'artStyle', 'cameraAngle',
     'aesthetic', 'additionalNotes'
 ];
 
-// 最新のラベルマッピング定義
+// ラベルマッピング定義
 window.LABEL_MAP = {
     hairStyle: '髪型', 
     hairBangs: '前髪', 
     hairColor: '髪色', 
-    hairAccessory: 'ヘアアクセ', // 「飾り」から名称変更し衣装セクションへ
+    hairAccessory: 'ヘアアクセ', 
     hairTexture: '髪質',
     faceOutline: '輪郭', 
     facePlacement: '顔のパーツ配置比率', 
@@ -64,7 +64,7 @@ window.LABEL_MAP = {
     makeupStyle: '全体メイク', 
     skinColor: '肌の色', 
     skinTexture: '肌質', 
-    bodyInterface: 'その他', // 表向きの項目名「その他」を維持
+    bodyInterface: 'その他', 
     molesFreckles: '特徴', 
     age: '年齢感', 
     height: '身長', 
@@ -82,7 +82,7 @@ window.LABEL_MAP = {
     additionalNotes: '追記' 
 };
 
-// 表現ロンダリング・ルールを100%適用した極上の事前サジェスト辞書 (その他：日本語ローカライズ完了)
+// 事前サジェスト辞書
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -219,7 +219,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with micro pores, peach fuzz, and natural oils' },
         { label: '陶器すべすべ 🏺', value: 'Flawlessly smooth, soft-matte studio-airbrushed skin texture' }
     ],
-    bodyInterface: [ // 表現ロンダリングを完全適用した、日本語でのはみ出し・露出起伏の極上サジェストチップス
+    bodyInterface: [
         { label: 'アンダーはみ出し 👙', value: 'アンダーバストのシームラインの下側から柔らかい肉の輪郭がわずかに覗き、美しくはみ出している' },
         { label: 'サイドはみ出し 📐', value: '衣装の脇のシーム境界線に沿って、なめらかなお尻や胴体の柔らかな起伏がわずかに押し出されはみ出している' },
         { label: 'お尻のハイカット露出 🍑', value: 'ショーツの極めて高いハイカットレッグラインに沿って、お尻の広い領域が大胆に露出し、なめらかなお尻の曲線が際立っている' },
