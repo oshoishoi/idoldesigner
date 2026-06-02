@@ -180,14 +180,14 @@ window.FIELD_SUGGESTIONS = {
     ],
     mouthShape: [
         { label: 'アヒル口 🦆', value: 'Cute small cupids-bow lips with slightly upturned corners' },
-        { label: 'ハーフオープン 👄', value: 'Slightly parted lips revealing a glimpse of tiny upper teeth' }
+        { label: 'ハーフオープン 👄', value: 'Slightly parted lips revealing a glimpse of delicate upper teeth' }
     ],
     lipTexture: [
         { label: 'うる艶リップ 💄', value: 'Glossy wet pink lip gloss texture, high reflective shine' },
         { label: 'マシュマロマット 🍑', value: 'Soft velvety matte peach lipstick texture' }
     ],
     teeth: [
-        { label: '八重歯 🦷', value: 'Charming tiny single vampire-like fang poking out over her lower lip' },
+        { label: '八重歯 🦷', value: 'Charming delicate single vampire-like fang poking out over her lower lip' },
         { label: '綺麗な並び ✨', value: 'Flawlessly aligned pearly white teeth' }
     ],
     cheekStyle: [
@@ -198,7 +198,7 @@ window.FIELD_SUGGESTIONS = {
         { label: '満面笑顔 😄', value: 'Radiant joyful smile with squinting happy eyes' },
         { label: 'ドヤ顔 😎', value: 'Confident smug grin, half-lidded arrogant eyes' },
         { label: 'ぷくっと不機嫌 😡', value: 'Cute grumpy pout with slightly puffed cheeks' },
-        { label: 'てへぺろ 😜', value: 'Playful cheeky wink with a tiny pink tongue peeking out' }
+        { label: 'てへぺろ 😜', value: 'Playful cheeky wink with a delicate pink tongue peeking out' }
     ],
     facs: [
         { label: '笑顔 😃', value: 'AU12C + AU6B (smirk + eye squeeze)' },
@@ -216,7 +216,7 @@ window.FIELD_SUGGESTIONS = {
         { label: '小麦肌 ☀️', value: 'Healthy sun-kissed glowing golden bronze skin' }
     ],
     skinTexture: [
-        { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with micro pores, peach fuzz, and natural oils' },
+        { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with fine pores, peach fuzz, and natural oils' },
         { label: '陶器すべすべ 🏺', value: 'Flawlessly smooth, soft-matte studio-airbrushed skin texture' }
     ],
     bodyInterface: [
@@ -228,7 +228,7 @@ window.FIELD_SUGGESTIONS = {
     ], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
-        { label: '口元ホクロ 💋', value: 'A tiny seductive beauty mole located just above her right upper lip border' }
+        { label: '口元ホクロ 💋', value: 'A delicate seductive beauty mole located just above her right upper lip border' }
     ],
     age: [
         { label: '10代後半 🎒', value: 'Late teens, around 17-19 years old, youthful innocent aura' },
@@ -241,7 +241,7 @@ window.FIELD_SUGGESTIONS = {
     ],
     bodyType: [
         { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' },
-        { label: 'メリハリ/マシュマロ ☁️', value: 'Soft voluptuous hourglass body shape with a tiny cinched waist' },
+        { label: 'メリハリ/マシュマロ ☁️', value: 'Soft voluptuous hourglass body shape with a narrow cinched waist' },
         { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with subtle abdominal lines and firm posture' }
     ],
     bodyFrame: [
@@ -256,13 +256,13 @@ window.FIELD_SUGGESTIONS = {
         { label: '王道ドレス 👗', value: 'Tier-layered chiffon frilled idol stage dress' },
         { label: '夏祭り浴衣 👘', value: 'Traditional summer cotton yukata adorned with floral motifs, tied with a contrasting obi sash' },
         { label: 'セーラー制服 🏫', value: 'Classic Japanese school sailor uniform with a large collar and neat pleated skirt' },
-        { label: 'ミニマル水着 👙', value: 'Sleek minimal spandex-nylon two-piece swimwear with flat seamless cuts fastened by neat structural straps' },
+        { label: 'サイドリボン水着 👙', value: 'Sleek minimal spandex-nylon two-piece swimwear tied with slender string-based construction' },
         { label: '肩あきニット 🧶', value: 'Oversized cozy off-shoulder pastel-pink knit sweater' }
     ],
     outfitDetail: [
         { label: 'レース刺繍 🕸️', value: 'Intricate scalloped sheer lace net linings, delicate floral embroidery' },
         { label: 'バック編み上げ 🎗️', value: 'Satin corset lace-up details stretching down the bodice' },
-        { label: '金属チャーム ⛓️', value: 'Tiny dangling silver metallic stars, safety pins, and padlock ornaments' }
+        { label: '金属チャーム ⛓️', value: 'Delicate dangling silver metallic stars, safety pins, and padlock ornaments' }
     ],
     pose: [
         { label: 'ピースサイン ✌️', value: 'Double peace sign gesture held close to her blushing cheek' },
@@ -316,7 +316,7 @@ window.INSPI_THEMES = {
             expression: 'Blushing idol-grade radiant smile',
             facs: 'AU12C + AU6B + AU25',
             outfit: 'Classic tier-layered frilled white chiffon idol dress',
-            outfitDetail: 'Satin corset lace-up front, sheer puffed sleeves, micro pearls stitched along scalloped edges',
+            outfitDetail: 'Satin corset lace-up front, sheer puffed sleeves, delicate pearls stitched along scalloped edges',
             situation: 'Performing on a grand bright stage, rain of glittering pastel pink confetti falling around her',
             lighting: 'Dazzling high-key stage spotlighting, rainbow flare',
             artStyle: 'Ultra-high-fidelity cinematic modern anime artwork, sharp lines, pastel color palette'
@@ -326,7 +326,7 @@ window.INSPI_THEMES = {
         name: 'サイバーパンク・近未来 ⚡',
         data: {
             hairStyle: 'Sharp asymmetrical futuristic bob cut with clean edges',
-            hairBangs: 'Micro fringe, futuristic cyber visor look',
+            hairBangs: 'Minimalist fringe, futuristic cyber visor look',
             hairColor: 'Fluorescent neon cyan with glow-in-the-dark magenta streaks',
             hairAccessory: 'Mechanical cybernetic hair clamps, glowing fiber-optic strands',
             eyeShape: 'Piercing fox-like sharp upturned eyes',
@@ -346,7 +346,7 @@ window.INSPI_THEMES = {
             hairStyle: 'Half-up twin tails, heavily textured messy strands',
             hairBangs: 'Curved see-through bangs with long side-hime-cut framing',
             hairColor: 'Deep charcoal black with split pastel purple dye underneath',
-            hairAccessory: 'Black velvet gothic crosses, tiny silver safety pin hair clips',
+            hairAccessory: 'Black velvet gothic crosses, delicate silver safety pin hair clips',
             eyeShape: 'Slightly droopy sleepy-looking eyes (tareme)',
             tearBags: 'Deeply defined teardrop bags highlighted with soft reddish pink blush',
             expression: 'Pouting melancholic gaze',
