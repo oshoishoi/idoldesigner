@@ -400,7 +400,8 @@ function App() {
     };
 
     const runAnalysis = async (base64, mode) => {
-        let delay = 1000;
+        // APIレートリミット(429)対策: 初期遅延を2秒に設定し、安全にバックオフする
+        let delay = 2000;
         let response;
         let success = false;
         
@@ -434,51 +435,51 @@ function App() {
 【対象フィールドキーリスト（この通りにJSONを生成せよ）】
 ${keyListString}`;
 
-        for (let attempt = 0; attempt < 5; attempt++) {
-            try {
-                setStatusMessage(attempt > 0 ? `再試行中 (${attempt}/5)...` : '分析中');
-                response = await fetch(getApiUrl("generateContent"), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ 
-                            parts: [
-                                { text: "添付された画像キャラクターのビジュアル要素を精密にスキャンし、指示されたフィールドキーリストに対応する日本語のJSONデータを出力してください。" },
-                                { inlineData: { mimeType: "image/jpeg", data: base64 } }
-                            ] 
-                        }],
-                        systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
-                        safetySettings,
-                        generationConfig: { responseMimeType: "application/json" }
-                    }),
-                });
+        try {
+            for (let attempt = 0; attempt < 5; attempt++) {
+                try {
+                    setStatusMessage(attempt > 0 ? `再試行中 (${attempt}/5)...` : '分析中');
+                    response = await fetch(getApiUrl("generateContent"), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ 
+                                parts: [
+                                    { text: "添付された画像キャラクターのビジュアル要素を精密にスキャンし、指示されたフィールドキーリストに対応する日本語のJSONデータを出力してください。" },
+                                    { inlineData: { mimeType: "image/jpeg", data: base64 } }
+                                ] 
+                            }],
+                            systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
+                            safetySettings,
+                            generationConfig: { responseMimeType: "application/json" }
+                        }),
+                    });
 
-                if (response.status === 429) {
-                    if (attempt === 4) throw new Error("WAIT_LIMIT");
+                    if (response.status === 429) {
+                        if (attempt === 4) throw new Error("WAIT_LIMIT");
+                        // 429エラー時は少し長めに待つ(2s -> 3s -> 4.5s -> 6.7s)
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 1.5;
+                        continue;
+                    }
+
+                    if (!response.ok) throw new Error("HTTP " + response.status);
+                    success = true;
+                    break;
+                } catch (err) {
+                    // 通信エラー等
+                    if (attempt === 4 || err.message === "WAIT_LIMIT") {
+                        throw err;
+                    }
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2;
-                    continue;
+                    delay *= 1.5;
                 }
-
-                if (!response.ok) throw new Error("HTTP " + response.status);
-                success = true;
-                break;
-            } catch (err) {
-                if (attempt === 4) {
-                    setStatusMessage(err.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : '解析失敗');
-                    setTimeout(() => setIsAnalyzing(null), 1000);
-                    return;
-                }
-                await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2;
             }
-        }
 
-        if (success) {
-            try {
+            if (success) {
                 const res = await response.json();
                 const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-                const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || rawText);
+                const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
 
                 const safeStringifyValue = (val) => {
                     if (val === null || val === undefined) return '';
@@ -519,12 +520,12 @@ ${keyListString}`;
                     }, {}));
                 }
                 setStatusMessage('');
-            } catch (e) {
-                setStatusMessage('解析失敗');
-            } finally {
-                // 非同期例外時におけるローディング永続フリーズ回避（ルール遵守）
-                setTimeout(() => setIsAnalyzing(null), 1000);
             }
+        } catch (e) {
+            setStatusMessage(e.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : '解析失敗');
+        } finally {
+            // 例外時でも必ずローディング（isAnalyzing）を解除する
+            setTimeout(() => setIsAnalyzing(null), 1000);
         }
     };
 
@@ -533,7 +534,8 @@ ${keyListString}`;
         setIsProcessing(true);
         setStatusMessage('生成中');
         
-        let delay = 1000;
+        // APIレートリミット対策: 初期遅延を2秒に設定
+        let delay = 2000;
         let response;
         let success = false;
 
@@ -552,7 +554,7 @@ ${keyListString}`;
             // 衣服特性に応じた動的プロンプトルーティング設計
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
                 routeSpecificInstruction = `
-- 【露出領域の物理的ロック】: 腕性デザインの隙間を勝手に布地で塞がれるのを防ぐため、肩や胴体を完全に露出させる工学的アパレル表現を冒頭部分に必ず配置すること。
+- 【露出領域の物理的ロック】: 腕の隙間を勝手に布地で塞がれるのを防ぐため、肩や胴体を完全に露出させる工学的アパレル表現を冒頭部分に必ず配置すること。
 - 【過激ワードの幾何学記述への完全置き換え（ロンダリング）】: セーフティフィルターを回避するため、"micro" や "high-cut" などの過激語はプロンプトでの使用を完全に禁止・排除せよ。代わりに "minimal seamless inner briefs" などのアパレル工学的・テクスチャ幾何学的表現を用いて精緻に描写すること。
 - 【衣装形状の勝手な省略の徹底防止】: AIが勝手に衣装構造を簡略化するのを阻止するため、形状固定化指示テキストを必ずプロンプトに組み込め。`;
             } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|kimono|yukata|着崩)/i)) {
@@ -617,8 +619,8 @@ ${artStyleSpecificInstruction}`;
 
                     if (response.status === 429) {
                         if (attempt === 4) throw new Error("WAIT_LIMIT");
-                        await new Promise(resolve => setTimeout(resolve, delay * 2));
-                        delay *= 2;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 1.5;
                         continue;
                     }
 
@@ -626,12 +628,11 @@ ${artStyleSpecificInstruction}`;
                     success = true;
                     break;
                 } catch (err) {
-                    if (attempt === 4) {
-                        setStatusMessage(err.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : 'Error');
-                        return;
+                    if (attempt === 4 || err.message === "WAIT_LIMIT") {
+                        throw err;
                     }
-                    await new Promise(resolve => setTimeout(resolve, delay * 2));
-                    delay *= 2;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 1.5;
                 }
             }
 
@@ -645,9 +646,9 @@ ${artStyleSpecificInstruction}`;
                 setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
             }
         } catch (e) {
-            setStatusMessage('Error');
+            setStatusMessage(e.message === "WAIT_LIMIT" ? '制限中: 1分待ってください' : 'Error');
         } finally {
-            // 例外発生時であっても確実にフラグをリセットしてUIロックの永続フリーズを防止
+            // いかなるエラー時もフリーズを防ぐため確実にステートを解除する
             setIsProcessing(false);
         }
     };
@@ -1126,7 +1127,7 @@ ${artStyleSpecificInstruction}`;
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <button type="button" onClick={() => setFocusField(null)} className="flex-1 bg-slate-800 text-white py-4 rounded-xl font-bold">キャンセル</button>
+                        <button type="button" onClick={() => setFocusField(null)} className="flex-1 bg-slate-800 text-slate-400 hover:text-white py-4 rounded-xl font-bold">キャンセル</button>
                         <button type="button" onClick={saveFocusEdit} className="flex-1 bg-pink-500 text-white py-4 rounded-xl font-black">適用する ✓</button>
                     </div>
                 </div>
