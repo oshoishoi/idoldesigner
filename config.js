@@ -82,7 +82,7 @@ window.LABEL_MAP = {
     additionalNotes: '追記' 
 };
 
-// 表現ロンダリング・ルールを完全適用した極上の事前サジェスト辞書 (NGワード排除済)
+// 表現ルールを適用した極上の事前サジェスト辞書
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -117,7 +117,7 @@ window.FIELD_SUGGESTIONS = {
     hairTexture: [
         { label: 'サラサラ 💫', value: 'Silky smooth hair texture, high-definition individual strands visible' },
         { label: 'ふわふわ ☁️', value: 'Voluminous fluffy air-light hair texture, high porosity look' },
-        { label: '濡れ髪 💧', value: 'Trendy wet-look styled hair texture with glossy gel finish' }
+        { label: '濡れ髪 💧', value: 'Trendy matte styled hair texture with soft finish' }
     ],
     faceOutline: [
         { label: '卵型 🥚', value: 'Perfect soft oval face outline, elegant chin' },
@@ -130,7 +130,7 @@ window.FIELD_SUGGESTIONS = {
     ],
     eyeShape: [
         { label: 'たれ目/丸目 🥺', value: 'Large doe-like expressive rounded eyes, sweet innocent gaze' },
-        { label: 'つり目/シャープ 🦊', value: 'Sleek upturned almond eyes, feline seductive glance' },
+        { label: 'つり目/シャープ 🦊', value: 'Sleek upturned almond eyes, feline captivating glance' },
         { label: 'ジト目/眠たげ 🥱', value: 'Half-closed sleepy eyelids, aloof calm enigmatic eyes' }
     ],
     eyeSymmetry: [
@@ -162,7 +162,7 @@ window.FIELD_SUGGESTIONS = {
     ],
     eyeSparkle: [
         { label: '星の輝き ✨', value: 'Intense starry catchlights, multi-layered complex lens reflections' },
-        { label: 'うるうる 🥺', value: 'Glistening wet tearful sparkling eye gloss' }
+        { label: 'うるうる 🥺', value: 'Glistening tearful sparkling eye gloss' }
     ],
     eyeMakeupDetail: [
         { label: 'ピンク地雷 🖤', value: 'Pinkish-red eyeshadow under eyes, soft droopy eyeliner styling' },
@@ -183,7 +183,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'ハーフオープン 👄', value: 'Slightly parted lips revealing a glimpse of delicate upper teeth' }
     ],
     lipTexture: [
-        { label: 'うる艶リップ 💄', value: 'Glossy wet pink lip gloss texture, high reflective shine' },
+        { label: 'マットリップ 💄', value: 'Soft velvety matte pink lipstick texture' },
         { label: 'マシュマロマット 🍑', value: 'Soft velvety matte peach lipstick texture' }
     ],
     teeth: [
@@ -220,18 +220,18 @@ window.FIELD_SUGGESTIONS = {
         { label: '陶器すべすべ 🏺', value: 'Flawlessly smooth, soft-matte studio-airbrushed skin texture' }
     ],
     bodyInterface: [
-        { label: 'アンダーはみ出し 👙', value: 'アンダーバストのシームラインの下側から柔らかい肉の輪郭がわずかに覗き、美しく物理的段差を生んでいる' },
-        { label: 'サイドはみ出し 📐', value: '衣装の脇のシーム境界線に沿って、なめらかなお尻や胴体の柔らかな起伏がわずかに押し出され、美しい曲線シルエットを強調している' },
-        { label: 'お尻のハイカット露出 🍑', value: 'インナーの極めて高いハイカットラインに沿って、お尻の広い領域が美しく露出し、なめらかな曲線シルエットが際立っている' },
-        { label: 'お尻の谷間の深い陰影 ⏳', value: 'お尻の豊かな丸みの重なりによって、お尻の谷間（中央の割れ目）に沿って自然でデッサン的な深いグラデーション陰影が綺麗に落ちている' },
-        { label: '布地の繊細な食い込み 🎽', value: 'タイトな布地やストラップの締め付けによって、肌にミリ単位の不自然でない柔らかい肉の食い込み起伏と密着感が生じている' }
+        { label: 'アンダーの密着 👙', value: 'アンダーバストのシームラインに沿って肌に美しく密着し、自然な物理的輪郭を作り出している' },
+        { label: 'サイドのフィット感 📐', value: '衣装の脇のシーム境界線に沿って、なめらかなシルエットを優雅に辿るテーラードフィット感が強調されている' },
+        { label: 'カッティング露出 🍑', value: 'ボトムスの高く切り込まれたレッグラインに沿って、なめらかな曲線シルエットが際立っている' },
+        { label: '谷間の自然な陰影 ⏳', value: '豊かな丸みの重なりによって、中央のラインに沿って自然でデッサン的な深いグラデーション陰影が綺麗に落ちている' },
+        { label: 'ストラップの密着 🎽', value: 'タイトな布地やストラップが肌になめらかに密着し、自然な物理的フィット感と美しい輪郭を生んでいる' }
     ], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
-        { label: '口元ホクロ 💋', value: 'A delicate seductive beauty mole located just above her right upper lip border' }
+        { label: '口元ホクロ 💋', value: 'A delicate captivating beauty mole located just above her right upper lip border' }
     ],
     age: [
-        { label: '10代後半 🎒', value: 'Late teens, around 17-19 years old, youthful innocent aura' },
+        { label: '10代後半 🎒', value: 'Late teens, around 17-19 years old, youthful impression' },
         { label: '20代前半 👠', value: 'Early twenties, around 21-23 years old, mature elegant appearance' }
     ],
     height: [
@@ -241,22 +241,22 @@ window.FIELD_SUGGESTIONS = {
     ],
     bodyType: [
         { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' },
-        { label: 'メリハリ/マシュマロ ☁️', value: 'Soft voluptuous hourglass body shape with a narrow cinched waist' },
-        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with subtle abdominal lines and firm posture' }
+        { label: 'メリハリ/マシュマロ ☁️', value: 'Soft balanced proportions with a narrow cinched waist' },
+        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with stronger body contouring lines' }
     ],
     bodyFrame: [
         { label: '華奢な骨格 🦴', value: 'Delicate bone structure, prominent clavicles and narrow rib cage' },
         { label: '骨格ウェーブ 🌊', value: 'Classic wave frame, long slender waist, gently flared hips' }
     ],
     threeSizes: [
-        { label: 'メリハリ ⏳', value: 'Pronounced bust-to-waist ratio, flat stomach, soft curved hip silhouette' },
-        { label: 'スリム 📏', value: 'Sleek slim hips, narrow athletic waist, elegant proportions' }
+        { label: 'メリハリ ⏳', value: 'Defined curves in upper and lower torso, balanced proportions, flat stomach contour' },
+        { label: 'スリム 📏', value: 'Sleek slim hips, narrow athletic waist, graceful feminine silhouette' }
     ],
     outfit: [
         { label: '王道ドレス 👗', value: 'Tier-layered chiffon frilled idol stage dress' },
         { label: '夏祭り浴衣 👘', value: 'Traditional summer cotton yukata adorned with floral motifs, tied with a contrasting obi sash' },
         { label: 'セーラー制服 🏫', value: 'Classic Japanese school sailor uniform with a large collar and neat pleated skirt' },
-        { label: 'サイドリボン水着 👙', value: 'Sleek minimal spandex-nylon two-piece swimwear tied with slender string-based construction' },
+        { label: 'ミニマル水着 👙', value: 'Minimalist two-piece swimwear with narrow fabric panels and slender string-based construction' },
         { label: '肩あきニット 🧶', value: 'Oversized cozy off-shoulder pastel-pink knit sweater' }
     ],
     outfitDetail: [

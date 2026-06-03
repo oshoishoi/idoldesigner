@@ -591,42 +591,41 @@ ${keyListString}`;
 【出力形式】
 純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
 
-【最優先・鉄の掟（表現ロンダリング・ガイドライン）】
+【最優先・鉄の掟（表現最適化・アパレル工学ガイドライン）】
 1. 身体・肉体描写の言い換え (体型、肉感、ボリューム):
-   - 露出度の高い衣装と解剖学的な直接描写("bust volume", "rich bust", "prominent bust", "rich hip line", "feminine curves"等)の組み合わせを【絶対に使用禁止】とする。
+   - 解剖学的な直接描写("bust volume", "rich bust", "prominent bust", "rich hip line", "feminine curves"等)を【絶対に使用禁止】とする。
    - 代わりに "graceful feminine silhouette", "balanced proportions", "stronger body contouring", "defined curves in upper and lower torso" といった抽象的・アパレル用語に完全変換せよ。
 2. セクシーな雰囲気・形容詞の言い換え:
    - "sexy", "slightly sexy" といった直接的な表現を【絶対に使用禁止】とする。代わりに "alluring presence", "captivating aura", "alluring", "graceful", "captivating" などの写真批評的な佇まいのオーラ表現に昇華させること。
-3. 衣装の素材・質感描写の言い換え (露出度・エロティシズムの調整):
-   - "micro", "high-cut", "sleek high-gloss", "wet-look" 等の露出を想起させる単語・身体の凹凸を強調するテカリ素材を【絶対に使用禁止】とする。
+3. 衣装の素材・質感描写の言い換え (意図しない質感の防止):
+   - "micro", "high-cut", "sleek high-gloss", "wet-look" 等の極端・不自然な素材感を【絶対に使用禁止】とする。
    - 代わりに "matte finish", "minimal", "sleek"(脚のライン用), "intricate lace patterns" のような上品で正確なアパレル用語を使用せよ。
-4. 布面積を極限まで小さくするための構造的指定 (安全な露出の最大化):
+4. ミニマルなデザインの構造的指定 (サイズの極端な指定防止):
    - "micro", "tiny", "barely covering" 等の過激なサイズ表現を【絶対に使用禁止】とする。
-   - 代わりに布の形状を狭くする "minimalist triangular cut", "narrow fabric panels", "slender string-based construction" や、カットを深くする "deep plunging neckline", "low-cut underwire layout" 等の幾何学的・構造的なアパレル用語を使用せよ。
-   - 同時にネガティブプロンプトに "full coverage, wide straps, thick fabric, sports bra, tank top, camisole, large cups" を追加し、布面積の大きい服へのすり替えを完全に拒否せよ。
-5. ネガティブプロンプトのメタ単語排除・言い換え:
-   - ネガティブ内に "nsfw", "censorship" を含めることを【絶対に使用禁止】とする。ポロリ防止に "inappropriate attire"、モザイク防止に "unpolished composition", "distorted composition" を使用せよ。
-6. ネガティブプロンプトの影表現の言い換え:
+   - 代わりに布の形状を狭くする "minimalist triangular cut", "narrow fabric panels", "slender string-based construction" や、カットを深くする "deep plunging neckline" 等の幾何学的・構造的なアパレル用語を使用せよ。
+5. ネガティブプロンプトのクリーン化 (メタ単語排除):
+   - ネガティブ内に "nsfw", "censorship" を含めることを【絶対に使用禁止】とする。衣装の破綻防止に "inappropriate attire"、不自然なノイズ防止に "unpolished composition", "distorted composition" を使用せよ。
+6. 陰影描写のエラー回避:
    - ネガティブ内に "shadow bulge" を含めることを【絶対に使用禁止】とする。衣服の不自然な膨らみ・ノイズ防止に "artifacts on clothes", "unnatural fabric folds" を使用せよ。
-7. 肌の露出・裸体を連想させる直接表現の言い換え:
+7. スキン見せデザインのアパレル表現:
    - "Completely exposed", "bare back", "uncovered torso" 等の裸体・脱衣を連想させる直接表現を【絶対に使用禁止】とする。
    - 代わりに "Sleek open-back", "off-shoulder clothing layout", "structured fabric positioning" 等の衣装デザイン・レイアウト用語に変換せよ。
-8. 肉体の変化・衣服の食い込み描写の言い換え (溢れ・密着度の高級ロンダリング):
-   - 「その他(bodyInterface)」などに含まれる日本語のはみ出し・食い込み情報に対して、"soft overspill", "physical overspill", "skin contour overspill" 等の肉感・食い込みの直接表現（英語）を【絶対に使用禁止】とする。
-   - 代わりに以下のタイトフィット・輪郭強調用語へ100%ロンダリング（言い換え）してポジティブプロンプトに反映させよ：
-     * ストラップ・紐の食い込み ➔ "fitting smoothly and seamlessly against the skin, creating natural physical contours"
-     * ウエスト・境界の溢れ ➔ "defined by a snug, tailored fit that elegantly follows the natural silhouette"
-     * アンダーバストの溢れ ➔ "the supportive seam line highlighting a beautifully defined and natural lower curve"
-9. 直接的な下着・水着名称の言い換え (アパレル・セットアップ名目への偽装):
-   - "undergarments", "bra", "inner briefs", "panties" 等の直接的な名称を【絶対に使用禁止】とする。
-   - 代わりに "two-piece ensemble", "two-piece swimwear", "minimalist lace-trimmed top", "seamless bikini top", "matching seamless bikini bottoms" などのファッション・水着・セットアップ用語に変換せよ。
-10. 「部屋着・面積の広い服」への誤認防止 (形状の具体化とネガティブ指定):
-   - "top" (単体での使用), "shorts" (ボトムスとしての使用) 等の面積が広くなる単語を【絶対に使用禁止】とする。
-   - 代わりに、トップスの背中開きは "slender shoulder straps and a narrow horizontal back band"、ボトムスの三角形状は "classic triangular bikini bottoms featuring high-cut leg lines" などのように露出構造を明記せよ。
-   - ネガティブプロンプトで "boy-shorts, boxers, roomwear, camisole, full back coverage" を併用指定して部屋着を徹底排除せよ。
-11. 胴体・胸周りの解剖学的ワードの言い換え (アパレル構造への置き換え):
-   - "open-torso", "bust", "under the bust" 等の部位直接指定を【絶対に使用禁止】とする。
-   - 代わりに "midriff-baring fashion layout", "beneath the top's lower edge", "along the lower structural line" などの衣服構造を基準としたレイアウト用語に変換せよ。
+8. 衣装のフィット感と立体感の強調 (作画崩壊防止):
+   - 「その他(bodyInterface)」などに含まれる日本語のはみ出し・食い込み情報に対して、"soft overspill", "physical overspill", "skin contour overspill" 等の過度な密着描写（英語）を【絶対に使用禁止】とする。
+   - 代わりに以下のタイトフィット・輪郭強調用語へ100%言い換えてポジティブプロンプトに反映させよ：
+     * ストラップ・紐の密着 ➔ "fitting smoothly and seamlessly against the skin, creating natural physical contours"
+     * シルエットライン ➔ "defined by a snug, tailored fit that elegantly follows the natural silhouette"
+9. ツーピース・セットアップの正確な名称指定:
+   - "undergarments", "bra", "inner briefs", "panties" 等の曖昧・直接的な名称を【絶対に使用禁止】とする。
+   - 代わりに "two-piece ensemble", "minimalist lace-trimmed top", "matching seamless bikini bottoms" などの正確なセットアップ・アパレル用語に変換せよ。
+10. 意図しないデザイン（ルーズフィット等）の防止:
+   - "top" (単体での使用), "shorts" (ボトムスとしての使用) 等の面積が広くなりやすい単語を【絶対に使用禁止】とする。
+   - 代わりに、トップスの背中構造は "slender shoulder straps and a narrow horizontal back band"、ボトムスの形状は "classic triangular bikini bottoms featuring high-cut leg lines" などのように露出構造を明記せよ。
+   - ネガティブプロンプトに "boy-shorts, boxers, roomwear, camisole, full back coverage" を追加してルーズな服を徹底排除せよ。
+11. トップス形状の担保とデザイン維持 (意図しない丈の延長防止):
+   - "tank top" 等の丈が長くなりやすい単語を【絶対に使用禁止】とする。
+   - 代わりに丈の短さと構造を明記する "underwire bralette", "underwire bikini top", "ultra-cropped midriff-baring design revealing the navel" などのアパレル用語を使用せよ。
+   - 同時にネガティブプロンプトに "bustier, corset, fabric covering the belly, hidden navel, long top" を追加し、腹部を覆う服へのすり替えを完全に拒否せよ。
 12. FACSコードクリーン化:
    - AUおよびADは "AU12C" のようにコードと強度のみを反映し、名称説明は含めない。
 13. 非実在性の明記:
