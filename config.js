@@ -265,6 +265,10 @@ window.FIELD_SUGGESTIONS = {
         { label: '金属チャーム ⛓️', value: 'Delicate dangling silver metallic stars, safety pins, and padlock ornaments' }
     ],
     pose: [
+        { label: '正座 🧎‍♀️', value: 'seiza, traditional Japanese formal sitting posture, resting hips on heels, folded legs' },
+        { label: '膝立ち 🦵', value: 'kneeling pose, resting on both knees, upright torso, thighs perpendicular to the ground' },
+        { label: 'あぐら 🧘‍♀️', value: 'sitting cross-legged on the floor, relaxed posture' },
+        { label: '横座り 🧜‍♀️', value: 'sitting side-saddle, legs folded to one side gracefully' },
         { label: 'ピースサイン ✌️', value: 'Double peace sign gesture held close to her blushing cheek' },
         { label: '自撮りアングル 🤳', value: 'Cute selfie pose, holding an invisible phone at an angle' },
         { label: '指ハート 🫰', value: 'Delicate finger-heart gesture with a charming smile' },
