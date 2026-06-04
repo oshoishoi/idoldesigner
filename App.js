@@ -1,7 +1,6 @@
 // App.js
 const { useState, useEffect, useRef, useMemo } = React;
 
-// config.jsからグローバル定数を安全に受け渡す
 const FIELD_KEYS = window.FIELD_KEYS || [];
 const LABEL_MAP = window.LABEL_MAP || {};
 const FIELD_SUGGESTIONS = window.FIELD_SUGGESTIONS || {};
@@ -26,8 +25,7 @@ const Icon = ({ name, className = "" }) => {
         info: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
         chevronDown: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"/></svg>,
         chevronUp: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="18 15 12 9 6 15"/></svg>,
-        zoom: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>,
-        paste: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/><path d="M12 11h4"/><path d="M14 9v4"/></svg>
+        zoom: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
     };
     return svgs[name] || null;
 };
@@ -41,7 +39,7 @@ function App() {
     ];
 
     const createEmptyState = () => {
-        const obj = { orientation: 'portrait', ratio: '9:16', aesthetic: '' };
+        const obj = { orientation: 'portrait', ratio: '3:4', aesthetic: '' };
         FIELD_KEYS.forEach(k => obj[k] = '');
         return obj;
     };
@@ -60,16 +58,8 @@ function App() {
     const [previews, setPreviews] = useState({ base: null, plus: null, baseStored: null, plusStored: null });
     const [memorySlots, setMemorySlots] = useState(Array(10).fill(null));
 
-    const [openSections, setOpenSections] = useState({
-        0: true,  
-        1: false, 
-        2: false, 
-        3: false  
-    });
-
-    const [mergeOpenSections, setMergeOpenSections] = useState({
-        0: true, 1: true, 2: true, 3: true
-    });
+    const [openSections, setOpenSections] = useState({ 0: true, 1: false, 2: false, 3: false });
+    const [mergeOpenSections, setMergeOpenSections] = useState({ 0: true, 1: true, 2: true, 3: true });
 
     const [focusField, setFocusField] = useState(null); 
     const [focusTempText, setFocusTempText] = useState(''); 
@@ -98,17 +88,6 @@ function App() {
 
     const copyText = (text, type) => {
         if (!text) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(() => {
-                setCopyFeedback(type);
-                setTimeout(() => setCopyFeedback(null), 1500);
-            }).catch(() => fallbackCopyText(text, type));
-        } else {
-            fallbackCopyText(text, type);
-        }
-    };
-
-    const fallbackCopyText = (text, type) => {
         const el = document.createElement("textarea");
         el.value = text;
         document.body.appendChild(el);
@@ -117,9 +96,7 @@ function App() {
             document.execCommand('copy');
             setCopyFeedback(type);
             setTimeout(() => setCopyFeedback(null), 1500);
-        } catch (err) {
-            console.error("Fallback copy failed", err);
-        }
+        } catch (err) {}
         document.body.removeChild(el);
     };
 
@@ -129,19 +106,12 @@ function App() {
     };
 
     const toggleSection = (idx) => {
-        setOpenSections(prev => ({
-            ...prev,
-            [idx]: !prev[idx]
-        }));
+        setOpenSections(prev => ({ ...prev, [idx]: !prev[idx] }));
     };
 
     const getSectionFillCount = (fields) => {
         let count = 0;
-        fields.forEach(f => {
-            if (selections[f] && selections[f].trim() !== '') {
-                count++;
-            }
-        });
+        fields.forEach(f => { if (selections[f] && selections[f].trim() !== '') count++; });
         return count;
     };
 
@@ -153,9 +123,7 @@ function App() {
         setSelections(prev => {
             const next = { ...prev };
             Object.entries(theme.data).forEach(([key, val]) => {
-                if (FIELD_KEYS.includes(key)) {
-                    next[key] = val;
-                }
+                if (FIELD_KEYS.includes(key)) next[key] = val;
             });
             return next;
         });
@@ -166,42 +134,23 @@ function App() {
 
     const clearSingleField = (fieldId) => {
         setSelections(prev => ({ ...prev, [fieldId]: '' }));
-        if (focusField === fieldId) {
-            setFocusTempText('');
-        }
-    };
-
-    const copySingleField = (fieldId) => {
-        const val = selections[fieldId];
-        if (!val || val.trim() === '') return;
-        copyText(val, fieldId);
+        if (focusField === fieldId) setFocusTempText('');
     };
 
     const applySuggestionInternal = (currentVal, targetVal) => {
         if (sugMode === 'replace') {
             return currentVal === targetVal ? '' : targetVal;
         } else {
-            if (!currentVal || currentVal.trim() === '') {
-                return targetVal;
-            }
+            if (!currentVal || currentVal.trim() === '') return targetVal;
             if (currentVal.includes(targetVal)) {
-                const cleaned = currentVal
-                    .split(',')
-                    .map(x => x.trim())
-                    .filter(x => x !== targetVal && x !== '')
-                    .join(', ');
-                return cleaned;
+                return currentVal.split(',').map(x => x.trim()).filter(x => x !== targetVal && x !== '').join(', ');
             }
             return `${currentVal.trim().replace(/,$/, '')}, ${targetVal}`;
         }
     };
 
     const applySuggestion = (fieldId, val) => {
-        setSelections(prev => {
-            const currentVal = prev[fieldId] || '';
-            const nextVal = applySuggestionInternal(currentVal, val);
-            return { ...prev, [fieldId]: nextVal };
-        });
+        setSelections(prev => ({ ...prev, [fieldId]: applySuggestionInternal(prev[fieldId] || '', val) }));
     };
 
     const applySuggestionInFocus = (val) => {
@@ -214,7 +163,6 @@ function App() {
         const start = ta.selectionStart;
         const end = ta.selectionEnd;
         const currentText = ta.value;
-
         let nextVal = "";
         let newCursorPos = 0;
 
@@ -223,27 +171,19 @@ function App() {
             newCursorPos = nextVal.length;
         } else {
             if (currentText.includes(val)) {
-                nextVal = currentText
-                    .split(',')
-                    .map(x => x.trim())
-                    .filter(x => x !== val && x !== '')
-                    .join(', ');
+                nextVal = currentText.split(',').map(x => x.trim()).filter(x => x !== val && x !== '').join(', ');
                 newCursorPos = Math.min(start, nextVal.length);
             } else {
                 const before = currentText.substring(0, start).trim();
                 const after = currentText.substring(end).trim();
-                
                 let insertStr = val;
                 if (before && !before.endsWith(',')) insertStr = ', ' + insertStr;
                 if (after && !after.startsWith(',')) insertStr = insertStr + ', ';
-
                 nextVal = currentText.substring(0, start) + insertStr + currentText.substring(end);
                 newCursorPos = start + insertStr.length;
             }
         }
-
         setFocusTempText(nextVal);
-        
         setTimeout(() => {
             if (focusTextAreaRef.current) {
                 focusTextAreaRef.current.focus();
@@ -270,11 +210,8 @@ function App() {
         const ta = focusTextAreaRef.current;
         if (!ta) return;
         let start = ta.selectionStart;
-        if (direction === 'left' && start > 0) {
-            ta.setSelectionRange(start - 1, start - 1);
-        } else if (direction === 'right' && start < ta.value.length) {
-            ta.setSelectionRange(start + 1, start + 1);
-        }
+        if (direction === 'left' && start > 0) ta.setSelectionRange(start - 1, start - 1);
+        else if (direction === 'right' && start < ta.value.length) ta.setSelectionRange(start + 1, start + 1);
         ta.focus();
     };
 
@@ -282,75 +219,21 @@ function App() {
         try {
             const text = await navigator.clipboard.readText();
             if (text) {
-                setFocusTempText(prev => {
-                    if (!prev || prev.trim() === '') return text;
-                    return prev + " " + text;
-                });
+                setFocusTempText(prev => (!prev || prev.trim() === '' ? text : prev + " " + text));
                 setStatusMessage('ペーストしました');
                 setTimeout(() => setStatusMessage(''), 1500);
             }
-        } catch (err) {
-            setStatusMessage('手動ペーストしてください');
-            setTimeout(() => setStatusMessage(''), 2500);
-        }
+        } catch (err) {}
     };
 
     const clearSectionFields = (fields, sectionTitle) => {
         if (window.confirm(`「${sectionTitle}」のすべての項目をリセットしますか？`)) {
             setSelections(prev => {
                 const next = { ...prev };
-                fields.forEach(f => {
-                    next[f] = '';
-                });
+                fields.forEach(f => next[f] = '');
                 return next;
             });
         }
-    };
-
-    const applyPreset = (type) => {
-        setGlobalHistory(prev => [selections, ...prev].slice(0, 3));
-        setSelections(prev => {
-            const next = { ...prev };
-            if (type === 'cheki') {
-                next.ratio = '54:86';
-                next.artStyle = 'Lo-fi analog instant camera film, highly grainy texture, vintage Polaroid aesthetic, soft details, slight motion blur, NO high-fidelity, NO DSLR, NO studio lighting, NO 8k render';
-                next.lighting = 'Harsh camera-mounted flash, direct hard flash lighting, heavy contrast shadows behind model';
-                next.situation = 'Casual indoor snapshot, late night house party vibe, raw moment capture';
-                
-                if (prev.orientation === 'landscape') {
-                    next.additionalNotes = 'Classic white instant photo frame with a wide, thick white border on the RIGHT side, landscape Polaroid film frame design';
-                } else {
-                    next.additionalNotes = 'Classic white instant photo frame with a wide, thick white border on the BOTTOM side, traditional Instax portrait film frame design';
-                }
-            } else if (type === 'camera') {
-                next.ratio = '9:16';
-                next.artStyle = 'SNS風、スマホ撮影スナップ、ビューティーフィルター';
-                next.lighting = '自然光、柔らかい順光';
-                next.situation = '自撮り、日常スナップ';
-                next.additionalNotes = '';
-            } else if (type === 'realistic') {
-                next.ratio = '9:16';
-                next.artStyle = 'Hyper-realistic DSLR raw photograph, high fidelity, fine skin texture';
-                next.lighting = 'Cinematic studio key light, volumetric rim lighting';
-                next.situation = 'Professional studio fashion shoot';
-                next.additionalNotes = '8k, sharp focus, photo masterclass';
-            }
-            return next;
-        });
-    };
-
-    const handleOrientationChange = (orientation) => {
-        setSelections(prev => {
-            const next = { ...prev, orientation };
-            if (prev.ratio === '54:86' || (prev.artStyle && prev.artStyle.includes('instant camera'))) {
-                if (orientation === 'landscape') {
-                    next.additionalNotes = 'Classic white instant photo frame with a wide, thick white border on the RIGHT side, landscape Polaroid film frame design';
-                } else {
-                    next.additionalNotes = 'Classic white instant photo frame with a wide, thick white border on the BOTTOM side, traditional Instax portrait film frame design';
-                }
-            }
-            return next;
-        });
     };
 
     const safeProcessImage = async (file) => {
@@ -386,11 +269,7 @@ function App() {
         setStatusMessage('分析中...');
         try {
             const { b64, pUrl, b64Preview } = await safeProcessImage(file);
-            setPreviews(prev => ({ 
-                ...prev, 
-                [mode]: pUrl, 
-                [`${mode}Stored`]: b64Preview 
-            }));
+            setPreviews(prev => ({ ...prev, [mode]: pUrl, [`${mode}Stored`]: b64Preview }));
             await runAnalysis(b64, mode);
         } catch (err) {
             setStatusMessage('Error');
@@ -398,6 +277,7 @@ function App() {
         } finally { if(e.target) e.target.value = ''; }
     };
 
+    // ＝＝＝ スマホ最適化・超圧縮分析エンジン ＝＝＝
     const runAnalysis = async (base64, mode) => {
         let delay = 1000;
         let response;
@@ -405,34 +285,21 @@ function App() {
         
         const keyListString = FIELD_KEYS.join(', ');
 
-        const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼身体物理監査官です。
-与えられた画像をミリ単位で超精密にスキャンし、指定されたすべての項目について分析結果を出力してください。
-
-【出力の絶対ルール（対応関係ロック・完全日本語化）】
-1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdownの装飾は一切含めないこと。
-2. JSONの「キー名（Key）」は、下部に指定された【対象フィールドキーリスト】の文字列と1文字も違わぬ同一の英語キー名を使用すること。
-3. データ形式の平滑化：すべてのキーに対する値（Value）はネストさせず、必ずプレーンな1つの文字列として出力すること。
-4. 画像から読み取れない項目もある場合、値を ""（空文字）としてすべてのキーを漏れなく出力すること。
-5. 【超重要】すべての値（Value）は【絶対にすべて日本語】で記述すること。「Long hair」「Red」などの英語のまま出力することは一切禁止する。必ず「ロングヘア」「赤色」「ツインテール」のように美しく正確な日本語に翻訳して出力せよ。
-
-【重要監査項目・顔の静動デカップリング（表情・造形分離ルール）】
-- expression, facs: ウインク、大笑い、驚きなどの「表情筋の運動や動的変化」はすべてこの2項目に集約せよ。
-- eyeShape, mouthShape 等の顔パーツ造形項目:
-  - 画像上で表情が変化していても、「真顔・無表情（ニュートラル）に戻ったとした場合の本来の静的パーツの造形」のみを逆算して、極めて端的な【日本語の1フレーズ】で出力せよ。
-- height：身長の印象を日本語テキストで記述。
-- threeSizes：肉付きの質感や体格バランスを数値を含めず日本語テキストで記述。
-- facePlacement：輪郭領域内における目・鼻・口・眉の間隔や配置比率を日本語で記述。
-- bodyInterface (その他): 
-  - 衣装の布地境界線（シームライン）やストラップ、ウエストバンド、袖口と肌が干渉する物理境界線について超精緻なミリ単位スキャンを実行せよ。
-  - 特に、ハイカットインナーなどのカッティングによる【お尻（ヒップ）の広い露出領域】、布端から押し出されるなめらかな肉の輪郭や起伏、【お尻の谷間（割れ目）に落ちる立体的で深いグラデーションシャドウ（陰影）】、およびタイトな布地やゴムが肌を優しく圧迫することで生じるミリ単位の繊細な食い込みや段差を、極めて克明かつ客観的な【日本語の文章】として出力せよ。英語での出力は厳禁とする。
-- pose (ポーズ): 単なる「座っている」「立っている」という抽象的な表現は【絶対に使用禁止】とする。下半身（膝、足首、お尻の接地状態と関節の曲がり方）を物理的にスキャンし、以下のように明確に区別して日本語で出力せよ。
-  * 正座: 「両膝を深く曲げ、お尻をかかとの上に乗せて座っている状態」
-  * 膝立ち: 「両膝を地面につき、お尻を浮かせている状態」
-  * 横座り: 「両足を同じ方向に崩して座っている状態」
-  * あぐら: 「両膝を外側に開き、足首を交差させて座っている状態」
-- molesFreckles：ホクロ、そばかすなどの特徴を日本語で記述。
-
-【対象フィールドキーリスト】
+        const analysisSystemInstruction = `最高峰の監査官として画像を精密スキャンし指定JSONを出力せよ。
+【絶対ルール】
+1. 純粋なJSONのみ。解説・装飾厳禁。
+2. キー名は【対象リスト】と完全一致。
+3. 値はネストせずフラットな1つの文字列。
+4. 不明項目も空文字で出力。
+5. 【重要】値は全て【日本語】で記述。英語は禁止。
+【監査項目】
+- expression/facs: 動的変化(ウインク等)はここに集約。
+- 顔パーツ造形: 無表情時を逆算し端的に。
+- height/threeSizes/facePlacement: 数値は避け日本語テキストで。
+- bodyInterface: 物理境界(ハイカット露出、谷間陰影、食い込み等)を克明な日本語で。
+- pose: 下半身の接地状態・自重のかかり方を明記。正座・膝立ち等は明確に区別せよ。
+- molesFreckles: 特徴を日本語で。
+【対象リスト】
 ${keyListString}`;
 
         try {
@@ -442,72 +309,40 @@ ${keyListString}`;
             while (attempt < 5 && !success) {
                 for (let i = 0; i < FALLBACK_MODELS.length; i++) {
                     const currentModel = FALLBACK_MODELS[i];
-                    const shortName = currentModel.replace('gemini-', '');
-                    
                     try {
-                        setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '分析中...');
+                        setStatusMessage(`[${currentModel.replace('gemini-','')}] 分析中...`);
                         response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{ 
-                                    parts: [
-                                        { text: "添付された画像キャラクターのビジュアル要素を精密にスキャンし、指示されたフィールドキーリストに対応する日本語のJSONデータを出力してください。" },
-                                        { inlineData: { mimeType: "image/jpeg", data: base64 } }
-                                    ] 
-                                }],
+                                contents: [{ parts: [{ inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
                                 systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
                                 safetySettings,
                                 generationConfig: { responseMimeType: "application/json" }
                             }),
                         });
-
-                        if (response.ok) {
-                            success = true;
-                            break;
-                        } else if (response.status === 404 || response.status === 429 || response.status === 503) {
-                            continue;
-                        } else {
-                            throw new Error("HTTP " + response.status);
-                        }
-                    } catch (err) {
-                        continue;
-                    }
+                        if (response.ok) { success = true; break; }
+                        if (response.status === 404 || response.status === 429 || response.status === 503) continue;
+                    } catch (err) { continue; }
                 }
-
                 if (success) break;
-
                 attempt++;
                 if (attempt < 5) {
-                    setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
                     delay *= 2;
                 }
             }
 
-            if (!success) {
-                setStatusMessage('制限中: 1分待ってください');
-                return;
-            }
+            if (!success) { setStatusMessage('制限中: 1分待ってください'); return; }
 
             const res = await response.json();
             const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
             const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
 
-            const safeStringifyValue = (val) => {
-                if (val === null || val === undefined) return '';
-                if (typeof val === 'object') {
-                    if (Array.isArray(val)) {
-                        return val.map(v => typeof v === 'object' ? JSON.stringify(v) : String(v)).join('、');
-                    }
-                    return Object.entries(val).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`).join('、');
-                }
-                return String(val);
-            };
-
             const normalizedResult = {};
             Object.keys(result).forEach(rawKey => {
-                normalizedResult[rawKey.trim().toLowerCase()] = safeStringifyValue(result[rawKey]);
+                const val = result[rawKey];
+                normalizedResult[rawKey.trim().toLowerCase()] = val === null || val === undefined ? '' : String(val);
             });
 
             if (mode === 'base') {
@@ -515,17 +350,12 @@ ${keyListString}`;
                     const next = createEmptyState();
                     next.orientation = prev.orientation;
                     next.ratio = prev.ratio;
-                    FIELD_KEYS.forEach(k => { 
-                        const aiVal = normalizedResult[k.toLowerCase()];
-                        if (aiVal !== undefined && aiVal !== null) next[k] = aiVal; 
-                    });
+                    FIELD_KEYS.forEach(k => { if (normalizedResult[k.toLowerCase()] !== undefined) next[k] = normalizedResult[k.toLowerCase()]; });
                     return next;
                 });
             } else {
                 const mergedStaged = {};
-                FIELD_KEYS.forEach(k => {
-                    mergedStaged[k] = normalizedResult[k.toLowerCase()] !== undefined ? normalizedResult[k.toLowerCase()] : '';
-                });
+                FIELD_KEYS.forEach(k => { mergedStaged[k] = normalizedResult[k.toLowerCase()] || ''; });
                 setStagedData(mergedStaged);
                 setSelectedFields(FIELD_KEYS.reduce((a, k) => {
                     a[k] = mergedStaged[k] !== 'none' && mergedStaged[k] !== '不明' && mergedStaged[k] !== '';
@@ -540,6 +370,7 @@ ${keyListString}`;
         }
     };
 
+    // ＝＝＝ スマホ最適化・マシュマロ物理プロンプト生成エンジン ＝＝＝
     const generatePrompt = async () => {
         if (isProcessing) return;
         setIsProcessing(true);
@@ -562,85 +393,29 @@ ${keyListString}`;
             let routeSpecificInstruction = "";
 
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
-                routeSpecificInstruction = `
-- 【露出領域の物理的ロックと安全な露出の最大化】: 
-  - デザインの隙間を勝手に布地で塞がれるのを防ぐため、肩や胴体を広範囲に魅せる工学的アパレル表現を冒頭部分に必ず配置すること。
-  - 布面積を極限まで小さく指定するため、"micro", "tiny", "barely covering", "high-cut" 等の検閲対象ワードは【絶対に使用禁止】とする。
-  - 代わりに、布の形状を狭くする "minimalist triangular cut", "narrow fabric panels", "slender string-based construction" や、カットを深くする "deep plunging neckline", "low-cut underwire layout" などの幾何学的・構造的なアパレル用語に完全変換せよ。
-  - 【面積の広い服・部屋着への誤認防止】: AIが勝手に一般的なサイズの服に解釈するのを防ぐため、"top" や "shorts" の単体使用を禁じ、"slender shoulder straps and a narrow horizontal back band" や "classic triangular bikini bottoms featuring high-cut leg lines" のように露出構造を明記せよ。
-  - ネガティブプロンプト(negative)に必ず "full coverage, wide straps, thick fabric, sports bra, tank top, camisole, large cups, boy-shorts, boxers, roomwear, full back coverage" を追加して面積の大きい服や部屋着を徹底排除せよ。
-- 【衣装形状の勝手な省略の徹底防止】: AIが勝手に衣装構造を簡略化するのを阻止するため、形状固定化指示テキストを必ずプロンプトに組み込め。`;
-            } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|kimono|yukata|着崩)/i)) {
-                routeSpecificInstruction = `
-- 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 衣服が「はだけている」「ずり落ちている」描写がある場合、衣服の位置を低くロックする厳格な指示文を必ずポジティブプロンプトに組み込め。`;
+                routeSpecificInstruction = `- 【極小指定】"micro", "tiny"等は禁止。"minimalist triangular cut", "narrow fabric panels" 等幾何学的用語へ変換。
+- 【面積増大防止】"top", "shorts"単体禁止。露出構造明記。ネガティブに"full coverage, sports bra, tank top, roomwear, boxers, camisole"追加。`;
             } else {
-                routeSpecificInstruction = `
-- 衣装デザインの物理カッティングの美しさを幾何学的かつ具体的に美しく英語へ翻訳せよ。矛盾する強制挿入は行わず、対象となる衣服のテクスチャやドレープラインの表現に美しくフォーカスせよ。`;
+                routeSpecificInstruction = `- 衣装カッティングを幾何学的に英訳。`;
             }
 
-            const artStyleText = selections.artStyle && (selections.artStyle || selections.ratio) ? ((selections.artStyle || "") + " " + (selections.ratio || "")).toLowerCase() : "";
-            let artStyleSpecificInstruction = "";
-            
-            if (artStyleText.match(/(54:86|cheki|polaroid|instant|analog|vintage)/i)) {
-                const borderSide = selections.orientation === 'landscape' ? 'RIGHT' : 'BOTTOM';
-                artStyleSpecificInstruction = `
-- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風」が指定されています。AIが "Photorealistic" などのスタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止】せよ。
-- 代わりに、プロンプトの冒頭から "Lo-fi analog instant camera film, heavy grainy texture" をメイン画質トーンとして強制適用せよ。さらに "Classic white instant photo frame with a wide, thick white border on the ${borderSide} side" というフレーム記述を英語プロンプトの文中に盛り込むこと。`;
-            } else {
-                artStyleSpecificInstruction = `
-- 【チェキ風画質の完全排除】: 通常時条件として "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" などを適用し、ライティングや演出を精緻に反映せよ。"non-existent person" などの表現を組み込み、非実在性を明記せよ。`;
-            }
-
-            const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質の英語プロンプトに変換してください。
-
-【出力形式】
-純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
-
-【最優先・鉄の掟（表現最適化・アパレル工学ガイドライン）】
-1. 身体・肉体描写の言い換え (体型、肉感、ボリューム):
-   - 解剖学的な直接描写("bust volume", "rich bust", "prominent bust", "rich hip line", "feminine curves"等)を【絶対に使用禁止】とする。
-   - 代わりに "graceful feminine silhouette", "balanced proportions", "stronger body contouring", "defined curves in upper and lower torso" といった抽象的・アパレル用語に完全変換せよ。
-2. セクシーな雰囲気・形容詞の言い換え:
-   - "sexy", "slightly sexy" といった直接的な表現を【絶対に使用禁止】とする。代わりに "alluring presence", "captivating aura", "alluring", "graceful", "captivating" などの写真批評的な佇まいのオーラ表現に昇華させること。
-3. 衣装の素材・質感描写の言い換え (意図しない質感の防止):
-   - "micro", "high-cut", "sleek high-gloss", "wet-look" 等の極端・不自然な素材感を【絶対に使用禁止】とする。
-   - 代わりに "matte finish", "minimal", "sleek"(脚のライン用), "intricate lace patterns" のような上品で正確なアパレル用語を使用せよ。
-4. ミニマルなデザインの構造的指定 (サイズの極端な指定防止):
-   - "micro", "tiny", "barely covering" 等の過激なサイズ表現を【絶対に使用禁止】とする。
-   - 代わりに布の形状を狭くする "minimalist triangular cut", "narrow fabric panels", "slender string-based construction" や、カットを深くする "deep plunging neckline" 等の幾何学的・構造的なアパレル用語を使用せよ。
-5. ネガティブプロンプトのクリーン化 (メタ単語排除):
-   - ネガティブ内に "nsfw", "censorship" を含めることを【絶対に使用禁止】とする。衣装の破綻防止に "inappropriate attire"、不自然なノイズ防止に "unpolished composition", "distorted composition" を使用せよ。
-6. 陰影描写のエラー回避:
-   - ネガティブ内に "shadow bulge" を含めることを【絶対に使用禁止】とする。衣服の不自然な膨らみ・ノイズ防止に "artifacts on clothes", "unnatural fabric folds" を使用せよ。
-7. スキン見せデザインのアパレル表現:
-   - "Completely exposed", "bare back", "uncovered torso" 等の裸体・脱衣を連想させる直接表現を【絶対に使用禁止】とする。
-   - 代わりに "Sleek open-back", "off-shoulder clothing layout", "structured fabric positioning" 等の衣装デザイン・レイアウト用語に変換せよ。
-8. 衣装のフィット感と立体感の強調 (作画崩壊防止):
-   - 「その他(bodyInterface)」などに含まれる日本語のはみ出し・食い込み情報に対して、"soft overspill", "physical overspill", "skin contour overspill" 等の過度な密着描写（英語）を【絶対に使用禁止】とする。
-   - 代わりに以下のタイトフィット・輪郭強調用語へ100%言い換えてポジティブプロンプトに反映させよ：
-     * ストラップ・紐の密着 ➔ "fitting smoothly and seamlessly against the skin, creating natural physical contours"
-     * シルエットライン ➔ "defined by a snug, tailored fit that elegantly follows the natural silhouette"
-9. ツーピース・セットアップの正確な名称指定:
-   - "undergarments", "bra", "inner briefs", "panties" 等の曖昧・直接的な名称を【絶対に使用禁止】とする。
-   - 代わりに "two-piece ensemble", "minimalist lace-trimmed top", "matching seamless bikini bottoms" などの正確なセットアップ・アパレル用語に変換せよ。
-10. 意図しないデザイン（ルーズフィット等）の防止:
-   - "top" (単体での使用), "shorts" (ボトムスとしての使用) 等の面積が広くなりやすい単語を【絶対に使用禁止】とする。
-   - 代わりに、トップスの背中構造は "slender shoulder straps and a narrow horizontal back band"、ボトムスの形状は "classic triangular bikini bottoms featuring high-cut leg lines" などのように露出構造を明記せよ。
-   - ネガティブプロンプトに "boy-shorts, boxers, roomwear, camisole, full back coverage" を追加してルーズな服を徹底排除せよ。
-11. トップス形状の担保とデザイン維持 (意図しない丈の延長防止):
-   - "tank top" 等の丈が長くなりやすい単語を【絶対に使用禁止】とする。
-   - 代わりに丈の短さと構造を明記する "underwire bralette", "underwire bikini top", "ultra-cropped midriff-baring design revealing the navel" などのアパレル用語を使用せよ。
-   - 同時にネガティブプロンプトに "bustier, corset, fabric covering the belly, hidden navel, long top" を追加し、腹部を覆う服へのすり替えを完全に拒否せよ。
-12. FACSコードクリーン化:
-   - AUおよびADは "AU12C" のようにコードと強度のみを反映し、名称説明は含めない。
-13. 非実在性の明記:
-   - AIによる架空の創作であることを示すため、"non-existent person" などの表現を組み込め（"character", "virtual" は使用禁止）。
-14. 印象補正(aesthetic):
-   - "cute" 時は先頭や自然な位置に "cute"、"beautiful" 時は "beautiful" を追加し、顔立ちの力を極限に高めよ。
-15. 姿勢・ポーズの崩壊防止 (座り・膝立ち等の接地安定化):
-   - 床に接地するポーズ（正座、膝立ち、横座り、あぐら等）が指定されている場合、意図しない家具の出現を防ぐため、ネガティブプロンプトに必ず "chair, stool, bench, standing, unnatural leg anatomy, floating" を追加して床での姿勢を安定させよ。
-${routeSpecificInstruction}
-${artStyleSpecificInstruction}`;
+            const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}
+【表現最適化ガイドライン】
+1. 肉体直接描写("bust volume"等)禁止 ➔ "graceful feminine silhouette", "generously rounded contours"等へ。
+2. セクシー形容詞("sexy"等)禁止 ➔ "captivating aura"等へ。
+3. 過激素材("micro","wet-look"等)禁止 ➔ "minimal","matte finish"等へ。
+4. 極小表現禁止 ➔ "minimalist triangular cut"等へ。ネガティブに"full coverage, sports bra, large cups"等追加。
+5. メタ単語("nsfw","censorship")禁止 ➔ "inappropriate attire"等へ。
+6. 影表現("shadow bulge")禁止 ➔ "artifacts on clothes"等へ。
+7. 直接的脱衣表現禁止 ➔ "off-shoulder clothing layout"等レイアウト用語へ。
+8. 下着名称("bra","panties"等)禁止 ➔ "two-piece ensemble", "minimalist lace-trimmed top"等へ。
+9. ルーズ化防止: "top","shorts"単体禁止 ➔ 露出構造明記。ネガティブに"roomwear, camisole"追加。
+10. 丈延長防止: "tank top"禁止 ➔ "underwire bralette"等へ。ネガティブに"bustier, corset"追加。
+11. 姿勢・ポーズの崩壊防止: 座り・膝立ち等の場合、ネガティブに"chair, stool, bench, standing, unnatural leg anatomy, floating"を追加し床での姿勢を安定させよ。
+12. 【重要:肉感の柔らかさ・マシュマロ物理】: "fat", "thick thighs", "erotic flesh" は厳禁。「その他(bodyInterface)」等の食い込み・むっちり感は "the delicate fabric gently sinks into her extremely soft, supple skin, highlighting the plush, marshmallow-like texture" 等の「自重の分散」と「肌の柔らかさへの沈み込み」を表現する芸術的なアパレル・彫刻用語へ全自動ロンダリングせよ。
+13. FACSは"AU12C"のみ反映。非実在性("non-existent person")明記。
+14. aesthetic("cute"/"beautiful")を自然に追加。
+${routeSpecificInstruction}`;
 
             const FALLBACK_MODELS = ['gemini-3.5-flash', 'gemini-3.0-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
             let attempt = 0;
@@ -648,48 +423,31 @@ ${artStyleSpecificInstruction}`;
             while (attempt < 5 && !success) {
                 for (let i = 0; i < FALLBACK_MODELS.length; i++) {
                     const currentModel = FALLBACK_MODELS[i];
-                    const shortName = currentModel.replace('gemini-', '');
-                    
                     try {
-                        setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '生成中...');
+                        setStatusMessage(`[${currentModel.replace('gemini-','')}] 生成中...`);
                         response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプトを作成し、末尾に比率 "${arTag}" 含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
+                                contents: [{ parts: [{ text: `以下の日本語データに基づきプロンプトを作成し、末尾に比率 "${arTag}" を含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
                                 systemInstruction: { parts: [{ text: promptSystemInstruction }] },
                                 safetySettings,
                                 generationConfig: { responseMimeType: "application/json" }
                             }),
                         });
-
-                        if (response.ok) {
-                            success = true;
-                            break;
-                        } else if (response.status === 404 || response.status === 429 || response.status === 503) {
-                            continue;
-                        } else {
-                            throw new Error("HTTP " + response.status);
-                        }
-                    } catch (err) {
-                        continue;
-                    }
+                        if (response.ok) { success = true; break; }
+                        if (response.status === 404 || response.status === 429 || response.status === 503) continue;
+                    } catch (err) { continue; }
                 }
-
                 if (success) break;
-
                 attempt++;
                 if (attempt < 5) {
-                    setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
                     delay *= 2;
                 }
             }
 
-            if (!success) {
-                setStatusMessage('制限中: 1分待ってください');
-                return;
-            }
+            if (!success) { setStatusMessage('制限中: 1分待ってください'); return; }
 
             const res = await response.json();
             const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
@@ -810,15 +568,6 @@ ${artStyleSpecificInstruction}`;
                         ))}
                     </div>
                 </section>
-
-                <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl text-[9px]">
-                     <div className="flex items-start gap-2">
-                         <Icon name="info" className="text-blue-500 w-4 h-4 mt-0.5 shrink-0" />
-                         <div>
-                            <p className="text-blue-700 font-bold italic">【FICTION】生成内容はすべて架空の創作物であり、実在の人物とは関係ありません。</p>
-                         </div>
-                     </div>
-                </div>
 
                 <div className="h-6 flex items-center justify-center">
                     {statusMessage && (
