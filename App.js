@@ -790,9 +790,14 @@ ${routeSpecificInstruction}`;
                             <button type="button" onClick={() => applyPreset('camera')} className="px-4 py-2 rounded-full border text-[10px]">スマホ風</button>
                             <button type="button" onClick={() => applyPreset('realistic')} className="px-4 py-2 rounded-full border text-[10px]">実写風</button>
                         </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            {[{ label: '縦長 (Portrait)', value: 'portrait' }, { label: '横長 (Landscape)', value: 'landscape' }].map((o) => (
+                                <button key={o.value} type="button" onClick={() => handleOrientationChange(o.value)} className={`p-3 rounded-2xl border-2 transition-all ${selections.orientation === o.value ? 'bg-pink-50 border-pink-400 text-pink-600 shadow-sm' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-pink-200'}`}>{o.label}</button>
+                            ))}
+                        </div>
                         <div className="grid grid-cols-4 gap-2">
                             {['1:1', '3:4', '9:16', '54:86'].map((r) => (
-                                <button key={r} type="button" onClick={() => setSelections(p=>({...p, ratio: r}))} className={`p-3 rounded-2xl border-2 transition-all ${selections.ratio === r ? 'bg-pink-50 border-pink-200 text-pink-600' : 'bg-slate-50 text-slate-400'}`}>{r}</button>
+                                <button key={r} type="button" onClick={() => setSelections(p=>({...p, ratio: r}))} className={`p-3 rounded-2xl border-2 transition-all ${selections.ratio === r ? 'bg-pink-50 border-pink-400 text-pink-600 shadow-sm' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-pink-200'}`}>{r === '54:86' ? 'チェキ' : r}</button>
                             ))}
                         </div>
                         <button type="button" onClick={generatePrompt} disabled={isProcessing || isAnalyzing} className="w-full py-6 rounded-3xl bg-slate-900 text-white font-black text-sm uppercase italic active:scale-95 transition-all shadow-xl hover:shadow-2xl">
