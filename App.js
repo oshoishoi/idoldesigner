@@ -1,6 +1,7 @@
 // App.js
 const { useState, useEffect, useRef, useMemo } = React;
 
+// config.jsからグローバル定数を安全に受け渡す
 const FIELD_KEYS = window.FIELD_KEYS || [];
 const LABEL_MAP = window.LABEL_MAP || {};
 const FIELD_SUGGESTIONS = window.FIELD_SUGGESTIONS || {};
@@ -25,7 +26,8 @@ const Icon = ({ name, className = "" }) => {
         info: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
         chevronDown: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"/></svg>,
         chevronUp: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="18 15 12 9 6 15"/></svg>,
-        zoom: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        zoom: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>,
+        paste: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/><path d="M12 11h4"/><path d="M14 9v4"/></svg>
     };
     return svgs[name] || null;
 };
@@ -236,6 +238,52 @@ function App() {
         }
     };
 
+    const applyPreset = (type) => {
+        setGlobalHistory(prev => [selections, ...prev].slice(0, 3));
+        setSelections(prev => {
+            const next = { ...prev };
+            if (type === 'cheki') {
+                next.ratio = '54:86';
+                next.artStyle = 'Lo-fi analog instant camera film, highly grainy texture, vintage Polaroid aesthetic, soft details, slight motion blur, NO high-fidelity, NO DSLR, NO studio lighting, NO 8k render';
+                next.lighting = 'Harsh camera-mounted flash, direct hard flash lighting, heavy contrast shadows behind model';
+                next.situation = 'Casual indoor snapshot, late night house party vibe, raw moment capture';
+                
+                if (prev.orientation === 'landscape') {
+                    next.additionalNotes = 'Classic white instant photo frame with a wide, thick white border on the RIGHT side, landscape Polaroid film frame design';
+                } else {
+                    next.additionalNotes = 'Classic white instant photo frame with a wide, thick white border on the BOTTOM side, traditional Instax portrait film frame design';
+                }
+            } else if (type === 'camera') {
+                next.ratio = '9:16';
+                next.artStyle = 'SNS風、スマホ撮影スナップ、ビューティーフィルター';
+                next.lighting = '自然光、柔らかい順光';
+                next.situation = '自撮り、日常スナップ';
+                next.additionalNotes = '';
+            } else if (type === 'realistic') {
+                next.ratio = '9:16';
+                next.artStyle = 'Hyper-realistic DSLR raw photograph, high fidelity, fine skin texture';
+                next.lighting = 'Cinematic studio key light, volumetric rim lighting';
+                next.situation = 'Professional studio fashion shoot';
+                next.additionalNotes = '8k, sharp focus, photo masterclass';
+            }
+            return next;
+        });
+    };
+
+    const handleOrientationChange = (orientation) => {
+        setSelections(prev => {
+            const next = { ...prev, orientation };
+            if (prev.ratio === '54:86' || (prev.artStyle && prev.artStyle.includes('instant camera'))) {
+                if (orientation === 'landscape') {
+                    next.additionalNotes = 'Classic white instant photo frame with a wide, thick white border on the RIGHT side, landscape Polaroid film frame design';
+                } else {
+                    next.additionalNotes = 'Classic white instant photo frame with a wide, thick white border on the BOTTOM side, traditional Instax portrait film frame design';
+                }
+            }
+            return next;
+        });
+    };
+
     const safeProcessImage = async (file) => {
         return new Promise((resolve) => {
             const url = URL.createObjectURL(file);
@@ -277,7 +325,6 @@ function App() {
         } finally { if(e.target) e.target.value = ''; }
     };
 
-    // ＝＝＝ スマホ最適化・超圧縮分析エンジン ＝＝＝
     const runAnalysis = async (base64, mode) => {
         let delay = 1000;
         let response;
@@ -295,8 +342,9 @@ function App() {
 【監査項目】
 - expression/facs: 動的変化(ウインク等)はここに集約。
 - 顔パーツ造形: 無表情時を逆算し端的に。
-- height/threeSizes/facePlacement: 数値は避け日本語テキストで。
-- bodyInterface: 物理境界(ハイカット露出、谷間陰影、食い込み等)を克明な日本語で。
+- height/threeSizes/facePlacement: 数値は避け日本語テキストで。特にバストのボリューム感(こぼれるような豊満さ等)を詳細に。
+- skinTexture / bodyType: 肉質の差(引き締まっているが柔らかい、マシュマロのようにふくよか等)を詳細に。
+- bodyInterface: 物理境界を克明な日本語で。特に「極細の紐やストラップが、腰回りやヒップの肌にどのように沈み込み、極上の柔らかさ（マシュマロ感）を生み出しているか」を精密に言語化せよ。
 - pose: 下半身の接地状態・自重のかかり方を明記。正座・膝立ち等は明確に区別せよ。
 - molesFreckles: 特徴を日本語で。
 【対象リスト】
@@ -309,40 +357,72 @@ ${keyListString}`;
             while (attempt < 5 && !success) {
                 for (let i = 0; i < FALLBACK_MODELS.length; i++) {
                     const currentModel = FALLBACK_MODELS[i];
+                    const shortName = currentModel.replace('gemini-', '');
+                    
                     try {
-                        setStatusMessage(`[${currentModel.replace('gemini-','')}] 分析中...`);
+                        setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '分析中...');
                         response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{ parts: [{ inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
+                                contents: [{ 
+                                    parts: [
+                                        { text: "添付された画像キャラクターのビジュアル要素を精密にスキャンし、指示されたフィールドキーリストに対応する日本語のJSONデータを出力してください。" },
+                                        { inlineData: { mimeType: "image/jpeg", data: base64 } }
+                                    ] 
+                                }],
                                 systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
                                 safetySettings,
                                 generationConfig: { responseMimeType: "application/json" }
                             }),
                         });
-                        if (response.ok) { success = true; break; }
-                        if (response.status === 404 || response.status === 429 || response.status === 503) continue;
-                    } catch (err) { continue; }
+
+                        if (response.ok) {
+                            success = true;
+                            break;
+                        } else if (response.status === 404 || response.status === 429 || response.status === 503) {
+                            continue;
+                        } else {
+                            throw new Error("HTTP " + response.status);
+                        }
+                    } catch (err) {
+                        continue;
+                    }
                 }
+
                 if (success) break;
+
                 attempt++;
                 if (attempt < 5) {
+                    setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
                     delay *= 2;
                 }
             }
 
-            if (!success) { setStatusMessage('制限中: 1分待ってください'); return; }
+            if (!success) {
+                setStatusMessage('制限中: 1分待ってください');
+                return;
+            }
 
             const res = await response.json();
             const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
             const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
 
+            const safeStringifyValue = (val) => {
+                if (val === null || val === undefined) return '';
+                if (typeof val === 'object') {
+                    if (Array.isArray(val)) {
+                        return val.map(v => typeof v === 'object' ? JSON.stringify(v) : String(v)).join('、');
+                    }
+                    return Object.entries(val).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`).join('、');
+                }
+                return String(val);
+            };
+
             const normalizedResult = {};
             Object.keys(result).forEach(rawKey => {
-                const val = result[rawKey];
-                normalizedResult[rawKey.trim().toLowerCase()] = val === null || val === undefined ? '' : String(val);
+                normalizedResult[rawKey.trim().toLowerCase()] = safeStringifyValue(result[rawKey]);
             });
 
             if (mode === 'base') {
@@ -350,12 +430,17 @@ ${keyListString}`;
                     const next = createEmptyState();
                     next.orientation = prev.orientation;
                     next.ratio = prev.ratio;
-                    FIELD_KEYS.forEach(k => { if (normalizedResult[k.toLowerCase()] !== undefined) next[k] = normalizedResult[k.toLowerCase()]; });
+                    FIELD_KEYS.forEach(k => { 
+                        const aiVal = normalizedResult[k.toLowerCase()];
+                        if (aiVal !== undefined && aiVal !== null) next[k] = aiVal; 
+                    });
                     return next;
                 });
             } else {
                 const mergedStaged = {};
-                FIELD_KEYS.forEach(k => { mergedStaged[k] = normalizedResult[k.toLowerCase()] || ''; });
+                FIELD_KEYS.forEach(k => {
+                    mergedStaged[k] = normalizedResult[k.toLowerCase()] !== undefined ? normalizedResult[k.toLowerCase()] : '';
+                });
                 setStagedData(mergedStaged);
                 setSelectedFields(FIELD_KEYS.reduce((a, k) => {
                     a[k] = mergedStaged[k] !== 'none' && mergedStaged[k] !== '不明' && mergedStaged[k] !== '';
@@ -370,7 +455,6 @@ ${keyListString}`;
         }
     };
 
-    // ＝＝＝ スマホ最適化・マシュマロ物理プロンプト生成エンジン ＝＝＝
     const generatePrompt = async () => {
         if (isProcessing) return;
         setIsProcessing(true);
@@ -393,15 +477,29 @@ ${keyListString}`;
             let routeSpecificInstruction = "";
 
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
-                routeSpecificInstruction = `- 【極小指定】"micro", "tiny"等は禁止。"minimalist triangular cut", "narrow fabric panels" 等幾何学的用語へ変換。
+                routeSpecificInstruction = `
+- 【極小指定】"micro", "tiny"等は禁止。"minimalist triangular cut", "narrow fabric panels", "ultra-fine string construction" 等幾何学的用語へ変換。
 - 【面積増大防止】"top", "shorts"単体禁止。露出構造明記。ネガティブに"full coverage, sports bra, tank top, roomwear, boxers, camisole"追加。`;
             } else {
                 routeSpecificInstruction = `- 衣装カッティングを幾何学的に英訳。`;
             }
 
+            const artStyleText = selections.artStyle && (selections.artStyle || selections.ratio) ? ((selections.artStyle || "") + " " + (selections.ratio || "")).toLowerCase() : "";
+            let artStyleSpecificInstruction = "";
+            
+            if (artStyleText.match(/(54:86|cheki|polaroid|instant|analog|vintage)/i)) {
+                const borderSide = selections.orientation === 'landscape' ? 'RIGHT' : 'BOTTOM';
+                artStyleSpecificInstruction = `
+- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風」が指定されています。AIが "Photorealistic" などのスタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止】せよ。
+- 代わりに、プロンプトの冒頭から "Lo-fi analog instant camera film, heavy grainy texture" をメイン画質トーンとして強制適用せよ。さらに "Classic white instant photo frame with a wide, thick white border on the ${borderSide} side" というフレーム記述を英語プロンプトの文中に盛り込むこと。`;
+            } else {
+                artStyleSpecificInstruction = `
+- 【チェキ風画質の完全排除】: 通常時条件として "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" などを適用し、ライティングや演出を精緻に反映せよ。"non-existent person" などの表現を組み込み、非実在性を明記せよ。`;
+            }
+
             const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}
 【表現最適化ガイドライン】
-1. 肉体直接描写("bust volume"等)禁止 ➔ "graceful feminine silhouette", "generously rounded contours"等へ。
+1. 肉体直接描写(体型,胸,ボリューム)の言い換え: "bust volume", "cleavage", "huge breasts", "erotic flesh", "fat"等は【絶対に使用禁止】とする。代わりに "graceful feminine silhouette", "generously full upper contours", "plush volume gracefully held by the fabric" 等の高級アパレル用語・デッサン用語へロンダリングせよ。
 2. セクシー形容詞("sexy"等)禁止 ➔ "captivating aura"等へ。
 3. 過激素材("micro","wet-look"等)禁止 ➔ "minimal","matte finish"等へ。
 4. 極小表現禁止 ➔ "minimalist triangular cut"等へ。ネガティブに"full coverage, sports bra, large cups"等追加。
@@ -412,10 +510,11 @@ ${keyListString}`;
 9. ルーズ化防止: "top","shorts"単体禁止 ➔ 露出構造明記。ネガティブに"roomwear, camisole"追加。
 10. 丈延長防止: "tank top"禁止 ➔ "underwire bralette"等へ。ネガティブに"bustier, corset"追加。
 11. 姿勢・ポーズの崩壊防止: 座り・膝立ち等の場合、ネガティブに"chair, stool, bench, standing, unnatural leg anatomy, floating"を追加し床での姿勢を安定させよ。
-12. 【重要:肉感の柔らかさ・マシュマロ物理】: "fat", "thick thighs", "erotic flesh" は厳禁。「その他(bodyInterface)」等の食い込み・むっちり感は "the delicate fabric gently sinks into her extremely soft, supple skin, highlighting the plush, marshmallow-like texture" 等の「自重の分散」と「肌の柔らかさへの沈み込み」を表現する芸術的なアパレル・彫刻用語へ全自動ロンダリングせよ。
+12. 【マシュマロ物理・極細紐と腰回りの柔らかさ】: 腰回りやヒップにおける紐の食い込みや肉感は "ultra-fine side-tie strings gently pressing into her exceptionally soft waistline, creating an elegant yielding indentation" 等の「極細紐の物理的張力」と「柔らかな肌への沈み込み」で表現し、極上の柔らかさを視覚化せよ。また、「引き締まり」と「柔らかさ」の同居は "toned yet exceptionally soft body contour", "delicate balance of a slender frame and plush curves" 等の芸術的表現を用いよ。
 13. FACSは"AU12C"のみ反映。非実在性("non-existent person")明記。
 14. aesthetic("cute"/"beautiful")を自然に追加。
-${routeSpecificInstruction}`;
+${routeSpecificInstruction}
+${artStyleSpecificInstruction}`;
 
             const FALLBACK_MODELS = ['gemini-3.5-flash', 'gemini-3.0-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
             let attempt = 0;
@@ -423,8 +522,10 @@ ${routeSpecificInstruction}`;
             while (attempt < 5 && !success) {
                 for (let i = 0; i < FALLBACK_MODELS.length; i++) {
                     const currentModel = FALLBACK_MODELS[i];
+                    const shortName = currentModel.replace('gemini-', '');
+                    
                     try {
-                        setStatusMessage(`[${currentModel.replace('gemini-','')}] 生成中...`);
+                        setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '生成中...');
                         response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -435,19 +536,34 @@ ${routeSpecificInstruction}`;
                                 generationConfig: { responseMimeType: "application/json" }
                             }),
                         });
-                        if (response.ok) { success = true; break; }
-                        if (response.status === 404 || response.status === 429 || response.status === 503) continue;
-                    } catch (err) { continue; }
+
+                        if (response.ok) {
+                            success = true;
+                            break;
+                        } else if (response.status === 404 || response.status === 429 || response.status === 503) {
+                            continue;
+                        } else {
+                            throw new Error("HTTP " + response.status);
+                        }
+                    } catch (err) {
+                        continue;
+                    }
                 }
+
                 if (success) break;
+
                 attempt++;
                 if (attempt < 5) {
+                    setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
                     delay *= 2;
                 }
             }
 
-            if (!success) { setStatusMessage('制限中: 1分待ってください'); return; }
+            if (!success) {
+                setStatusMessage('制限中: 1分待ってください');
+                return;
+            }
 
             const res = await response.json();
             const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";

@@ -48,7 +48,7 @@ window.LABEL_MAP = {
     artStyle: '画風', cameraAngle: 'アングル', aesthetic: '印象補正', additionalNotes: '追記' 
 };
 
-// 表現ルールを適用した極上の事前サジェスト辞書 (マシュマロ・むっちり物理対応)
+// 表現ルールを適用した極上の事前サジェスト辞書 (極細紐・腰回りマシュマロ物理追加)
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -161,10 +161,10 @@ window.FIELD_SUGGESTIONS = {
         { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with fine pores, peach fuzz, and natural oils' }
     ],
     bodyInterface: [
+        { label: '極細紐による腰の沈み込み 🎀', value: '極細のサイドストリングが腰回りの極めて柔らかい肌に優しく沈み込み、極上の柔らかさとマシュマロのようなふくよかさを強調する美しい凹みを作り出している' },
         { label: '柔らかい肌への沈み込み ☁️', value: '布地が極めて柔らかくしなやかな肌に優しく沈み込み、マシュマロのようなふかふかの質感と身体の自然な柔らかさを際立たせている' },
-        { label: 'アンダーの密着 👙', value: 'アンダーバストのシームラインに沿って肌に美しく密着し、自然な物理的輪郭を作り出している' },
-        { label: 'サイドのフィット感 📐', value: '衣装の脇のシーム境界線に沿って、なめらかなシルエットを優雅に辿るテーラードフィット感が強調されている' },
-        { label: '谷間の自然な陰影 ⏳', value: '豊かな丸みと自重の重なりによって、中央のラインに沿って自然でデッサン的な深いグラデーション陰影が綺麗に落ちている' }
+        { label: 'カッティング露出 🍑', value: 'ボトムスの高く切り込まれたレッグラインに沿って、なめらかな曲線シルエットが際立っている' },
+        { label: '豊かな胸の支えと谷間 🕊️', value: '布地がこぼれるような豊かなボリュームを優雅に支え、深く開いたネックラインに沿って自然で美しい起伏と陰影を生み出している' }
     ], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
@@ -179,7 +179,8 @@ window.FIELD_SUGGESTIONS = {
         { label: '普通(160cm) 🧍‍♀️', value: 'Average slender height, around 161cm with proportional limbs' }
     ],
     bodyType: [
-        { label: 'むっちり/マシュマロ ☁️', value: 'Soft, supple feminine silhouette with generously rounded contours, emphasizing natural softness and a plush organic form' },
+        { label: 'スレンダー×マシュマロ 🌿☁️', value: 'Toned yet exceptionally soft body contour, delicate balance of a slender frame and plush, yielding curves especially around the hips' },
+        { label: '豊満な上半身/こぼれる肉付き ☁️', value: 'Voluptuous silhouette with generously full upper contours and plush softness, gracefully held by the garment' },
         { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' },
         { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with stronger body contouring lines' }
     ],
@@ -188,17 +189,19 @@ window.FIELD_SUGGESTIONS = {
         { label: '骨格ウェーブ 🌊', value: 'Classic wave frame, long slender waist, gently flared hips' }
     ],
     threeSizes: [
-        { label: '豊かな丸みと肉感 ☁️', value: 'Generously rounded contours in the upper and lower torso, highlighting a soft, plush, and voluptuous elegant silhouette' },
-        { label: 'メリハリ ⏳', value: 'Defined curves in upper and lower torso, balanced proportions, flat stomach contour' }
+        { label: '引き締まりと柔らかさの同居 ⏳', value: 'Gentle firmness in the waist combined with yielding plush softness in the hips and lower torso, balanced elegant proportions' },
+        { label: 'こぼれるような豊満さ ☁️', value: 'Generously full upper torso with plush volume resting naturally, creating a breathtaking and elegant silhouette' },
+        { label: 'スリム 📏', value: 'Sleek slim hips, narrow athletic waist, graceful feminine silhouette' }
     ],
     outfit: [
+        { label: '極細紐のビキニ 👙', value: 'Minimalist two-piece swimwear featuring ultra-fine string construction that delicately rests against the skin' },
+        { label: '繊細なブルーレースのセット 🎀', value: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire and scalloped edges softly resting against the skin' },
         { label: '王道ドレス 👗', value: 'Tier-layered chiffon frilled idol stage dress' },
-        { label: 'ミニマル水着 👙', value: 'Minimalist two-piece swimwear with narrow fabric panels and slender string-based construction' },
-        { label: '肩あきニット 🧶', value: 'Oversized cozy off-shoulder pastel-pink knit sweater' }
+        { label: '夏祭り浴衣 👘', value: 'Traditional summer cotton yukata adorned with floral motifs, tied with a contrasting obi sash' }
     ],
     outfitDetail: [
-        { label: 'レース刺繍 🕸️', value: 'Intricate scalloped sheer lace net linings, delicate floral embroidery' },
-        { label: 'バック編み上げ 🎗️', value: 'Satin corset lace-up details stretching down the bodice' }
+        { label: '極細のサイドストリング 🪢', value: 'Ultra-fine side-tie strings securely holding the garment' },
+        { label: 'レース刺繍 🕸️', value: 'Intricate scalloped sheer lace net linings, delicate floral embroidery' }
     ],
     pose: [
         { label: '正座・むっちり座り 🧎‍♀️', value: 'seiza sitting pose, resting her soft weight naturally on her calves, emphasizing the beautiful, full spread and supple curves of her lower body' },
@@ -207,8 +210,9 @@ window.FIELD_SUGGESTIONS = {
         { label: '振り向き 💫', value: 'Dynamic over-the-shoulder look, mid-turn candid captured pose' }
     ],
     situation: [
+        { label: '砂浜・ビーチ 🏖️', value: 'Kneeling on a beautiful sunlit sandy beach with clear blue ocean waves in the background' },
         { label: '和室の畳 🍵', value: 'Inside a traditional Japanese washitsu room with tatami flooring and shoji sliding doors' },
-        { label: 'オシャレカフェ ☕', value: 'Relaxing by a sunny indoor window seat at a chic modern Harajuku cafe' }
+        { label: '白いベッドシーツ 🛏️', value: 'Resting on soft, wrinkled white bed sheets in a bright morning room' }
     ],
     lighting: [
         { label: '窓からの自然光 ☀️', value: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours' },
@@ -234,25 +238,41 @@ window.FIELD_SUGGESTIONS = {
 
 // 共通インスピレーション用テーマプリセット
 window.INSPI_THEMES = {
-    gravure: {
-        name: '和室グラビア・マシュマロ 🍵',
+    voluptuous_bikini: {
+        name: '豊満×極細紐ビキニ 🏖️',
         data: {
-            hairStyle: 'Natural black short bob, rounded and softly curled inward with a smooth, gentle luster',
-            hairBangs: 'See-through bangs lightly touching her eyes, parted in the center',
-            faceOutline: 'Rounded oval with soft, full cheeks and compact proportions',
-            eyeShape: 'Large highly symmetrical round almond-shaped eyes, sweet innocent gaze',
-            eyeColor: 'Warm brown irises',
-            bodyType: 'Soft, supple feminine silhouette with generously rounded contours, emphasizing natural softness',
-            threeSizes: 'Generously rounded contours in the lower torso, highlighting a soft, plush silhouette',
-            skinTexture: 'Extremely soft, supple skin texture, smooth and yielding',
-            bodyInterface: 'The delicate fabric gently sinks into her extremely soft, supple skin, highlighting the marshmallow-like plush texture and natural weight of her body',
-            outfit: 'Minimalist two-piece swimwear with narrow fabric panels',
-            outfitDetail: 'Underwire bralette top in pale orange with intricate lace patterns, matching dusty pink classic triangular bikini bottoms',
-            pose: 'Kneeling pose, resting her soft weight naturally on her calves, emphasizing the beautiful, full spread and supple curves of her lower body',
-            situation: 'Inside a traditional Japanese washitsu room with tatami flooring and shoji sliding doors in the background',
-            lighting: 'Soft natural daylight filtering from the side, creating realistic, delicate shadow gradients',
+            hairStyle: 'Flawless waist-length silky straight black hair',
+            hairBangs: 'Trendy light and airy see-through bangs',
+            eyeShape: 'Large doe-like expressive rounded eyes',
+            bodyType: 'Voluptuous silhouette with generously full upper contours and plush softness, gracefully held by the garment',
+            threeSizes: 'Generously full upper torso with plush volume resting naturally, creating a breathtaking and elegant silhouette',
+            skinTexture: 'Extremely soft, supple skin texture, smooth and yielding like marshmallow',
+            bodyInterface: '極細のサイドストリングが腰回りの極めて柔らかい肌に優しく沈み込み、極上の柔らかさとマシュマロのようなふくよかさを強調する美しい凹みを作り出している',
+            outfit: 'Minimalist two-piece swimwear featuring ultra-fine string construction that delicately rests against the skin',
+            outfitDetail: 'Ultra-fine side-tie strings',
+            pose: 'Kneeling pose, resting on both knees, upright torso, gently touching the side string of the bottoms',
+            situation: 'Kneeling on a beautiful sunlit sandy beach with clear blue ocean waves in the background',
+            lighting: 'Bright, radiant sun-kissed lighting, highlighting the smooth skin contours',
             artStyle: 'Hyper-realistic gravure raw photograph taken with high-end DSLR, sharp focus, 8k',
-            cameraAngle: 'Captured from a middle-low angle from behind, emphasizing the elegant S-curve from her back to her lower torso'
+            cameraAngle: 'Three-quarter angle medium portrait'
+        }
+    },
+    slender_marshmallow: {
+        name: 'スレンダー×マシュマロ 🎀',
+        data: {
+            hairStyle: 'Natural black short bob, rounded and softly curled inward',
+            hairBangs: 'Soft side-swept bangs cascading to the side',
+            eyeShape: 'Sleek upturned almond eyes, feline captivating glance',
+            bodyType: 'Toned yet exceptionally soft body contour, delicate balance of a slender frame and plush, yielding curves especially around the hips',
+            threeSizes: 'Gentle firmness in the waist combined with yielding plush softness in the hips and lower torso, balanced elegant proportions',
+            skinTexture: 'Pale porcelain ivory skin, translucent texture, soft-matte studio-airbrushed finish',
+            bodyInterface: '衣装の縁や極細のストラップが腰回りやヒップの肌になめらかに密着・沈み込み、自然な物理的フィット感と極上の柔らかさを視覚化している',
+            outfit: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire and scalloped edges softly resting against the skin',
+            pose: 'seiza sitting pose, resting her soft weight naturally on her calves, emphasizing the beautiful, full spread and supple curves of her lower body',
+            situation: 'Resting on soft, wrinkled white bed sheets in a bright morning room',
+            lighting: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours',
+            artStyle: 'Hyper-realistic gravure raw photograph taken with high-end DSLR, sharp focus, 8k',
+            cameraAngle: 'Captured from a middle-low angle from behind, emphasizing the elegant S-curve and full silhouette from the back to the lower torso'
         }
     }
 };
