@@ -342,9 +342,9 @@ function App() {
 【監査項目】
 - expression/facs: 動的変化(ウインク等)はここに集約。
 - 顔パーツ造形: 無表情時を逆算し端的に。
-- height/threeSizes/facePlacement: 数値は避け日本語テキストで。特にバストのボリューム感(こぼれるような豊満さ等)を詳細に。
+- height/threeSizes/facePlacement: 数値は避け日本語テキストで。特にバストの重力感(自然なドレープと豊満さ)を詳細に。
 - skinTexture / bodyType: 肉質の差(引き締まっているが柔らかい、マシュマロのようにふくよか等)を詳細に。
-- bodyInterface: 物理境界を克明な日本語で。特に「極細の紐やストラップが、腰回りやヒップの肌にどのように沈み込み、極上の柔らかさ（マシュマロ感）を生み出しているか」を精密に言語化せよ。
+- bodyInterface: 物理境界を克明な日本語で。特に「極細の紐や水着の縁が、腰回りやヒップの肌にどのように沈み込み（食い込み）、張力と極上の柔らかさのコントラストを生み出しているか」を精密に言語化せよ。
 - pose: 下半身の接地状態・自重のかかり方を明記。正座・膝立ち等は明確に区別せよ。
 - molesFreckles: 特徴を日本語で。
 【対象リスト】
@@ -499,7 +499,7 @@ ${keyListString}`;
 
             const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}
 【表現最適化ガイドライン】
-1. 肉体直接描写(体型,胸,ボリューム)の言い換え: "bust volume", "cleavage", "huge breasts", "erotic flesh", "fat"等は【絶対に使用禁止】とする。代わりに "graceful feminine silhouette", "generously full upper contours", "plush volume gracefully held by the fabric" 等の高級アパレル用語・デッサン用語へロンダリングせよ。
+1. 肉体直接描写(体型,ボリューム)の言い換え: "bust volume", "cleavage", "huge breasts", "erotic flesh", "fat"等は【絶対に使用禁止】とする。代わりに "graceful feminine silhouette", "generously full upper contours" 等の高級アパレル用語・デッサン用語へロンダリングせよ。胸の重力感や豊満さは "plush upper volume with a natural, elegant heavy drape gracefully supported by the fabric" と表現せよ。
 2. セクシー形容詞("sexy"等)禁止 ➔ "captivating aura"等へ。
 3. 過激素材("micro","wet-look"等)禁止 ➔ "minimal","matte finish"等へ。
 4. 極小表現禁止 ➔ "minimalist triangular cut"等へ。ネガティブに"full coverage, sports bra, large cups"等追加。
@@ -510,7 +510,7 @@ ${keyListString}`;
 9. ルーズ化防止: "top","shorts"単体禁止 ➔ 露出構造明記。ネガティブに"roomwear, camisole"追加。
 10. 丈延長防止: "tank top"禁止 ➔ "underwire bralette"等へ。ネガティブに"bustier, corset"追加。
 11. 姿勢・ポーズの崩壊防止: 座り・膝立ち等の場合、ネガティブに"chair, stool, bench, standing, unnatural leg anatomy, floating"を追加し床での姿勢を安定させよ。
-12. 【マシュマロ物理・極細紐と腰回りの柔らかさ】: 腰回りやヒップにおける紐の食い込みや肉感は "ultra-fine side-tie strings gently pressing into her exceptionally soft waistline, creating an elegant yielding indentation" 等の「極細紐の物理的張力」と「柔らかな肌への沈み込み」で表現し、極上の柔らかさを視覚化せよ。また、「引き締まり」と「柔らかさ」の同居は "toned yet exceptionally soft body contour", "delicate balance of a slender frame and plush curves" 等の芸術的表現を用いよ。
+12. 【極細紐と肌の張力コントラスト（マシュマロ物理）】: 極細の紐や水着の食い込みは "delicate thread-like side ties creating a soft, yielding indentation against the exceptionally plush waistline" 等の「紐の張力(tension)」と「肌の沈み込み(yielding contour)」の対比を用いて、極上の柔らかさと重力感を視覚化せよ。また、「引き締まり」と「柔らかさ」の同居は "toned yet exceptionally soft body contour", "delicate balance of a slender frame and plush curves" 等の芸術的表現を用いよ。
 13. FACSは"AU12C"のみ反映。非実在性("non-existent person")明記。
 14. aesthetic("cute"/"beautiful")を自然に追加。
 ${routeSpecificInstruction}

@@ -48,7 +48,7 @@ window.LABEL_MAP = {
     artStyle: '画風', cameraAngle: 'アングル', aesthetic: '印象補正', additionalNotes: '追記' 
 };
 
-// 表現ルールを適用した極上の事前サジェスト辞書 (極細紐・腰回りマシュマロ物理追加)
+// 表現ルールを適用した極上の事前サジェスト辞書
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -161,10 +161,9 @@ window.FIELD_SUGGESTIONS = {
         { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with fine pores, peach fuzz, and natural oils' }
     ],
     bodyInterface: [
-        { label: '極細紐による腰の沈み込み 🎀', value: '極細のサイドストリングが腰回りの極めて柔らかい肌に優しく沈み込み、極上の柔らかさとマシュマロのようなふくよかさを強調する美しい凹みを作り出している' },
+        { label: '極細紐の張力と肌の沈み込み 🎀', value: '極細の糸のような紐の確かな張力と、それに優しく沈み込む極めて柔らかいマシュマロのような肌のコントラストが、極上の柔らかさと自然な肉感を視覚化している' },
         { label: '柔らかい肌への沈み込み ☁️', value: '布地が極めて柔らかくしなやかな肌に優しく沈み込み、マシュマロのようなふかふかの質感と身体の自然な柔らかさを際立たせている' },
-        { label: 'カッティング露出 🍑', value: 'ボトムスの高く切り込まれたレッグラインに沿って、なめらかな曲線シルエットが際立っている' },
-        { label: '豊かな胸の支えと谷間 🕊️', value: '布地がこぼれるような豊かなボリュームを優雅に支え、深く開いたネックラインに沿って自然で美しい起伏と陰影を生み出している' }
+        { label: '胸の自重と谷間 🕊️', value: '極細の布地がこぼれるような豊かなボリュームと自然な重みを優雅に支え、深く開いたネックラインに沿ってリアルで美しい起伏と陰影を生み出している' }
     ], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
@@ -180,27 +179,25 @@ window.FIELD_SUGGESTIONS = {
     ],
     bodyType: [
         { label: 'スレンダー×マシュマロ 🌿☁️', value: 'Toned yet exceptionally soft body contour, delicate balance of a slender frame and plush, yielding curves especially around the hips' },
-        { label: '豊満な上半身/こぼれる肉付き ☁️', value: 'Voluptuous silhouette with generously full upper contours and plush softness, gracefully held by the garment' },
-        { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' },
-        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with stronger body contouring lines' }
+        { label: '豊満な重み/こぼれる肉付き ☁️', value: 'Voluptuous silhouette with generously full upper contours featuring a natural, elegant heavy drape gracefully supported by the garment' },
+        { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' }
     ],
     bodyFrame: [
         { label: '華奢な骨格 🦴', value: 'Delicate bone structure, prominent clavicles and narrow rib cage' },
         { label: '骨格ウェーブ 🌊', value: 'Classic wave frame, long slender waist, gently flared hips' }
     ],
     threeSizes: [
-        { label: '引き締まりと柔らかさの同居 ⏳', value: 'Gentle firmness in the waist combined with yielding plush softness in the hips and lower torso, balanced elegant proportions' },
-        { label: 'こぼれるような豊満さ ☁️', value: 'Generously full upper torso with plush volume resting naturally, creating a breathtaking and elegant silhouette' },
-        { label: 'スリム 📏', value: 'Sleek slim hips, narrow athletic waist, graceful feminine silhouette' }
+        { label: '重力を感じる豊満さ ☁️', value: 'Generously full upper torso with plush volume and a natural heavy drape resting naturally, creating a breathtaking and elegant silhouette' },
+        { label: '引き締まりと柔らかさの同居 ⏳', value: 'Gentle firmness in the waist combined with yielding plush softness in the hips and lower torso, balanced elegant proportions' }
     ],
     outfit: [
-        { label: '極細紐のビキニ 👙', value: 'Minimalist two-piece swimwear featuring ultra-fine string construction that delicately rests against the skin' },
+        { label: '極小の白紐ビキニ 👙', value: 'Minimalist white string two-piece swimwear with triangular cups and delicate thread-like side-ties' },
         { label: '繊細なブルーレースのセット 🎀', value: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire and scalloped edges softly resting against the skin' },
         { label: '王道ドレス 👗', value: 'Tier-layered chiffon frilled idol stage dress' },
         { label: '夏祭り浴衣 👘', value: 'Traditional summer cotton yukata adorned with floral motifs, tied with a contrasting obi sash' }
     ],
     outfitDetail: [
-        { label: '極細のサイドストリング 🪢', value: 'Ultra-fine side-tie strings securely holding the garment' },
+        { label: '極細のサイドストリング 🪢', value: 'Delicate thread-like side-tie strings providing structural tension' },
         { label: 'レース刺繍 🕸️', value: 'Intricate scalloped sheer lace net linings, delicate floral embroidery' }
     ],
     pose: [
@@ -238,19 +235,44 @@ window.FIELD_SUGGESTIONS = {
 
 // 共通インスピレーション用テーマプリセット
 window.INSPI_THEMES = {
+    plain_model: {
+        name: '人物のみクリア 👤',
+        data: {
+            hairAccessory: '',
+            eyeMakeupDetail: '',
+            lipTexture: '',
+            cheekStyle: '',
+            makeupStyle: '',
+            outfit: '',
+            outfitDetail: '',
+            bodyInterface: ''
+        }
+    },
+    style_check: {
+        name: 'スタイル確認(グレー無地) 📏',
+        data: {
+            hairAccessory: '',
+            outfit: 'minimalist unbranded heather-grey sporty two-piece ensemble',
+            outfitDetail: 'solid light grey bralette top and matching basic bottoms, plain wide elastic bands with strictly no logos or text, sleek and seamless design',
+            pose: 'standing naturally, simple straight posture to clearly show body proportions',
+            situation: 'pure white seamless studio backdrop, minimalist setting',
+            lighting: 'clean, even soft studio lighting for clear visibility of body contours',
+            bodyInterface: 'fitting smoothly against the skin, highlighting the natural body contour'
+        }
+    },
     voluptuous_bikini: {
         name: '豊満×極細紐ビキニ 🏖️',
         data: {
             hairStyle: 'Flawless waist-length silky straight black hair',
             hairBangs: 'Trendy light and airy see-through bangs',
             eyeShape: 'Large doe-like expressive rounded eyes',
-            bodyType: 'Voluptuous silhouette with generously full upper contours and plush softness, gracefully held by the garment',
+            bodyType: 'Voluptuous silhouette with generously full upper contours featuring a natural, elegant heavy drape gracefully supported by the garment',
             threeSizes: 'Generously full upper torso with plush volume resting naturally, creating a breathtaking and elegant silhouette',
             skinTexture: 'Extremely soft, supple skin texture, smooth and yielding like marshmallow',
-            bodyInterface: '極細のサイドストリングが腰回りの極めて柔らかい肌に優しく沈み込み、極上の柔らかさとマシュマロのようなふくよかさを強調する美しい凹みを作り出している',
-            outfit: 'Minimalist two-piece swimwear featuring ultra-fine string construction that delicately rests against the skin',
-            outfitDetail: 'Ultra-fine side-tie strings',
-            pose: 'Kneeling pose, resting on both knees, upright torso, gently touching the side string of the bottoms',
+            bodyInterface: '極細の糸のような紐の確かな張力と、それに優しく沈み込む極めて柔らかいマシュマロのような肌のコントラストが、極上の柔らかさと自然な肉感を視覚化している',
+            outfit: 'Minimalist white string two-piece swimwear with triangular cups and delicate thread-like side-ties',
+            outfitDetail: 'Delicate thread-like side-tie strings providing structural tension',
+            pose: 'Kneeling pose, resting on both knees, upright torso, gently pulling the side string of the bottoms',
             situation: 'Kneeling on a beautiful sunlit sandy beach with clear blue ocean waves in the background',
             lighting: 'Bright, radiant sun-kissed lighting, highlighting the smooth skin contours',
             artStyle: 'Hyper-realistic gravure raw photograph taken with high-end DSLR, sharp focus, 8k',
