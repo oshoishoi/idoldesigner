@@ -257,7 +257,10 @@ window.INSPI_THEMES = {
             pose: 'standing naturally, simple straight posture to clearly show body proportions',
             situation: 'pure white seamless studio backdrop, minimalist setting',
             lighting: 'clean, even soft studio lighting for clear visibility of body contours',
-            bodyInterface: 'fitting smoothly against the skin, highlighting the natural body contour'
+            bodyInterface: 'fitting smoothly against the skin, highlighting the natural body contour',
+            artStyle: 'Hyper-realistic studio portrait photograph, high-resolution 8k, sharp focus, clean aesthetic',
+            cameraAngle: 'Straight-on full body shot, eye-level camera angle, perfectly centered',
+            additionalNotes: 'masterpiece, highly detailed body proportions, clear anatomical structure, professional test shot'
         }
     },
     voluptuous_bikini: {
