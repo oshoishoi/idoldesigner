@@ -12,7 +12,7 @@ const safetySettings = window.safetySettings || [];
 
 const Icon = ({ name, className = "" }) => {
     const svgs = {
-        sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
+        sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
         refresh: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
         undo: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 7V5c0-1.1.9-2 2-2h2"/><path d="M17 3h2c1.1 0 2 .9 2 2v2"/><path d="M21 17v2c0 1.1-.9 2-2 2h-2"/><path d="M7 21H5c-1.1 0-2-.9-2-2v-2"/><path d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2Z"/><path d="M12 16v2"/><path d="M12 8V6"/><path d="M8 12H6"/><path d="M18 12h-2"/></svg>,
         target: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
@@ -399,7 +399,7 @@ function App() {
     };
 
     const runAnalysis = async (base64, mode) => {
-        let delay = 1000;
+        let delay = 2000; // APIレートリミット対策：初期遅延を2秒に延長
         let response;
         let success = false;
         
@@ -476,7 +476,7 @@ ${keyListString}`;
                 if (attempt < 5) {
                     setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2;
+                    delay *= 1.5; // バックオフ乗数を1.5倍に設定し、429エラーを安全に回避
                 }
             }
 
@@ -540,7 +540,7 @@ ${keyListString}`;
         setIsProcessing(true);
         setStatusMessage('生成中...');
         
-        let delay = 1000;
+        let delay = 2000; // APIレートリミット対策：初期遅延を2秒に設定
         let response;
         let success = false;
 
@@ -552,22 +552,19 @@ ${keyListString}`;
             // ★超重要：生成AIに渡すデータの「優先順位（並び順）」を定義
             // これにより、AIが最初に構図やポーズを理解し、「顔の呪縛」から解放されます。
             const PRIORITY_ORDER = [
-                'artStyle', 'cameraAngle', 'pose', 'situation', 'lighting', // 1. 全体の構図・環境（最優先）
-                'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes', // 2. 全体の体型・シルエット
-                'skinColor', 'skinTexture', 'bodyInterface', // 3. 肌と肉の質感
-                'outfit', 'outfitDetail', 'hairAccessory', // 4. 衣装・装飾
-                'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', // 5. 髪型
-                'region', 'aesthetic', 'additionalNotes', // 6. 補足情報
-                // 7. 顔のディテール（最後尾に下げることで構図破壊を防ぐ）
+                'artStyle', 'cameraAngle', 'pose', 'situation', 'lighting', 
+                'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes', 
+                'skinColor', 'skinTexture', 'bodyInterface', 
+                'outfit', 'outfitDetail', 'hairAccessory', 
+                'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', 
+                'aesthetic', 'additionalNotes', 
                 'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs'
             ];
 
-            // 万が一将来未登録のキーが追加された場合でも漏らさない安全フォールバック
             const allActiveKeys = Object.keys(activeData);
             const remainingKeys = allActiveKeys.filter(k => !PRIORITY_ORDER.includes(k) && !['orientation', 'ratio'].includes(k));
             const FULL_ORDER = [...PRIORITY_ORDER, ...remainingKeys];
 
-            // 優先順位リストに従ってアクティブなデータをソート・結合
             const activeText = FULL_ORDER
                 .map(key => {
                     const value = activeData[key];
@@ -701,7 +698,7 @@ ${artStyleSpecificInstruction}`;
                 if (attempt < 5) {
                     setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2;
+                    delay *= 1.5;
                 }
             }
 
@@ -989,10 +986,12 @@ ${artStyleSpecificInstruction}`;
                                             const hasVal = selections[id] && selections[id].trim() !== '';
                                             const suggestions = FIELD_SUGGESTIONS[id] || [];
                                             
+                                            // ★【修正】isDisabledの厳密な判定とopacity適用（ReferenceError回避）
                                             const isFACSMode = expressionMode === 'facs';
-                                            let disabledOpacity = '';
-                                            if (id === 'expression' && isFACSMode) disabledOpacity = 'opacity-30 pointer-events-none grayscale';
-                                            if (id === 'facs' && !isFACSMode) disabledOpacity = 'opacity-30 pointer-events-none grayscale';
+                                            const isStandardExpr = id === 'expression';
+                                            const isFacsExpr = id === 'facs';
+                                            const isDisabled = (isStandardExpr && isFACSMode) || (isFacsExpr && !isFACSMode);
+                                            const disabledOpacity = isDisabled ? 'opacity-30 pointer-events-none grayscale scale-[0.98]' : '';
 
                                             return (
                                                 <div key={id} className={`${id === 'additionalNotes' || id === 'outfitDetail' || id === 'situation' || id === 'bodyInterface' || id === 'aesthetic' ? 'col-span-2' : ''} ${disabledOpacity} transition-all duration-300`}>
@@ -1009,7 +1008,7 @@ ${artStyleSpecificInstruction}`;
                                                         </div>
                                                     </div>
 
-                                                    {id === 'facs' && isFACSMode && (
+                                                    {id === 'facs' && !isDisabled && (
                                                         <div className="mb-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
                                                             <span className="text-[7px] text-slate-400 font-bold block mb-1">FACSパッチ:</span>
                                                             <div className="flex flex-wrap gap-1">
@@ -1027,7 +1026,7 @@ ${artStyleSpecificInstruction}`;
                                                         </div>
                                                     ) : (
                                                         <>
-                                                            <textarea rows="2" className={`w-full p-2.5 border rounded-xl bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:border-pink-200 transition-colors resize-none ${hasVal ? 'text-pink-700' : ''}`} value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
+                                                            <textarea disabled={isDisabled} rows="2" className={`w-full p-2.5 border rounded-xl bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:border-pink-200 transition-colors resize-none ${hasVal ? 'text-pink-700' : ''}`} value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
                                                             <div className="mt-1.5 flex gap-1 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap">
                                                                 {suggestions.map((sug, sIdx) => {
                                                                     const isSelected = selections[id] && (selections[id] === sug.value || selections[id].includes(sug.value));
@@ -1097,7 +1096,7 @@ ${artStyleSpecificInstruction}`;
                 </div>
             </main>
 
-            {/* ズームエディタ */}
+            {/* 大画面フォーカスエディタ */}
             {focusField && (
                 <div className="fixed inset-0 bg-slate-950/95 z-[1000] flex flex-col justify-between p-4 animate-fade-in">
                     <div className="flex justify-between items-center pb-3 border-b border-slate-800">
@@ -1167,9 +1166,10 @@ ${artStyleSpecificInstruction}`;
 const saveToSlot = (index, memorySlots, selections, previews, setMemorySlots, setStatusMessage) => {
     try {
         const newSlots = [...memorySlots];
+        const existingPreview = memorySlots[index]?.preview || null;
         newSlots[index] = {
             data: { ...selections },
-            preview: previews.baseStored || previews.plusStored || null
+            preview: previews.baseStored || previews.plusStored || existingPreview
         };
         setMemorySlots(newSlots);
         localStorage.setItem('idol_designer_slots_v195', JSON.stringify(newSlots));
@@ -1184,8 +1184,13 @@ const loadFromSlot = (index, memorySlots, setSelections, setPreviews, setStatusM
     const slot = memorySlots[index];
     if (!slot) return;
     setSelections(slot.data);
+    
     if (slot.preview) {
-        setPreviews(prev => ({ ...prev, base: slot.preview, baseStored: slot.preview }));
+        setPreviews(prev => ({
+            ...prev,
+            base: slot.preview,
+            baseStored: slot.preview
+        }));
     }
     setStatusMessage(`Slot ${index + 1} Loaded`);
     setTimeout(() => setStatusMessage(''), 2000);
