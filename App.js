@@ -12,7 +12,7 @@ const safetySettings = window.safetySettings || [];
 
 const Icon = ({ name, className = "" }) => {
     const svgs = {
-        sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
+        sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
         refresh: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
         undo: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 7V5c0-1.1.9-2 2-2h2"/><path d="M17 3h2c1.1 0 2 .9 2 2v2"/><path d="M21 17v2c0 1.1-.9 2-2 2h-2"/><path d="M7 21H5c-1.1 0-2-.9-2-2v-2"/><path d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2Z"/><path d="M12 16v2"/><path d="M12 8V6"/><path d="M8 12H6"/><path d="M18 12h-2"/></svg>,
         target: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
@@ -41,7 +41,7 @@ function App() {
     ];
 
     const createEmptyState = () => {
-        const obj = { orientation: 'portrait', ratio: '9:16', aesthetic: '' };
+        const obj = { orientation: 'portrait', ratio: '3:4', aesthetic: '' };
         FIELD_KEYS.forEach(k => obj[k] = '');
         return obj;
     };
@@ -60,16 +60,8 @@ function App() {
     const [previews, setPreviews] = useState({ base: null, plus: null, baseStored: null, plusStored: null });
     const [memorySlots, setMemorySlots] = useState(Array(10).fill(null));
 
-    const [openSections, setOpenSections] = useState({
-        0: true,  
-        1: false, 
-        2: false, 
-        3: false  
-    });
-
-    const [mergeOpenSections, setMergeOpenSections] = useState({
-        0: true, 1: true, 2: true, 3: true
-    });
+    const [openSections, setOpenSections] = useState({ 0: true, 1: false, 2: false, 3: false });
+    const [mergeOpenSections, setMergeOpenSections] = useState({ 0: true, 1: true, 2: true, 3: true });
 
     const [focusField, setFocusField] = useState(null); 
     const [focusTempText, setFocusTempText] = useState(''); 
@@ -98,17 +90,6 @@ function App() {
 
     const copyText = (text, type) => {
         if (!text) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(() => {
-                setCopyFeedback(type);
-                setTimeout(() => setCopyFeedback(null), 1500);
-            }).catch(() => fallbackCopyText(text, type));
-        } else {
-            fallbackCopyText(text, type);
-        }
-    };
-
-    const fallbackCopyText = (text, type) => {
         const el = document.createElement("textarea");
         el.value = text;
         document.body.appendChild(el);
@@ -117,9 +98,7 @@ function App() {
             document.execCommand('copy');
             setCopyFeedback(type);
             setTimeout(() => setCopyFeedback(null), 1500);
-        } catch (err) {
-            console.error("Fallback copy failed", err);
-        }
+        } catch (err) {}
         document.body.removeChild(el);
     };
 
@@ -129,19 +108,12 @@ function App() {
     };
 
     const toggleSection = (idx) => {
-        setOpenSections(prev => ({
-            ...prev,
-            [idx]: !prev[idx]
-        }));
+        setOpenSections(prev => ({ ...prev, [idx]: !prev[idx] }));
     };
 
     const getSectionFillCount = (fields) => {
         let count = 0;
-        fields.forEach(f => {
-            if (selections[f] && selections[f].trim() !== '') {
-                count++;
-            }
-        });
+        fields.forEach(f => { if (selections[f] && selections[f].trim() !== '') count++; });
         return count;
     };
 
@@ -153,9 +125,7 @@ function App() {
         setSelections(prev => {
             const next = { ...prev };
             Object.entries(theme.data).forEach(([key, val]) => {
-                if (FIELD_KEYS.includes(key)) {
-                    next[key] = val;
-                }
+                if (FIELD_KEYS.includes(key)) next[key] = val;
             });
             return next;
         });
@@ -166,42 +136,23 @@ function App() {
 
     const clearSingleField = (fieldId) => {
         setSelections(prev => ({ ...prev, [fieldId]: '' }));
-        if (focusField === fieldId) {
-            setFocusTempText('');
-        }
-    };
-
-    const copySingleField = (fieldId) => {
-        const val = selections[fieldId];
-        if (!val || val.trim() === '') return;
-        copyText(val, fieldId);
+        if (focusField === fieldId) setFocusTempText('');
     };
 
     const applySuggestionInternal = (currentVal, targetVal) => {
         if (sugMode === 'replace') {
             return currentVal === targetVal ? '' : targetVal;
         } else {
-            if (!currentVal || currentVal.trim() === '') {
-                return targetVal;
-            }
+            if (!currentVal || currentVal.trim() === '') return targetVal;
             if (currentVal.includes(targetVal)) {
-                const cleaned = currentVal
-                    .split(',')
-                    .map(x => x.trim())
-                    .filter(x => x !== targetVal && x !== '')
-                    .join(', ');
-                return cleaned;
+                return currentVal.split(',').map(x => x.trim()).filter(x => x !== targetVal && x !== '').join(', ');
             }
             return `${currentVal.trim().replace(/,$/, '')}, ${targetVal}`;
         }
     };
 
     const applySuggestion = (fieldId, val) => {
-        setSelections(prev => {
-            const currentVal = prev[fieldId] || '';
-            const nextVal = applySuggestionInternal(currentVal, val);
-            return { ...prev, [fieldId]: nextVal };
-        });
+        setSelections(prev => ({ ...prev, [fieldId]: applySuggestionInternal(prev[fieldId] || '', val) }));
     };
 
     const applySuggestionInFocus = (val) => {
@@ -214,7 +165,6 @@ function App() {
         const start = ta.selectionStart;
         const end = ta.selectionEnd;
         const currentText = ta.value;
-
         let nextVal = "";
         let newCursorPos = 0;
 
@@ -223,27 +173,19 @@ function App() {
             newCursorPos = nextVal.length;
         } else {
             if (currentText.includes(val)) {
-                nextVal = currentText
-                    .split(',')
-                    .map(x => x.trim())
-                    .filter(x => x !== val && x !== '')
-                    .join(', ');
+                nextVal = currentText.split(',').map(x => x.trim()).filter(x => x !== val && x !== '').join(', ');
                 newCursorPos = Math.min(start, nextVal.length);
             } else {
                 const before = currentText.substring(0, start).trim();
                 const after = currentText.substring(end).trim();
-                
                 let insertStr = val;
                 if (before && !before.endsWith(',')) insertStr = ', ' + insertStr;
                 if (after && !after.startsWith(',')) insertStr = insertStr + ', ';
-
                 nextVal = currentText.substring(0, start) + insertStr + currentText.substring(end);
                 newCursorPos = start + insertStr.length;
             }
         }
-
         setFocusTempText(nextVal);
-        
         setTimeout(() => {
             if (focusTextAreaRef.current) {
                 focusTextAreaRef.current.focus();
@@ -270,11 +212,8 @@ function App() {
         const ta = focusTextAreaRef.current;
         if (!ta) return;
         let start = ta.selectionStart;
-        if (direction === 'left' && start > 0) {
-            ta.setSelectionRange(start - 1, start - 1);
-        } else if (direction === 'right' && start < ta.value.length) {
-            ta.setSelectionRange(start + 1, start + 1);
-        }
+        if (direction === 'left' && start > 0) ta.setSelectionRange(start - 1, start - 1);
+        else if (direction === 'right' && start < ta.value.length) ta.setSelectionRange(start + 1, start + 1);
         ta.focus();
     };
 
@@ -282,26 +221,18 @@ function App() {
         try {
             const text = await navigator.clipboard.readText();
             if (text) {
-                setFocusTempText(prev => {
-                    if (!prev || prev.trim() === '') return text;
-                    return prev + " " + text;
-                });
+                setFocusTempText(prev => (!prev || prev.trim() === '' ? text : prev + " " + text));
                 setStatusMessage('ペーストしました');
                 setTimeout(() => setStatusMessage(''), 1500);
             }
-        } catch (err) {
-            setStatusMessage('手動ペーストしてください');
-            setTimeout(() => setStatusMessage(''), 2500);
-        }
+        } catch (err) {}
     };
 
     const clearSectionFields = (fields, sectionTitle) => {
         if (window.confirm(`「${sectionTitle}」のすべての項目をリセットしますか？`)) {
             setSelections(prev => {
                 const next = { ...prev };
-                fields.forEach(f => {
-                    next[f] = '';
-                });
+                fields.forEach(f => next[f] = '');
                 return next;
             });
         }
@@ -386,48 +317,43 @@ function App() {
         setStatusMessage('分析中...');
         try {
             const { b64, pUrl, b64Preview } = await safeProcessImage(file);
-            setPreviews(prev => ({ 
-                ...prev, 
-                [mode]: pUrl, 
-                [`${mode}Stored`]: b64Preview 
-            }));
+            setPreviews(prev => ({ ...prev, [mode]: pUrl, [`${mode}Stored`]: b64Preview }));
             await runAnalysis(b64, mode);
         } catch (err) {
-            setStatusMessage('Error');
+            console.error(err);
+            setStatusMessage('画像処理エラー');
             setIsAnalyzing(null);
-        } finally { if(e.target) e.target.value = ''; }
+        } finally { 
+            if(e.target) e.target.value = ''; 
+        }
     };
 
     const runAnalysis = async (base64, mode) => {
-        let delay = 2000; // APIレートリミット対策：初期遅延を2秒に延長
+        if (isAnalyzing && isAnalyzing !== mode) return;
+        
+        let delay = 2000; // Exponential Backoff の初期遅延を2秒に設定 (429対策)
         let response;
         let success = false;
         
         const keyListString = FIELD_KEYS.join(', ');
 
-        const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼身体物理監査官です。
-与えられた画像をミリ単位で超精密にスキャンし、指定されたすべての項目について分析結果を出力してください。
-
-【出力の絶対ルール（対応関係ロック・完全日本語化）】
-1. 回答は純粋なJSONオブジェクトのみとし、解説やMarkdownの装飾は一切含めないこと。
-2. JSONの「キー名（Key）」は、下部に指定された【対象フィールドキーリスト】の文字列と1文字も違わぬ同一の英語キー名を使用すること。
-3. データ形式の平滑化：すべてのキーに対する値（Value）はネストさせず、必ずプレーンな1つの文字列として出力すること。
-4. 画像から読み取れない項目もある場合、値を ""（空文字）としてすべてのキーを漏れなく出力すること。
-5. 【超重要】すべての値（Value）は【絶対にすべて日本語】で記述すること。「Long hair」「Red」などの英語のまま出力することは一切禁止する。必ず「ロングヘア」「赤色」「ツインテール」のように美しく正確な日本語に翻訳して出力せよ。
-
-【重要監査項目・顔の静動デカップリング（表情・造形分離ルール）】
-- expression, facs: ウインク、大笑い、驚きなどの「表情筋の運動や動的変化」はすべてこの2項目に集約せよ。
-- eyeShape, mouthShape 等の顔パーツ造形項目:
-  - 画像上で表情が変化していても、「真顔・無表情（ニュートラル）に戻ったとした場合の本来の静的パーツの造形」のみを逆算して、極めて端的な【日本語の1フレーズ】で出力せよ。
-- height：身長の印象を日本語テキストで記述。
-- threeSizes：肉付きの質感や体格バランスを数値を含めず日本語テキストで記述。
-- facePlacement：輪郭領域内における目・鼻・口・眉の間隔や配置比率を日本語で記述。
-- bodyInterface (その他): 
-  - 衣装の布地境界線（シームライン）やストラップ、ウエストバンド、袖口と肌が干渉する物理境界線について超精緻なミリ単位スキャンを実行せよ。
-  - 特に、ハイカットインナーなどのカッティングによる【お尻（ヒップ）の広い露出領域】、布端から押し出されるなめらかな肉の輪郭や起伏、【お尻の谷間（割れ目）に落ちる立体的で深いグラデーションシャドウ（陰影）】、およびタイトな布地やゴムが肌を優しく圧迫することで生じるミリ単位の繊細な食い込みや段差を、極めて克明かつ客観的な【日本語の文章】として出力せよ。英語での出力は厳禁とする。
-- molesFreckles：ホクロ、そばかすなどの特徴を日本語で記述。
-
-【対象フィールドキーリスト】
+        const analysisSystemInstruction = `最高峰の監査官として画像を精密スキャンし指定JSONを出力せよ。
+【絶対ルール】
+1. 純粋なJSONのみ。解説・装飾厳禁。
+2. キー名は【対象リスト】と完全一致。
+3. 値はネストせずフラットな1つの文字列。
+4. 不明項目も空文字で出力。
+5. 【重要】値は全て【日本語】で記述。英語は禁止。
+【監査項目】
+- expression/facs: 動的変化(ウインク等)はここに集約。
+- facePlacement: 顔の向き(横顔や見返り等)の情報は完全に排除し、純粋に「正面を向いた場合のパーツの配置バランス」のみを逆算して記述せよ。
+- height/threeSizes/facePlacement: 数値は避け日本語テキストで。特にバストの重力感(自然なドレープと豊満さ)を詳細に。
+- skinTexture / bodyType: 肉質の差(引き締まっているが柔らかい、マシュマロのようにふくよか等)を詳細に。
+- bodyInterface: 物理境界を克明な日本語で。特に「極細の紐や水着の縁が、腰回りやヒップの肌にどのように沈み込み（食い込み）、張力と極上の柔らかさのコントラストを生み出しているか」を精密に言語化せよ。
+- pose: 下半身の接地状態・自重のかかり方を明記。正座・膝立ち等は明確に区別せよ。
+- molesFreckles: 特徴を日本語で。
+- additionalNotes (追記): モデルの人種(日本人、アジア系、白人系など)の印象を判別して必ず記載せよ。
+【対象リスト】
 ${keyListString}`;
 
         try {
@@ -461,7 +387,7 @@ ${keyListString}`;
                             success = true;
                             break;
                         } else if (response.status === 404 || response.status === 429 || response.status === 503) {
-                            continue;
+                            continue; // 次のモデルへフォールバック
                         } else {
                             throw new Error("HTTP " + response.status);
                         }
@@ -474,15 +400,15 @@ ${keyListString}`;
 
                 attempt++;
                 if (attempt < 5) {
-                    setStatusMessage('全モデル混雑中。待機して再試行...');
+                    setStatusMessage('混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 1.5; // バックオフ乗数を1.5倍に設定し、429エラーを安全に回避
+                    delay *= 2; // 指数バックオフ
                 }
             }
 
             if (!success) {
-                setStatusMessage('制限中: 1分待ってください');
-                return;
+                setStatusMessage('制限中: しばらく待ってから再試行してください');
+                return; // finallyブロックへ飛ぶ
             }
 
             const res = await response.json();
@@ -516,6 +442,7 @@ ${keyListString}`;
                     });
                     return next;
                 });
+                setStatusMessage('ベース解析完了');
             } else {
                 const mergedStaged = {};
                 FIELD_KEYS.forEach(k => {
@@ -526,12 +453,15 @@ ${keyListString}`;
                     a[k] = mergedStaged[k] !== 'none' && mergedStaged[k] !== '不明' && mergedStaged[k] !== '';
                     return a;
                 }, {}));
+                setStatusMessage('プラス解析完了');
             }
-            setStatusMessage('');
+            setTimeout(() => setStatusMessage(''), 2000);
         } catch (e) {
-            setStatusMessage('解析失敗');
+            console.error(e);
+            setStatusMessage('解析エラーが発生しました');
         } finally {
-            setTimeout(() => setIsAnalyzing(null), 1000);
+            // 【例外対応】いかなる場合でも必ずローディング状態を解放する
+            setIsAnalyzing(null);
         }
     };
 
@@ -540,7 +470,7 @@ ${keyListString}`;
         setIsProcessing(true);
         setStatusMessage('生成中...');
         
-        let delay = 2000; // APIレートリミット対策：初期遅延を2秒に設定
+        let delay = 2000; // Exponential Backoff の初期遅延を2秒に設定
         let response;
         let success = false;
 
@@ -550,22 +480,19 @@ ${keyListString}`;
             if (expressionMode === 'facs') activeData.expression = ""; else activeData.facs = "";
 
             // ★超重要：生成AIに渡すデータの「優先順位（並び順）」を定義
-            // これにより、AIが最初に構図やポーズを理解し、「顔の呪縛」から解放されます。
+            // これにより、AIが最初に構図やポーズを理解し、「顔の呪縛（顔が必ず描かれてしまう問題）」から解放されます。
             const PRIORITY_ORDER = [
-                'artStyle', 'cameraAngle', 'pose', 'situation', 'lighting', 
-                'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes', 
-                'skinColor', 'skinTexture', 'bodyInterface', 
-                'outfit', 'outfitDetail', 'hairAccessory', 
-                'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', 
-                'aesthetic', 'additionalNotes', 
+                'artStyle', 'cameraAngle', 'pose', 'situation', 'lighting', // 1. 全体の構図・環境（最優先）
+                'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes', // 2. 全体の体型・シルエット
+                'skinColor', 'skinTexture', 'bodyInterface', // 3. 肌と肉の質感
+                'outfit', 'outfitDetail', 'hairAccessory', // 4. 衣装・装飾
+                'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', // 5. 髪型
+                'region', 'aesthetic', 'additionalNotes', // 6. 補足情報
+                // 7. 顔のディテール（最後尾に下げることで構図破壊を防ぐ）
                 'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs'
             ];
 
-            const allActiveKeys = Object.keys(activeData);
-            const remainingKeys = allActiveKeys.filter(k => !PRIORITY_ORDER.includes(k) && !['orientation', 'ratio'].includes(k));
-            const FULL_ORDER = [...PRIORITY_ORDER, ...remainingKeys];
-
-            const activeText = FULL_ORDER
+            const activeText = PRIORITY_ORDER
                 .map(key => {
                     const value = activeData[key];
                     if (value && value !== '' && !['orientation', 'ratio'].includes(key)) {
@@ -581,19 +508,10 @@ ${keyListString}`;
 
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
                 routeSpecificInstruction = `
-- 【露出領域の物理的ロックと安全な露出の最大化】: 
-  - デザインの隙間を勝手に布地で塞がれるのを防ぐため、肩や胴体を広範囲に魅せる工学的アパレル表現を冒頭部分に必ず配置すること。
-  - 布面積を極限まで小さく指定するため、"micro", "tiny", "barely covering", "high-cut" 等の検閲対象ワードは【絶対に使用禁止】とする。
-  - 代わりに、布の形状を狭くする "minimalist triangular cut", "narrow fabric panels", "slender string-based construction" や、カットを深くする "deep plunging neckline", "low-cut underwire layout" などの幾何学的・構造的なアパレル用語に完全変換せよ。
-  - 【面積の広い服・部屋着への誤認防止】: AIが勝手に一般的なサイズの服に解釈するのを防ぐため、"top" や "shorts" の単体使用を禁じ、"slender shoulder straps and a narrow horizontal back band" や "classic triangular bikini bottoms featuring high-cut leg lines" のように露出構造を明記せよ。
-  - ネガティブプロンプト(negative)に必ず "full coverage, wide straps, thick fabric, sports bra, tank top, camisole, large cups, boy-shorts, boxers, roomwear, full back coverage" を追加して面積の大きい服や部屋着を徹底排除せよ。
-- 【衣装形状の勝手な省略の徹底防止】: AIが勝手に衣装構造を簡略化するのを阻止するため、形状固定化指示テキストを必ずプロンプトに組み込め。`;
-            } else if (outfitText.match(/(浴衣|ゆかた|着物|和服|和装|kimono|yukata|着崩)/i)) {
-                routeSpecificInstruction = `
-- 【羽織りもの・アウターの位置固定（Drape Position Lock）】: 衣服が「はだけている」「ずり落ちている」描写がある場合、衣服の位置を低くロックする厳格な指示文を必ずポジティブプロンプトに組み込め。`;
+- 【極小指定】"micro", "tiny"等は禁止。"minimalist triangular cut", "narrow fabric panels", "ultra-fine string construction" 等幾何学的用語へ変換。
+- 【面積増大防止】"top", "shorts"単体禁止。露出構造明記。ネガティブに"full coverage, sports bra, tank top, roomwear, boxers, camisole"追加。`;
             } else {
-                routeSpecificInstruction = `
-- 衣装デザインの物理カッティングの美しさを幾何学的かつ具体的に美しく英語へ翻訳せよ。矛盾する強制挿入は行わず、対象となる衣服のテクスチャやドレープラインの表現に美しくフォーカスせよ。`;
+                routeSpecificInstruction = `- 衣装カッティングを幾何学的に英訳。`;
             }
 
             const artStyleText = selections.artStyle && (selections.artStyle || selections.ratio) ? ((selections.artStyle || "") + " " + (selections.ratio || "")).toLowerCase() : "";
@@ -609,52 +527,22 @@ ${keyListString}`;
 - 【チェキ風画質の完全排除】: 通常時条件として "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" などを適用し、ライティングや演出を精緻に反映せよ。"non-existent person" などの表現を組み込み、非実在性を明記せよ。`;
             }
 
-            const promptSystemInstruction = `あなたは最高峰の画像生成エンジニアです。日本語設計データを最高品質の英語プロンプトに変換してください。
-
-【出力形式】
-純粋なJSON形式のみで出力せよ：{"positive": "...", "negative": "..."}
-
-【最優先・鉄の掟（表現最適化・アパレル工学ガイドライン）】
-1. 身体・肉体描写の言い換え (体型、肉感、ボリューム):
-   - 解剖学的な直接描写("bust volume", "rich bust", "prominent bust", "rich hip line", "feminine curves"等)を【絶対に使用禁止】とする。
-   - 代わりに "graceful feminine silhouette", "balanced proportions", "stronger body contouring", "defined curves in upper and lower torso" といった抽象的・アパレル用語に完全変換せよ。
-2. セクシーな雰囲気・形容詞の言い換え:
-   - "sexy", "slightly sexy" といった直接的な表現を【絶対に使用禁止】とする。代わりに "alluring presence", "captivating aura", "alluring", "graceful", "captivating" などの写真批評的な佇まいのオーラ表現に昇華させること。
-3. 衣装の素材・質感描写の言い換え (意図しない質感の防止):
-   - "micro", "high-cut", "sleek high-gloss", "wet-look" 等の極端・不自然な素材感を【絶対に使用禁止】とする。
-   - 代わりに "matte finish", "minimal", "sleek"(脚のライン用), "intricate lace patterns" のような上品で正確なアパレル用語を使用せよ。
-4. ミニマルなデザインの構造的指定 (サイズの極端な指定防止):
-   - "micro", "tiny", "barely covering" 等の過激なサイズ表現を【絶対に使用禁止】とする。
-   - 代わりに布の形状を狭くする "minimalist triangular cut", "narrow fabric panels", "slender string-based construction" や、カットを深くする "deep plunging neckline" 等の幾何学的・構造的なアパレル用語を使用せよ。
-5. ネガティブプロンプトのクリーン化 (メタ単語排除):
-   - ネガティブ内に "nsfw", "censorship" を含めることを【絶対に使用禁止】とする。衣装の破綻防止に "inappropriate attire"、不自然なノイズ防止に "unpolished composition", "distorted composition" を使用せよ。
-6. 陰影描写のエラー回避:
-   - ネガティブ内に "shadow bulge" を含めることを【絶対に使用禁止】とする。衣服の不自然な膨らみ・ノイズ防止に "artifacts on clothes", "unnatural fabric folds" を使用せよ。
-7. スキン見せデザインのアパレル表現:
-   - "Completely exposed", "bare back", "uncovered torso" 等の裸体・脱衣を連想させる直接表現を【絶対に使用禁止】とする。
-   - 代わりに "Sleek open-back", "off-shoulder clothing layout", "structured fabric positioning" 等の衣装デザイン・レイアウト用語に変換せよ。
-8. 衣装のフィット感と立体感の強調 (作画崩壊防止):
-   - 「その他(bodyInterface)」などに含まれる日本語のはみ出し・食い込み情報に対して、"soft overspill", "physical overspill", "skin contour overspill" 等の過度な密着描写（英語）を【絶対に使用禁止】とする。
-   - 代わりに以下のタイトフィット・輪郭強調用語へ100%言い換えてポジティブプロンプトに反映させよ：
-     * ストラップ・紐の密着 ➔ "fitting smoothly and seamlessly against the skin, creating natural physical contours"
-     * シルエットライン ➔ "defined by a snug, tailored fit that elegantly follows the natural silhouette"
-9. ツーピース・セットアップの正確な名称指定:
-   - "undergarments", "bra", "inner briefs", "panties" 等の曖昧・直接的な名称を【絶対に使用禁止】とする。
-   - 代わりに "two-piece ensemble", "minimalist lace-trimmed top", "matching seamless bikini bottoms" などの正確なセットアップ・アパレル用語に変換せよ。
-10. 意図しないデザイン（ルーズフィット等）の防止:
-   - "top" (単体での使用), "shorts" (ボトムスとしての使用) 等の面積が広くなりやすい単語を【絶対に使用禁止】とする。
-   - 代わりに、トップスの背中構造は "slender shoulder straps and a narrow horizontal back band"、ボトムスの形状は "classic triangular bikini bottoms featuring high-cut leg lines" などのように露出構造を明記せよ。
-   - ネガティブプロンプトに "boy-shorts, boxers, roomwear, camisole, full back coverage" を追加してルーズな服を徹底排除せよ。
-11. トップス形状の担保とデザイン維持 (意図しない丈の延長防止):
-   - "tank top" 等の丈が長くなりやすい単語を【絶対に使用禁止】とする。
-   - 代わりに丈の短さと構造を明記する "underwire bralette", "underwire bikini top", "ultra-cropped midriff-baring design revealing the navel" などのアパレル用語を使用せよ。
-   - 同時にネガティブプロンプトに "bustier, corset, fabric covering the belly, hidden navel, long top" を追加し、腹部を覆う服へのすり替えを完全に拒否せよ。
-12. FACSコードクリーン化:
-   - AUおよびADは "AU12C" のようにコードと強度のみを反映し、名称説明は含めない。
-13. 非実在性の明記:
-   - AIによる架空の創作であることを示すため、"non-existent person" などの表現を組み込め（"character", "virtual" は使用禁止）。
-14. 印象補正(aesthetic):
-   - "cute" 時は先頭や自然な位置に "cute"、"beautiful" 時は "beautiful" を追加し、顔立ちの力を極限に高めよ。
+            const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}
+【表現最適化ガイドライン】
+1. 肉体直接描写(体型,ボリューム)の言い換え: "bust volume", "cleavage", "huge breasts", "erotic flesh", "fat"等は【絶対に使用禁止】とする。代わりに "graceful feminine silhouette", "generously full upper contours" 等の高級アパレル用語・デッサン用語へロンダリングせよ。胸の重力感や豊満さは "plush upper volume with a natural, elegant heavy drape gracefully supported by the fabric" と表現せよ。
+2. セクシー形容詞("sexy"等)禁止 ➔ "captivating aura"等へ。
+3. 過激素材("micro","wet-look"等)禁止 ➔ "minimal","matte finish"等へ。
+4. 極小表現禁止 ➔ "minimalist triangular cut"等へ。ネガティブに"full coverage, sports bra, large cups"等追加。
+5. メタ単語("nsfw","censorship")禁止 ➔ "inappropriate attire"等へ。
+6. 影表現("shadow bulge")禁止 ➔ "artifacts on clothes"等へ。
+7. 直接的脱衣表現禁止 ➔ "off-shoulder clothing layout"等レイアウト用語へ。
+8. 下着名称("bra","panties"等)禁止 ➔ "two-piece ensemble", "minimalist lace-trimmed top"等へ。
+9. ルーズ化防止: "top","shorts"単体禁止 ➔ 露出構造明記。ネガティブに"roomwear, camisole"追加。
+10. 丈延長防止: "tank top"禁止 ➔ "underwire bralette"等へ。ネガティブに"bustier, corset"追加。
+11. 姿勢・ポーズの崩壊防止: 座り・膝立ち等の場合、ネガティブに"chair, stool, bench, standing, unnatural leg anatomy, floating"を追加し床での姿勢を安定させよ。
+12. 【極細紐と肌の張力コントラスト（マシュマロ物理）】: 極細の紐や水着の食い込みは "delicate thread-like side ties creating a soft, yielding indentation against the exceptionally plush waistline" 等の「紐の張力(tension)」と「肌の沈み込み(yielding contour)」の対比を用いて、極上の柔らかさと重力感を視覚化せよ。また、「引き締まり」と「柔らかさ」の同居は "toned yet exceptionally soft body contour", "delicate balance of a slender frame and plush curves" 等の芸術的表現を用いよ。
+13. FACSは"AU12C"のみ反映。非実在性("non-existent person")明記。
+14. aesthetic("cute"/"beautiful")を自然に追加。
 ${routeSpecificInstruction}
 ${artStyleSpecificInstruction}`;
 
@@ -672,7 +560,7 @@ ${artStyleSpecificInstruction}`;
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{ parts: [{ text: `以下の日本語データに基づき、最高峰の画像生成プロンプトを作成し、末尾に比率 "${arTag}" 含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
+                                contents: [{ parts: [{ text: `以下の日本語データに基づきプロンプトを作成し、末尾に比率 "${arTag}" を含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
                                 systemInstruction: { parts: [{ text: promptSystemInstruction }] },
                                 safetySettings,
                                 generationConfig: { responseMimeType: "application/json" }
@@ -683,12 +571,12 @@ ${artStyleSpecificInstruction}`;
                             success = true;
                             break;
                         } else if (response.status === 404 || response.status === 429 || response.status === 503) {
-                            continue;
+                            continue; // フォールバック
                         } else {
                             throw new Error("HTTP " + response.status);
                         }
                     } catch (err) {
-                        continue;
+                        continue; // フォールバック
                     }
                 }
 
@@ -696,15 +584,15 @@ ${artStyleSpecificInstruction}`;
 
                 attempt++;
                 if (attempt < 5) {
-                    setStatusMessage('全モデル混雑中。待機して再試行...');
+                    setStatusMessage('混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 1.5;
+                    delay *= 2; // 指数バックオフ
                 }
             }
 
             if (!success) {
-                setStatusMessage('制限中: 1分待ってください');
-                return;
+                setStatusMessage('制限中: しばらく待ってから再試行してください');
+                return; // finallyブロックへ
             }
 
             const res = await response.json();
@@ -712,11 +600,13 @@ ${artStyleSpecificInstruction}`;
             const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
             setEnglishPrompt(result.positive || "");
             setNegativePrompt(result.negative || "");
-            setStatusMessage('');
+            setStatusMessage('プロンプト生成完了 ✨');
             setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
         } catch (e) {
-            setStatusMessage('Error');
+            console.error(e);
+            setStatusMessage('生成エラーが発生しました');
         } finally {
+            // 【例外対応】いかなる場合でも必ずローディング状態を解放する
             setIsProcessing(false);
         }
     };
@@ -827,15 +717,6 @@ ${artStyleSpecificInstruction}`;
                     </div>
                 </section>
 
-                <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl text-[9px]">
-                     <div className="flex items-start gap-2">
-                         <Icon name="info" className="text-blue-500 w-4 h-4 mt-0.5 shrink-0" />
-                         <div>
-                            <p className="text-blue-700 font-bold italic">【FICTION】生成内容はすべて架空の創作物であり、実在の人物とは関係ありません。</p>
-                         </div>
-                     </div>
-                </div>
-
                 <div className="h-6 flex items-center justify-center">
                     {statusMessage && (
                         <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 bg-white text-pink-500`}>
@@ -847,7 +728,7 @@ ${artStyleSpecificInstruction}`;
                 <section className={`bg-white rounded-3xl p-5 shadow-sm border border-pink-50 flex gap-4 ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}>
                     <div onClick={() => !isAnalyzing && baseInputRef.current?.click()} className="flex-1 aspect-square border-2 border-dashed border-blue-100 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 relative cursor-pointer">
                         {previews.base ? <img src={previews.base} className="w-full h-full object-cover animate-fade-in" /> : <span className="text-[8px] font-bold text-blue-400">ベース画像</span>}
-                        {isAnalyzing === 'base' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center animate-spin"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>}
+                        {isAnalyzing === 'base' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>}
                     </div>
                     <div onClick={() => !isAnalyzing && plusInputRef.current?.click()} className="flex-1 aspect-square border-2 border-dashed border-pink-100 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 relative cursor-pointer">
                         {previews.plus ? <img src={previews.plus} className="w-full h-full object-cover animate-fade-in" /> : <span className="text-[8px] font-bold text-pink-400">プラス画像</span>}
@@ -954,7 +835,7 @@ ${artStyleSpecificInstruction}`;
                             <div key={idx} className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm animate-fade-in">
                                 <div className="w-full px-4 py-3 bg-slate-50/60 text-left flex justify-between items-center font-black cursor-pointer" onClick={() => toggleSection(idx)}>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{idx + 1}. {section.title}</span>
+                                        <span className="text-[10px] font-black text-slate-600 uppercase">{idx + 1}. {section.title}</span>
                                         <span className="text-[8px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-400">{fillCount} / {totalCount}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -986,12 +867,10 @@ ${artStyleSpecificInstruction}`;
                                             const hasVal = selections[id] && selections[id].trim() !== '';
                                             const suggestions = FIELD_SUGGESTIONS[id] || [];
                                             
-                                            // ★【修正】isDisabledの厳密な判定とopacity適用（ReferenceError回避）
                                             const isFACSMode = expressionMode === 'facs';
-                                            const isStandardExpr = id === 'expression';
-                                            const isFacsExpr = id === 'facs';
-                                            const isDisabled = (isStandardExpr && isFACSMode) || (isFacsExpr && !isFACSMode);
-                                            const disabledOpacity = isDisabled ? 'opacity-30 pointer-events-none grayscale scale-[0.98]' : '';
+                                            // ★【修正箇所】isDisabledを変数化して確実に判定する
+                                            const isDisabled = (id === 'expression' && isFACSMode) || (id === 'facs' && !isFACSMode);
+                                            const disabledOpacity = isDisabled ? 'opacity-30 pointer-events-none grayscale' : '';
 
                                             return (
                                                 <div key={id} className={`${id === 'additionalNotes' || id === 'outfitDetail' || id === 'situation' || id === 'bodyInterface' || id === 'aesthetic' ? 'col-span-2' : ''} ${disabledOpacity} transition-all duration-300`}>
@@ -1008,7 +887,8 @@ ${artStyleSpecificInstruction}`;
                                                         </div>
                                                     </div>
 
-                                                    {id === 'facs' && !isDisabled && (
+                                                    {/* ★【修正箇所】isDisabledを使用して表示制御 */}
+                                                    {id === 'facs' && isFACSMode && (
                                                         <div className="mb-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
                                                             <span className="text-[7px] text-slate-400 font-bold block mb-1">FACSパッチ:</span>
                                                             <div className="flex flex-wrap gap-1">
@@ -1026,7 +906,7 @@ ${artStyleSpecificInstruction}`;
                                                         </div>
                                                     ) : (
                                                         <>
-                                                            <textarea disabled={isDisabled} rows="2" className={`w-full p-2.5 border rounded-xl bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:border-pink-200 transition-colors resize-none ${hasVal ? 'text-pink-700' : ''}`} value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
+                                                            <textarea rows="2" className={`w-full p-2.5 border rounded-xl bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:border-pink-200 transition-colors resize-none ${hasVal ? 'text-pink-700' : ''}`} value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
                                                             <div className="mt-1.5 flex gap-1 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap">
                                                                 {suggestions.map((sug, sIdx) => {
                                                                     const isSelected = selections[id] && (selections[id] === sug.value || selections[id].includes(sug.value));
@@ -1059,9 +939,14 @@ ${artStyleSpecificInstruction}`;
                             <button type="button" onClick={() => applyPreset('camera')} className="px-4 py-2 rounded-full border text-[10px]">スマホ風</button>
                             <button type="button" onClick={() => applyPreset('realistic')} className="px-4 py-2 rounded-full border text-[10px]">実写風</button>
                         </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            {[{ label: '縦長 (Portrait)', value: 'portrait' }, { label: '横長 (Landscape)', value: 'landscape' }].map((o) => (
+                                <button key={o.value} type="button" onClick={() => handleOrientationChange(o.value)} className={`p-3 rounded-2xl border-2 transition-all ${selections.orientation === o.value ? 'bg-pink-50 border-pink-400 text-pink-600 shadow-sm' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-pink-200'}`}>{o.label}</button>
+                            ))}
+                        </div>
                         <div className="grid grid-cols-4 gap-2">
                             {['1:1', '3:4', '9:16', '54:86'].map((r) => (
-                                <button key={r} type="button" onClick={() => setSelections(p=>({...p, ratio: r}))} className={`p-3 rounded-2xl border-2 transition-all ${selections.ratio === r ? 'bg-pink-50 border-pink-200 text-pink-600' : 'bg-slate-50 text-slate-400'}`}>{r}</button>
+                                <button key={r} type="button" onClick={() => setSelections(p=>({...p, ratio: r}))} className={`p-3 rounded-2xl border-2 transition-all ${selections.ratio === r ? 'bg-pink-50 border-pink-400 text-pink-600 shadow-sm' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-pink-200'}`}>{r === '54:86' ? 'チェキ' : r}</button>
                             ))}
                         </div>
                         <button type="button" onClick={generatePrompt} disabled={isProcessing || isAnalyzing} className="w-full py-6 rounded-3xl bg-slate-900 text-white font-black text-sm uppercase italic active:scale-95 transition-all shadow-xl hover:shadow-2xl">
@@ -1096,7 +981,7 @@ ${artStyleSpecificInstruction}`;
                 </div>
             </main>
 
-            {/* 大画面フォーカスエディタ */}
+            {/* ズームエディタ */}
             {focusField && (
                 <div className="fixed inset-0 bg-slate-950/95 z-[1000] flex flex-col justify-between p-4 animate-fade-in">
                     <div className="flex justify-between items-center pb-3 border-b border-slate-800">
@@ -1166,10 +1051,9 @@ ${artStyleSpecificInstruction}`;
 const saveToSlot = (index, memorySlots, selections, previews, setMemorySlots, setStatusMessage) => {
     try {
         const newSlots = [...memorySlots];
-        const existingPreview = memorySlots[index]?.preview || null;
         newSlots[index] = {
             data: { ...selections },
-            preview: previews.baseStored || previews.plusStored || existingPreview
+            preview: previews.baseStored || previews.plusStored || null
         };
         setMemorySlots(newSlots);
         localStorage.setItem('idol_designer_slots_v195', JSON.stringify(newSlots));
@@ -1184,17 +1068,13 @@ const loadFromSlot = (index, memorySlots, setSelections, setPreviews, setStatusM
     const slot = memorySlots[index];
     if (!slot) return;
     setSelections(slot.data);
-    
     if (slot.preview) {
-        setPreviews(prev => ({
-            ...prev,
-            base: slot.preview,
-            baseStored: slot.preview
-        }));
+        setPreviews(prev => ({ ...prev, base: slot.preview, baseStored: slot.preview }));
     }
     setStatusMessage(`Slot ${index + 1} Loaded`);
     setTimeout(() => setStatusMessage(''), 2000);
 };
 
+// 【重要】ファイルの最下部には迷子のカッコがないことを保証します。
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
