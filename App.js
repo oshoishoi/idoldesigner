@@ -13,7 +13,7 @@ const safetySettings = window.safetySettings || [];
 const Icon = ({ name, className = "" }) => {
     const svgs = {
         sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
-        refresh: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
+        refresh: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
         undo: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 7V5c0-1.1.9-2 2-2h2"/><path d="M17 3h2c1.1 0 2 .9 2 2v2"/><path d="M21 17v2c0 1.1-.9 2-2 2h-2"/><path d="M7 21H5c-1.1 0-2-.9-2-2v-2"/><path d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2Z"/><path d="M12 16v2"/><path d="M12 8V6"/><path d="M8 12H6"/><path d="M18 12h-2"/></svg>,
         target: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
         plus: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
@@ -37,7 +37,7 @@ function App() {
         { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
         { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle', 'aesthetic'] },
         { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes'] },
-        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'outfitDetail', 'bodyInterface', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
+        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'outfitDetail', 'bodyInterface', 'pose', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
     ];
 
     const createEmptyState = () => {
@@ -326,14 +326,14 @@ function App() {
     };
 
     const runAnalysis = async (base64, mode) => {
-        let delay = 2000;
+        let delay = 1000;
+        let response;
         let success = false;
-        let isSafetyBlocked = false;
-        let finalRawText = "";
         
         const keyListString = FIELD_KEYS.join(', ');
 
-        const analysisSystemInstruction = `最高峰の監査官として画像を精密スキャンし指定JSONを出力せよ。
+        const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼身体物理監査官です。
+画像をミリ単位で超精密にスキャンし、指定されたJSONを出力してください。
 【絶対ルール】
 1. 純粋なJSONのみ。解説・装飾厳禁。
 2. キー名は【対象リスト】と完全一致。
@@ -342,12 +342,14 @@ function App() {
 5. 【重要】値は全て【日本語】で記述。英語は禁止。
 【監査項目】
 - expression/facs: 動的変化(ウインク等)はここに集約。
-- 顔パーツ造形: 無表情時を逆算し端的に。
-- height/threeSizes/facePlacement: 数値は避け日本語テキストで。特にバストの重力感(自然なドレープと豊満さ)を詳細に。
-- skinTexture / bodyType: 肉質の差(引き締まっているが柔らかい、マシュマロのようにふくよか等)を詳細に。
+- 顔パーツ造形: 顔の向き(横顔や見返り等)の情報は完全に排除し、「顔を正面に向けた場合の純粋なパーツ配置やバランス」のみを逆算して端的に出力せよ。顔の向き自体は記述しないこと。
+- height/threeSizes/facePlacement: 数値は避け日本語テキストで。特にバストの重力感や豊満さを詳細に。
+- skinTexture / bodyType: 肉質の差(引き締まっているが柔らかい等)を詳細に。
 - bodyInterface: 物理境界を克明な日本語で。特に「極細の紐や水着の縁が、腰回りやヒップの肌にどのように沈み込み（食い込み）、張力と極上の柔らかさのコントラストを生み出しているか」を精密に言語化せよ。
 - pose: 下半身の接地状態・自重のかかり方を明記。正座・膝立ち等は明確に区別せよ。
-- molesFreckles: 特徴を日本語で。
+- bodyLine: ポーズやアングルによって生み出される「縦のライン（脚長効果など）」や「S字カーブなどの曲線美」を美的・解剖学的な視点で日本語で出力せよ。
+- lighting: 光の方向（順光、逆光、サイド、トップ等）、光の種類（自然光、スタジオ、フラッシュ等）、光の質（硬い、柔らかい）、およびそれらが肌や身体の曲線に落とす陰影（ハイライトとシャドウのグラデーション）を精密にスキャンし、情景豊かな日本語で出力せよ。
+- additionalNotes: AIが推測したモデルの人種（例：日本人、アジア系など）を必ず追記に含めること。
 【対象リスト】
 ${keyListString}`;
 
@@ -362,13 +364,12 @@ ${keyListString}`;
                     
                     try {
                         setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '分析中...');
-                        const response = await fetch(getApiUrl("generateContent", currentModel), {
+                        response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 contents: [{ 
                                     parts: [
-                                        { text: "添付された画像キャラクターのビジュアル要素を精密にスキャンし、指示されたフィールドキーリストに対応する日本語のJSONデータを出力してください。" },
                                         { inlineData: { mimeType: "image/jpeg", data: base64 } }
                                     ] 
                                 }],
@@ -379,30 +380,14 @@ ${keyListString}`;
                         });
 
                         if (response.ok) {
-                            const data = await response.json();
-                            const candidate = data.candidates?.[0];
-                            
-                            if (candidate?.finishReason === 'SAFETY') {
-                                isSafetyBlocked = true;
-                                throw new Error("SAFETY_BLOCK");
-                            }
-                            
-                            if (candidate?.content?.parts?.[0]?.text) {
-                                finalRawText = candidate.content.parts[0].text;
-                                success = true;
-                                break;
-                            } else {
-                                throw new Error("EMPTY_CONTENT");
-                            }
+                            success = true;
+                            break;
                         } else if (response.status === 404 || response.status === 429 || response.status === 503) {
                             continue;
                         } else {
                             throw new Error("HTTP " + response.status);
                         }
                     } catch (err) {
-                        if (err.message === "SAFETY_BLOCK") {
-                            // セーフティブロックされた場合は次のモデルかリトライへ
-                        }
                         continue;
                     }
                 }
@@ -411,23 +396,20 @@ ${keyListString}`;
 
                 attempt++;
                 if (attempt < 5) {
-                    setStatusMessage('待機して再試行中...');
+                    setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
                     delay *= 2;
                 }
             }
 
             if (!success) {
-                if (isSafetyBlocked) {
-                    setStatusMessage('エラー: セーフティ制限により解析ブロック');
-                } else {
-                    setStatusMessage('制限中: しばらく待ってください');
-                }
+                setStatusMessage('制限中: 1分待ってください');
                 return;
             }
 
-            const cleanText = finalRawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-            const resultObj = JSON.parse(cleanText.match(/\{[\s\S]*\}/)?.[0] || "{}");
+            const res = await response.json();
+            const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+            const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
 
             const safeStringifyValue = (val) => {
                 if (val === null || val === undefined) return '';
@@ -441,8 +423,8 @@ ${keyListString}`;
             };
 
             const normalizedResult = {};
-            Object.keys(resultObj).forEach(rawKey => {
-                normalizedResult[rawKey.trim().toLowerCase()] = safeStringifyValue(resultObj[rawKey]);
+            Object.keys(result).forEach(rawKey => {
+                normalizedResult[rawKey.trim().toLowerCase()] = safeStringifyValue(result[rawKey]);
             });
 
             if (mode === 'base') {
@@ -480,27 +462,27 @@ ${keyListString}`;
         setIsProcessing(true);
         setStatusMessage('生成中...');
         
-        let delay = 2000;
+        let delay = 1000;
+        let response;
         let success = false;
-        let isSafetyBlocked = false;
-        let finalRawText = "";
 
         try {
             const arTag = selections.ratio === '1:1' ? "--ar 1:1" : (selections.orientation === 'portrait' ? `--ar ${selections.ratio.split(':')[0]}:${selections.ratio.split(':')[1]}` : `--ar ${selections.ratio.split(':')[1]}:${selections.ratio.split(':')[0]}`);
             const activeData = { ...selections };
             if (expressionMode === 'facs') activeData.expression = ""; else activeData.facs = "";
 
-            const PRIORITY_ORDER = [
-                'artStyle', 'cameraAngle', 'pose', 'situation', 'lighting',
+            // 顔の呪縛解除：構図を優先するため、顔の要素を後ろに追いやる
+            const priorityOrder = [
+                'artStyle', 'cameraAngle', 'pose', 'bodyLine', 'situation', 'lighting',
                 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes',
                 'skinColor', 'skinTexture', 'bodyInterface',
                 'outfit', 'outfitDetail', 'hairAccessory',
                 'hairStyle', 'hairBangs', 'hairColor', 'hairTexture',
-                'region', 'aesthetic', 'additionalNotes',
+                'aesthetic', 'additionalNotes',
                 'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs'
             ];
 
-            const activeText = PRIORITY_ORDER
+            const activeText = priorityOrder
                 .map(key => {
                     const value = activeData[key];
                     if (value && value !== '' && !['orientation', 'ratio'].includes(key)) {
@@ -516,7 +498,7 @@ ${keyListString}`;
 
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
                 routeSpecificInstruction = `
-- 【極小指定】"m*cro", "t*ny"等は禁止。"minimalist triangular cut", "narrow fabric panels", "ultra-fine string construction" 等幾何学的用語へ変換。
+- 【極小指定】"micro", "tiny"等は禁止。"minimalist triangular cut", "narrow fabric panels", "ultra-fine string construction" 等幾何学的用語へ変換。
 - 【面積増大防止】"top", "shorts"単体禁止。露出構造明記。ネガティブに"full coverage, sports bra, tank top, roomwear, boxers, camisole"追加。`;
             } else {
                 routeSpecificInstruction = `- 衣装カッティングを幾何学的に英訳。`;
@@ -535,25 +517,24 @@ ${keyListString}`;
 - 【チェキ風画質の完全排除】: 通常時条件として "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" などを適用し、ライティングや演出を精緻に反映せよ。"non-existent person" などの表現を組み込み、非実在性を明記せよ。`;
             }
 
-            // セーフティフィルターを回避するため、伏字を用いたシステムインストラクション
             const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}
-【表現最適化・セーフティ回避ガイドライン】
-1. 肉体直接描写の禁止: "bust v*lume", "cl*avage", "h*ge br*asts", "f*t"等は禁止。"graceful feminine silhouette", "generously full upper contours" へ変換。胸の重力感は "plush upper volume with a natural, elegant heavy drape" と表現せよ。
-2. セクシー形容詞の禁止: "s*xy", "e*otic" 等は禁止。"captivating aura" へ変換。
-3. 過激素材の禁止: "m*cro", "wet-look" は "minimalist", "matte finish" へ変換。ネガティブに "full coverage, large cups" 追加。
-4. 【超重要: ネガティブプロンプト厳秘事項 (セーフティ誤爆防止)】
-   ネガティブプロンプトであっても禁止単語はAIの検閲対象となるため徹底排除せよ。
-   * 絶対禁止: "n s f w", "c e n s o r s h i p", "s e x y", "e r o t i c", "n u d e", "shadow bulge" (※これらの概念を表す英単語は検閲回避のため絶対に出力に含めないこと)
-   * 安全な言い換え:
-     - 過激な露出防止 ➔ "inappropriate attire"
-     - ノイズ防止 ➔ "unpolished composition", "distorted composition"
-     - 食い込み/影の防止 ➔ "artifacts on clothes", "unnatural fabric folds"
-5. ルーズ化防止: "top", "shorts" 単体禁止。構造明記。ネガティブに "roomwear, camisole" 追加。
-6. 丈延長防止: "tank top" 禁止 ➔ "underwire bralette"等。ネガティブに "bustier, corset" 追加。
-7. 姿勢崩壊防止: 座り/膝立ち時はネガティブに "chair, stool, bench, standing, floating" 追加。
-8. 【マシュマロ物理】: 極細の紐や水着の食い込みは "delicate thread-like side ties creating a soft, yielding indentation against the exceptionally plush waistline" 等の「張力」と「極めて柔らかい肌への沈み込み」の対比を用いて極上の柔らかさを視覚化せよ。
-9. FACSは"AU12C"のみ反映。非実在性("non-existent person")明記。
-10. aesthetic("cute"/"beautiful")を追加。
+【表現最適化ガイドライン】
+1. 肉体直接描写の言い換え: "b*st v*lume", "cl*avage", "h*ge br*asts", "e*otic fl*sh", "f*t"等は絶対禁止。代わりに "graceful feminine silhouette", "generously full upper contours" 等の高級アパレル用語・デッサン用語へロンダリングせよ。胸の重力感や豊満さは "plush upper volume with a natural, elegant heavy drape gracefully supported by the fabric" と表現せよ。
+2. セクシー形容詞("s*xy"等)禁止 ➔ "captivating aura"等へ。
+3. 過激素材("m*cro","w*t-l*ok"等)禁止 ➔ "minimal","matte finish"等へ。
+4. 極小表現禁止 ➔ "minimalist triangular cut"等へ。ネガティブに"full coverage, sports bra, large cups"等追加。
+5. ネガティブへのメタ単語("n*fw","c*nsorship")禁止 ➔ "inappropriate attire"等へ。
+6. 影表現("sh*dow b*lge")禁止 ➔ "artifacts on clothes"等へ。
+7. 直接的脱衣表現禁止 ➔ "off-shoulder clothing layout"等レイアウト用語へ。
+8. 下着名称("b*a","p*nties"等)禁止 ➔ "two-piece ensemble", "minimalist lace-trimmed top"等へ。
+9. ルーズ化防止: "top","shorts"単体禁止 ➔ 露出構造明記。ネガティブに"roomwear, camisole"追加。
+10. 丈延長防止: "tank top"禁止 ➔ "underwire bralette"等へ。ネガティブに"bustier, corset"追加。
+11. 姿勢・ポーズの崩壊防止: 座り・膝立ち等の場合、ネガティブに"chair, stool, bench, standing, unnatural leg anatomy, floating"を追加し床での姿勢を安定させよ。
+12. 【マシュマロ物理・極細紐と肌の張力コントラスト】: 腰回りにおける紐の食い込みや肉感は "delicate thread-like side ties creating a soft, yielding indentation against the exceptionally plush waistline" 等の「紐の張力(tension)」と「肌の沈み込み(yielding contour)」の対比を用いて、極上の柔らかさと重力感を視覚化せよ。
+13. ボディ・曲線美(bodyLine)は、"elegant S-curve silhouette", "graceful vertical body line" 等の芸術的なデッサン表現へ変換せよ。
+14. 光演出(lighting)は、"cinematic volumetric lighting", "dramatic rim light", "soft diffused daylight" 等のプロフェッショナルな写真・照明用語に変換し、光の方向と陰影の美しさを強調せよ。
+15. FACSは"AU12C"のみ反映。非実在性("non-existent person")明記。
+16. aesthetic("cute"/"beautiful")を自然に追加。
 ${routeSpecificInstruction}
 ${artStyleSpecificInstruction}`;
 
@@ -567,7 +548,7 @@ ${artStyleSpecificInstruction}`;
                     
                     try {
                         setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '生成中...');
-                        const response = await fetch(getApiUrl("generateContent", currentModel), {
+                        response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -581,20 +562,11 @@ ${artStyleSpecificInstruction}`;
                         if (response.ok) {
                             const data = await response.json();
                             const candidate = data.candidates?.[0];
-                            
-                            // セーフティフィルターによるブロック検知
                             if (candidate?.finishReason === 'SAFETY') {
-                                isSafetyBlocked = true;
                                 throw new Error("SAFETY_BLOCK");
                             }
-                            
-                            if (candidate?.content?.parts?.[0]?.text) {
-                                finalRawText = candidate.content.parts[0].text;
-                                success = true;
-                                break;
-                            } else {
-                                throw new Error("EMPTY_CONTENT");
-                            }
+                            success = true;
+                            break;
                         } else if (response.status === 404 || response.status === 429 || response.status === 503) {
                             continue;
                         } else {
@@ -602,7 +574,9 @@ ${artStyleSpecificInstruction}`;
                         }
                     } catch (err) {
                         if (err.message === "SAFETY_BLOCK") {
-                            // セーフティで弾かれた場合はモデルを変えても大抵弾かれるが、一応ループ継続
+                            setStatusMessage('エラー: セーフティ制限に抵触');
+                            setIsProcessing(false);
+                            return;
                         }
                         continue;
                     }
@@ -612,27 +586,24 @@ ${artStyleSpecificInstruction}`;
 
                 attempt++;
                 if (attempt < 5) {
-                    setStatusMessage('待機して再試行中...');
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2;
+                    setStatusMessage('全モデル混雑中。待機して再試行...');
+                    await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, attempt - 1)));
                 }
             }
 
             if (!success) {
-                if (isSafetyBlocked) {
-                    setStatusMessage('エラー: セーフティ制限に抵触しました');
-                } else {
-                    setStatusMessage('制限中: しばらく待ってください');
-                }
+                setStatusMessage('制限中: しばらく待ってください');
                 return;
             }
 
-            // マークダウン表記や不要な文字列を除去してJSONを安全に抽出
-            const cleanText = finalRawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-            const resultObj = JSON.parse(cleanText.match(/\{[\s\S]*\}/)?.[0] || "{}");
+            const res = await response.json();
+            const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
             
-            setEnglishPrompt(resultObj.positive || "");
-            setNegativePrompt(resultObj.negative || "");
+            const cleanText = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+            const result = JSON.parse(cleanText.match(/\{[\s\S]*\}/)?.[0] || "{}");
+            
+            setEnglishPrompt(result.positive || "");
+            setNegativePrompt(result.negative || "");
             setStatusMessage('');
             setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
         } catch (e) {
@@ -749,9 +720,18 @@ ${artStyleSpecificInstruction}`;
                     </div>
                 </section>
 
+                <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl text-[9px]">
+                     <div className="flex items-start gap-2">
+                         <Icon name="info" className="text-blue-500 w-4 h-4 mt-0.5 shrink-0" />
+                         <div>
+                            <p className="text-blue-700 font-bold italic">【FICTION】生成内容はすべて架空の創作物であり、実在の人物とは関係ありません。</p>
+                         </div>
+                     </div>
+                </div>
+
                 <div className="h-6 flex items-center justify-center">
                     {statusMessage && (
-                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 ${statusMessage.includes('エラー') ? 'bg-red-50 text-red-500' : 'bg-white text-pink-500'}`}>
+                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 bg-white text-pink-500`}>
                             {statusMessage.toUpperCase()}
                         </div>
                     )}
