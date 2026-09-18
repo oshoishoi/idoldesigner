@@ -327,7 +327,7 @@ function App() {
 
     const runAnalysis = async (base64, mode) => {
         let delay = 1000;
-        let response;
+        let responseData = null;
         let success = false;
         
         const keyListString = FIELD_KEYS.join(', ');
@@ -364,7 +364,7 @@ ${keyListString}`;
                     
                     try {
                         setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '分析中...');
-                        response = await fetch(getApiUrl("generateContent", currentModel), {
+                        const response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -380,6 +380,7 @@ ${keyListString}`;
                         });
 
                         if (response.ok) {
+                            responseData = await response.json();
                             success = true;
                             break;
                         } else if (response.status === 404 || response.status === 429 || response.status === 503) {
@@ -402,13 +403,12 @@ ${keyListString}`;
                 }
             }
 
-            if (!success) {
+            if (!success || !responseData) {
                 setStatusMessage('制限中: 1分待ってください');
                 return;
             }
 
-            const res = await response.json();
-            const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+            const rawText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
             const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
 
             const safeStringifyValue = (val) => {
@@ -452,6 +452,7 @@ ${keyListString}`;
             setStatusMessage('');
         } catch (e) {
             setStatusMessage('解析失敗');
+            console.error(e);
         } finally {
             setTimeout(() => setIsAnalyzing(null), 1000);
         }
@@ -463,7 +464,7 @@ ${keyListString}`;
         setStatusMessage('生成中...');
         
         let delay = 1000;
-        let response;
+        let responseData = null;
         let success = false;
 
         try {
@@ -472,7 +473,7 @@ ${keyListString}`;
             if (expressionMode === 'facs') activeData.expression = ""; else activeData.facs = "";
 
             // 顔の呪縛解除：構図を優先するため、顔の要素を後ろに追いやる
-            const priorityOrder = [
+            const PRIORITY_ORDER = [
                 'artStyle', 'cameraAngle', 'pose', 'bodyLine', 'situation', 'lighting',
                 'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes',
                 'skinColor', 'skinTexture', 'bodyInterface',
@@ -482,7 +483,12 @@ ${keyListString}`;
                 'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs'
             ];
 
-            const activeText = priorityOrder
+            // 安全な自動ソート機構：PRIORITY_ORDERにない新項目があっても末尾に拾い上げる
+            const allActiveKeys = Object.keys(activeData);
+            const remainingKeys = allActiveKeys.filter(k => !PRIORITY_ORDER.includes(k) && !['orientation', 'ratio'].includes(k));
+            const FULL_ORDER = [...PRIORITY_ORDER, ...remainingKeys];
+
+            const activeText = FULL_ORDER
                 .map(key => {
                     const value = activeData[key];
                     if (value && value !== '' && !['orientation', 'ratio'].includes(key)) {
@@ -532,7 +538,7 @@ ${keyListString}`;
 11. 姿勢・ポーズの崩壊防止: 座り・膝立ち等の場合、ネガティブに"chair, stool, bench, standing, unnatural leg anatomy, floating"を追加し床での姿勢を安定させよ。
 12. 【マシュマロ物理・極細紐と肌の張力コントラスト】: 腰回りにおける紐の食い込みや肉感は "delicate thread-like side ties creating a soft, yielding indentation against the exceptionally plush waistline" 等の「紐の張力(tension)」と「肌の沈み込み(yielding contour)」の対比を用いて、極上の柔らかさと重力感を視覚化せよ。
 13. ボディ・曲線美(bodyLine)は、"elegant S-curve silhouette", "graceful vertical body line" 等の芸術的なデッサン表現へ変換せよ。
-14. 光演出(lighting)は、"cinematic volumetric lighting", "dramatic rim light", "soft diffused daylight" 等のプロフェッショナルな写真・照明用語に変換し、光の方向と陰影の美しさを強調せよ。
+14. 光演出(lighting)は、"cinematic volumetric lighting", "dramatic rim light", "soft diffused daylight" 等のプロフェessionalな写真・照明用語に変換し、光の方向と陰影の美しさを強調せよ。
 15. FACSは"AU12C"のみ反映。非実在性("non-existent person")明記。
 16. aesthetic("cute"/"beautiful")を自然に追加。
 ${routeSpecificInstruction}
@@ -548,7 +554,7 @@ ${artStyleSpecificInstruction}`;
                     
                     try {
                         setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '生成中...');
-                        response = await fetch(getApiUrl("generateContent", currentModel), {
+                        const response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -560,8 +566,11 @@ ${artStyleSpecificInstruction}`;
                         });
 
                         if (response.ok) {
-                            const data = await response.json();
-                            const candidate = data.candidates?.[0];
+                            // ★ バグ修正箇所：Bodyを変数に保管し、2度読みエラーを回避
+                            responseData = await response.json();
+                            const candidate = responseData.candidates?.[0];
+                            
+                            // セーフティフィルタリングの検知
                             if (candidate?.finishReason === 'SAFETY') {
                                 throw new Error("SAFETY_BLOCK");
                             }
@@ -576,7 +585,7 @@ ${artStyleSpecificInstruction}`;
                         if (err.message === "SAFETY_BLOCK") {
                             setStatusMessage('エラー: セーフティ制限に抵触');
                             setIsProcessing(false);
-                            return;
+                            return; // 制限に引っかかったら処理を中止
                         }
                         continue;
                     }
@@ -591,13 +600,13 @@ ${artStyleSpecificInstruction}`;
                 }
             }
 
-            if (!success) {
+            if (!success || !responseData) {
                 setStatusMessage('制限中: しばらく待ってください');
                 return;
             }
 
-            const res = await response.json();
-            const rawText = res.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+            // 変数 responseData からデータを取り出すため、already read 例外が発生しない
+            const rawText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
             
             const cleanText = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
             const result = JSON.parse(cleanText.match(/\{[\s\S]*\}/)?.[0] || "{}");
