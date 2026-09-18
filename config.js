@@ -4,7 +4,6 @@ window.apiKey = ""; // 本番テスト時やCanvasランタイムでは空文字
 window.proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
 window.getApiUrl = (endpoint, modelOverride) => {
-    // 優先フォールバックで指定されたモデルを使用、指定がなければデフォルト(3.5)を適用
     const model = modelOverride || "gemini-3.5-flash";
     if (window.isPreview) {
         return `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${window.apiKey}`;
@@ -20,16 +19,16 @@ window.safetySettings = [
     { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
 ];
 
-// 45項目定義 (bodyLineを追加)
+// 43項目定義 (outfitDetail, bodyTypeを廃止し、expressionを移動)
 window.FIELD_KEYS = [
     'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', 
     'faceOutline', 'facePlacement', 
     'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape',
-    'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle',
+    'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle',
     'skinColor', 'skinTexture', 'molesFreckles', 
-    'age', 'height', 'bodyType', 'bodyFrame', 'threeSizes',
+    'age', 'height', 'bodyFrame', 'threeSizes',
     'hairAccessory', 
-    'outfit', 'outfitDetail', 'bodyInterface', 'pose', 'bodyLine',
+    'outfit', 'bodyInterface', 'pose', 'expression', 'facs', 'bodyLine',
     'situation', 'lighting', 'artStyle', 'cameraAngle',
     'aesthetic', 'additionalNotes'
 ];
@@ -43,12 +42,12 @@ window.LABEL_MAP = {
     eyeMakeupDetail: 'アイメイク詳細', eyebrowShape: '眉の形', noseShape: '鼻の形', mouthShape: '口の形', 
     lipTexture: '唇の質感', teeth: '歯', cheekStyle: 'ほっぺ', expression: '表情', facs: 'FACS (動作符号/強度)',
     makeupStyle: '全体メイク', skinColor: '肌の色', skinTexture: '肌質', bodyInterface: 'その他(すき間等)', 
-    molesFreckles: '特徴', age: '年齢感', height: '身長', bodyType: '体型', bodyFrame: '骨格', threeSizes: '肉付き', 
-    outfit: '衣装', outfitDetail: '衣装詳細', pose: 'ポーズ', bodyLine: 'ボディ・曲線美', situation: 'シチュエーション', lighting: '光演出', 
+    molesFreckles: '特徴', age: '年齢感', height: '身長', bodyFrame: '骨格', threeSizes: '肉付き', 
+    outfit: '衣装', pose: 'ポーズ', bodyLine: 'ボディ・曲線美', situation: 'シチュエーション', lighting: '光演出', 
     artStyle: '画風', cameraAngle: 'アングル', aesthetic: '印象補正', additionalNotes: '追記' 
 };
 
-// 表現ルールを適用した極上の事前サジェスト辞書
+// サジェスト辞書（bodyTypeの内容をthreeSizesに統合、日本人追加）
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -161,12 +160,11 @@ window.FIELD_SUGGESTIONS = {
         { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with fine pores, peach fuzz, and natural oils' }
     ],
     bodyInterface: [
-        { label: 'ヒップラインの美しい沈み込み 🍑', value: 'ボトムスのバックカッティングが極めて柔らかいヒップの曲線に沿って優しく沈み込み（食い込み）、なめらかで豊かな肉の起伏と美しい脚線美を強調している' },
         { label: '深いハイレグの境界 🍑', value: 'ボトムスが腰骨の上まで鋭角に深く切り込まれたハイカットラインを描き、むっちりとした脚の長さとヒップの優雅な曲線をドラマチックに強調している' },
-        { label: '極細紐による腰の沈み込み 🎀', value: '極細のサイドストリングが腰回りの極めて柔らかい肌に優しく沈み込み、極上の柔らかさとマシュマロのようなふくよかさを強調する美しい凹みを作り出している' },
+        { label: 'ヒップラインの美しい沈み込み 🍑', value: 'ボトムスのバックカッティングが極めて柔らかいヒップの曲線に沿って優しく沈み込み、なめらかで豊かな肉の起伏と美しい脚線美を強調している' },
+        { label: '極細紐の張力と肌の沈み込み 🎀', value: '極細の糸のような紐の確かな張力と、それに優しく沈み込む極めて柔らかいマシュマロのような肌のコントラストが、極上の柔らかさと自然な肉感を視覚化している' },
         { label: '柔らかい肌への沈み込み ☁️', value: '布地が極めて柔らかくしなやかな肌に優しく沈み込み、マシュマロのようなふかふかの質感と身体の自然な柔らかさを際立たせている' },
-        { label: 'カッティング露出 🍑', value: 'ボトムスの高く切り込まれたレッグラインに沿って、なめらかな曲線シルエットが際立っている' },
-        { label: '豊かな胸の支えと谷間 🕊️', value: '布地がこぼれるような豊かなボリュームを優雅に支え、深く開いたネックラインに沿って自然で美しい起伏と陰影を生み出している' }
+        { label: '胸の自重と谷間 🕊️', value: '極細の布地がこぼれるような豊かなボリュームと自然な重みを優雅に支え、深く開いたネックラインに沿ってリアルで美しい起伏と陰影を生み出している' }
     ], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
@@ -180,31 +178,22 @@ window.FIELD_SUGGESTIONS = {
         { label: '小柄(150cm) 🤏', value: 'Petite delicate build, around 152cm, cute compact bone structure' },
         { label: '普通(160cm) 🧍‍♀️', value: 'Average slender height, around 161cm with proportional limbs' }
     ],
-    bodyType: [
-        { label: 'スレンダー×マシュマロ 🌿☁️', value: 'Toned yet exceptionally soft body contour, delicate balance of a slender frame and plush, yielding curves especially around the hips' },
-        { label: '豊満な上半身/こぼれる肉付き ☁️', value: 'Voluptuous silhouette with generously full upper contours and plush softness, gracefully held by the garment' },
-        { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' },
-        { label: '引き締まり 🏃‍♀️', value: 'Toned fit athletic build with stronger body contouring lines' }
-    ],
     bodyFrame: [
         { label: '華奢な骨格 🦴', value: 'Delicate bone structure, prominent clavicles and narrow rib cage' },
         { label: '骨格ウェーブ 🌊', value: 'Classic wave frame, long slender waist, gently flared hips' }
     ],
     threeSizes: [
+        { label: 'スレンダー×マシュマロ 🌿☁️', value: 'Toned yet exceptionally soft body contour, delicate balance of a slender frame and plush, yielding curves especially around the hips' },
+        { label: '重力を感じる豊満さ ☁️', value: 'Generously full upper torso with plush volume and a natural heavy drape resting naturally, creating a breathtaking and elegant silhouette' },
         { label: '引き締まりと柔らかさの同居 ⏳', value: 'Gentle firmness in the waist combined with yielding plush softness in the hips and lower torso, balanced elegant proportions' },
-        { label: 'こぼれるような豊満さ ☁️', value: 'Generously full upper torso with plush volume resting naturally, creating a breathtaking and elegant silhouette' },
-        { label: 'スリム 📏', value: 'Sleek slim hips, narrow athletic waist, graceful feminine silhouette' }
+        { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' }
     ],
     outfit: [
+        { label: '極小の白紐ビキニ 👙', value: 'Minimalist white string two-piece swimwear with triangular cups and delicate thread-like side-ties providing structural tension' },
         { label: 'シアーハイレグスーツ 🩱', value: 'Elegant white high-cut bodysuit with sheer mesh side panels and delicate floral lace appliqué on the bust' },
-        { label: '極小の白紐ビキニ 👙', value: 'Minimalist white string two-piece swimwear with triangular cups and slender side-ties' },
-        { label: '繊細なブルーレースのセット 🎀', value: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire and scalloped edges softly resting against the skin' },
+        { label: '繊細なブルーレースのセット 🎀', value: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire, sheer lace net linings, and scalloped edges softly resting against the skin' },
         { label: '王道ドレス 👗', value: 'Tier-layered chiffon frilled idol stage dress' },
         { label: '夏祭り浴衣 👘', value: 'Traditional summer cotton yukata adorned with floral motifs, tied with a contrasting obi sash' }
-    ],
-    outfitDetail: [
-        { label: '極細のサイドストリング 🪢', value: 'Ultra-fine side-tie strings securely holding the garment' },
-        { label: 'レース刺繍 🕸️', value: 'Intricate scalloped sheer lace net linings, delicate floral embroidery' }
     ],
     pose: [
         { label: '正座・むっちり座り 🧎‍♀️', value: 'seiza sitting pose, resting her soft weight naturally on her calves, emphasizing the beautiful, full spread and supple curves of her lower body' },
@@ -223,11 +212,8 @@ window.FIELD_SUGGESTIONS = {
         { label: '白いベッドシーツ 🛏️', value: 'Resting on soft, wrinkled white bed sheets in a bright morning room' }
     ],
     lighting: [
-        { label: '自然光・サイド ☀️', value: 'Soft natural daylight filtering from the side, highlighting the smooth skin contours and creating delicate shadow gradients' },
-        { label: '逆光・リムライト ✨', value: 'Strong dramatic backlighting, glowing volumetric rim light outlining the hair and body silhouette' },
-        { label: 'スタジオ・ソフトボックス 💡', value: 'Cinematic key studio light with softbox diffusion, flawless even illumination on the skin' },
-        { label: '直射日光・ハード 🌴', value: 'Harsh direct sunlight, sharp high-contrast shadows, radiant bright summer vibe' },
-        { label: '夜間直フラッシュ 📸', value: 'Harsh raw camera-mounted direct hard flash, high contrast dark shadows behind her' }
+        { label: '窓からの自然光 ☀️', value: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours' },
+        { label: 'スタジオ照明 💡', value: 'Cinematic key studio light with a soft volumetric hair backlight' }
     ],
     artStyle: [
         { label: '実写DSLRグラビア 📷', value: 'Hyper-realistic gravure raw photograph taken with high-end DSLR, sharp focus, photo masterclass 8k' },
@@ -242,6 +228,7 @@ window.FIELD_SUGGESTIONS = {
         { label: '美人/きれい系 🔮', value: 'beautiful' }
     ],
     additionalNotes: [
+        { label: '日本人 🇯🇵', value: 'Japanese idol facial features, delicate pure Asian aesthetic' },
         { label: '傑作/高詳細 🏆', value: 'masterpiece, highly detailed features, intricate clothing cuts' },
         { label: 'シネマチック深み 🎬', value: 'award-winning portrait photography, cinematic depth of field, sharp focus' }
     ]
@@ -258,19 +245,15 @@ window.INSPI_THEMES = {
             cheekStyle: '',
             makeupStyle: '',
             outfit: '',
-            outfitDetail: '',
-            bodyInterface: '',
-            bodyLine: ''
+            bodyInterface: ''
         }
     },
     style_check: {
         name: 'スタイル確認(グレー無地) 📏',
         data: {
             hairAccessory: '',
-            outfit: 'minimalist unbranded heather-grey sporty two-piece ensemble',
-            outfitDetail: 'solid light grey bralette top and matching basic bottoms, plain wide elastic bands with strictly no logos or text, sleek and seamless design',
+            outfit: 'minimalist unbranded heather-grey sporty two-piece ensemble, solid light grey bralette top and matching basic bottoms, plain wide elastic bands with strictly no logos or text, sleek and seamless design',
             pose: 'standing naturally, simple straight posture to clearly show body proportions',
-            bodyLine: 'clean vertical straight body line, neutral silhouette',
             situation: 'pure white seamless studio backdrop, minimalist setting',
             lighting: 'clean, even soft studio lighting for clear visibility of body contours',
             bodyInterface: 'fitting smoothly against the skin, highlighting the natural body contour',
@@ -282,17 +265,9 @@ window.INSPI_THEMES = {
     voluptuous_bikini: {
         name: '豊満×極細紐ビキニ 🏖️',
         data: {
-            hairStyle: 'Flawless waist-length silky straight black hair',
-            hairBangs: 'Trendy light and airy see-through bangs',
-            eyeShape: 'Large doe-like expressive rounded eyes',
-            bodyType: 'Voluptuous silhouette with generously full upper contours featuring a natural, elegant heavy drape gracefully supported by the garment',
-            threeSizes: 'Generously full upper torso with plush volume resting naturally, creating a breathtaking and elegant silhouette',
-            skinTexture: 'Extremely soft, supple skin texture, smooth and yielding like marshmallow',
             bodyInterface: '極細の糸のような紐の確かな張力と、それに優しく沈み込む極めて柔らかいマシュマロのような肌のコントラストが、極上の柔らかさと自然な肉感を視覚化している',
-            outfit: 'Minimalist white string two-piece swimwear with triangular cups and delicate thread-like side-ties',
-            outfitDetail: 'Delicate thread-like side-tie strings providing structural tension',
+            outfit: 'Minimalist white string two-piece swimwear with triangular cups and delicate thread-like side-ties providing structural tension',
             pose: 'Kneeling pose, resting on both knees, upright torso, gently pulling the side string of the bottoms',
-            bodyLine: 'elegant S-curve silhouette emphasizing the delicate arch of the back and full hips',
             situation: 'Kneeling on a beautiful sunlit sandy beach with clear blue ocean waves in the background',
             lighting: 'Bright, radiant sun-kissed lighting, highlighting the smooth skin contours',
             artStyle: 'Hyper-realistic gravure raw photograph taken with high-end DSLR, sharp focus, 8k',
@@ -302,16 +277,9 @@ window.INSPI_THEMES = {
     slender_marshmallow: {
         name: 'スレンダー×マシュマロ 🎀',
         data: {
-            hairStyle: 'Natural black short bob, rounded and softly curled inward',
-            hairBangs: 'Soft side-swept bangs cascading to the side',
-            eyeShape: 'Sleek upturned almond eyes, feline captivating glance',
-            bodyType: 'Toned yet exceptionally soft body contour, delicate balance of a slender frame and plush, yielding curves especially around the hips',
-            threeSizes: 'Gentle firmness in the waist combined with yielding plush softness in the hips and lower torso, balanced elegant proportions',
-            skinTexture: 'Pale porcelain ivory skin, translucent texture, soft-matte studio-airbrushed finish',
             bodyInterface: '衣装の縁や極細のストラップが腰回りやヒップの肌になめらかに密着・沈み込み、自然な物理的フィット感と極上の柔らかさを視覚化している',
-            outfit: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire and scalloped edges softly resting against the skin',
+            outfit: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire, delicate scalloped sheer lace net linings, and scalloped edges softly resting against the skin',
             pose: 'seiza sitting pose, resting her soft weight naturally on her calves, emphasizing the beautiful, full spread and supple curves of her lower body',
-            bodyLine: 'graceful and supple curves emphasizing the slender yet plush body contour',
             situation: 'Resting on soft, wrinkled white bed sheets in a bright morning room',
             lighting: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours',
             artStyle: 'Hyper-realistic gravure raw photograph taken with high-end DSLR, sharp focus, 8k',
