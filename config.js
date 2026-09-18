@@ -161,6 +161,8 @@ window.FIELD_SUGGESTIONS = {
         { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with fine pores, peach fuzz, and natural oils' }
     ],
     bodyInterface: [
+        { label: 'ヒップラインの美しい沈み込み 🍑', value: 'ボトムスのバックカッティングが極めて柔らかいヒップの曲線に沿って優しく沈み込み（食い込み）、なめらかで豊かな肉の起伏と美しい脚線美を強調している' },
+        { label: '深いハイレグの境界 🍑', value: 'ボトムスが腰骨の上まで鋭角に深く切り込まれたハイカットラインを描き、むっちりとした脚の長さとヒップの優雅な曲線をドラマチックに強調している' },
         { label: '極細紐による腰の沈み込み 🎀', value: '極細のサイドストリングが腰回りの極めて柔らかい肌に優しく沈み込み、極上の柔らかさとマシュマロのようなふくよかさを強調する美しい凹みを作り出している' },
         { label: '柔らかい肌への沈み込み ☁️', value: '布地が極めて柔らかくしなやかな肌に優しく沈み込み、マシュマロのようなふかふかの質感と身体の自然な柔らかさを際立たせている' },
         { label: 'カッティング露出 🍑', value: 'ボトムスの高く切り込まれたレッグラインに沿って、なめらかな曲線シルエットが際立っている' },
@@ -194,6 +196,7 @@ window.FIELD_SUGGESTIONS = {
         { label: 'スリム 📏', value: 'Sleek slim hips, narrow athletic waist, graceful feminine silhouette' }
     ],
     outfit: [
+        { label: 'シアーハイレグスーツ 🩱', value: 'Elegant white high-cut bodysuit with sheer mesh side panels and delicate floral lace appliqué on the bust' },
         { label: '極小の白紐ビキニ 👙', value: 'Minimalist white string two-piece swimwear with triangular cups and slender side-ties' },
         { label: '繊細なブルーレースのセット 🎀', value: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire and scalloped edges softly resting against the skin' },
         { label: '王道ドレス 👗', value: 'Tier-layered chiffon frilled idol stage dress' },

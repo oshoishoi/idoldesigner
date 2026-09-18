@@ -345,7 +345,7 @@ function App() {
 - 顔パーツ造形: 顔の向き(横顔や見返り等)の情報は完全に排除し、「顔を正面に向けた場合の純粋なパーツ配置やバランス」のみを逆算して端的に出力せよ。顔の向き自体は記述しないこと。
 - height/threeSizes/facePlacement: 数値は避け日本語テキストで。特にバストの重力感や豊満さを詳細に。
 - skinTexture / bodyType: 肉質の差(引き締まっているが柔らかい等)を詳細に。
-- bodyInterface: 物理境界を克明な日本語で。特に「極細の紐や水着の縁が、腰回りやヒップの肌にどのように沈み込み（食い込み）、張力と極上の柔らかさのコントラストを生み出しているか」を精密に言語化せよ。
+- bodyInterface: 物理境界を克明な日本語で。特に「極細の紐や水着の縁が肌に沈み込む（食い込む）張力と柔らかさのコントラスト」や、「ボトムスのレッグラインが腰骨のどの位置まで深く切り込まれているか（ハイレグの角度や脚長効果）」、さらに「バックカッティングによるヒップラインへの柔らかな沈み込み（食い込み）と肉の起伏」を精密に言語化せよ。
 - pose: 下半身の接地状態・自重のかかり方を明記。正座・膝立ち等は明確に区別せよ。
 - bodyLine: ポーズやアングルによって生み出される「縦のライン（脚長効果など）」や「S字カーブなどの曲線美」を美的・解剖学的な視点で日本語で出力せよ。
 - lighting: 光の方向（順光、逆光、サイド、トップ等）、光の種類（自然光、スタジオ、フラッシュ等）、光の質（硬い、柔らかい）、およびそれらが肌や身体の曲線に落とす陰影（ハイライトとシャドウのグラデーション）を精密にスキャンし、情景豊かな日本語で出力せよ。
@@ -536,11 +536,12 @@ ${keyListString}`;
 9. ルーズ化防止: "top","shorts"単体禁止 ➔ 露出構造明記。ネガティブに"roomwear, camisole"追加。
 10. 丈延長防止: "tank top"禁止 ➔ "underwire bralette"等へ。ネガティブに"bustier, corset"追加。
 11. 姿勢・ポーズの崩壊防止: 座り・膝立ち等の場合、ネガティブに"chair, stool, bench, standing, unnatural leg anatomy, floating"を追加し床での姿勢を安定させよ。
-12. 【マシュマロ物理・極細紐と肌の張力コントラスト】: 腰回りにおける紐の食い込みや肉感は "delicate thread-like side ties creating a soft, yielding indentation against the exceptionally plush waistline" 等の「紐の張力(tension)」と「肌の沈み込み(yielding contour)」の対比を用いて、極上の柔らかさと重力感を視覚化せよ。
-13. ボディ・曲線美(bodyLine)は、"elegant S-curve silhouette", "graceful vertical body line" 等の芸術的なデッサン表現へ変換せよ。
-14. 光演出(lighting)は、"cinematic volumetric lighting", "dramatic rim light", "soft diffused daylight" 等のプロフェessionalな写真・照明用語に変換し、光の方向と陰影の美しさを強調せよ。
-15. FACSは"AU12C"のみ反映。非実在性("non-existent person")明記。
-16. aesthetic("cute"/"beautiful")を自然に追加。
+12. 【マシュマロ物理・極細紐と肌の張力コントラスト】: 腰回りやヒップにおける紐の食い込みや肉感は "delicate thread-like side ties creating a soft, yielding indentation against the exceptionally plush waistline" 等の「紐の張力(tension)」と「肌の沈み込み(yielding contour)」の対比を用いて、極上の柔らかさと重力感を視覚化せよ。
+13. 【ハイレグ・バックカッティングの芸術的昇華】: "high-leg", "crotch", "thong", "ass", "butt"等の過激な直接的ワードを完全に避けよ。ハイレグカッティングの深さやヒップへの食い込みは "dramatic high-rise leg openings extending elegantly above the hip bone", "minimalist cheeky cut back elegantly tracing and gently sinking into the plush contours" 等の「アパレル構造の美しさ」と「脚長効果・柔らかな肉の起伏」を強調する高級英語へ完全変換せよ。
+14. ボディ・曲線美(bodyLine)は、"elegant S-curve silhouette", "graceful vertical body line" 等の芸術的なデッサン表現へ変換せよ。
+15. 光演出(lighting)は、"cinematic volumetric lighting", "dramatic rim light", "soft diffused daylight" 等のプロフェッショナルな写真・照明用語に変換し、光の方向と陰影の美しさを強調せよ。
+16. FACSは"AU12C"のみ反映。非実在性("non-existent person")明記。
+17. aesthetic("cute"/"beautiful")を自然に追加。
 ${routeSpecificInstruction}
 ${artStyleSpecificInstruction}`;
 
