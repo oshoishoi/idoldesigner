@@ -1,6 +1,7 @@
 // App.js
 const { useState, useEffect, useRef, useMemo } = React;
 
+// config.jsからグローバル定数を安全に受け渡す
 const FIELD_KEYS = window.FIELD_KEYS || [];
 const LABEL_MAP = window.LABEL_MAP || {};
 const FIELD_SUGGESTIONS = window.FIELD_SUGGESTIONS || {};
@@ -34,9 +35,9 @@ const Icon = ({ name, className = "" }) => {
 function App() {
     const sections = [
         { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
-        { title: "顔・パーツ・メイクの極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle', 'aesthetic'] },
+        { title: "顔・表情・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle', 'aesthetic'] },
         { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyFrame', 'threeSizes'] },
-        { title: "衣装・ポーズ・演出設定", fields: ['hairAccessory', 'outfit', 'bodyInterface', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
+        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'bodyInterface', 'pose', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
     ];
 
     const createEmptyState = () => {
@@ -325,26 +326,29 @@ function App() {
     };
 
     const runAnalysis = async (base64, mode) => {
+        let delay = 1000;
         let responseData = null;
         let success = false;
         
         const keyListString = FIELD_KEYS.join(', ');
 
-        const analysisSystemInstruction = `世界最高峰の監査官として画像を精密スキャンし指定JSONを出力せよ。
+        const analysisSystemInstruction = `あなたは世界最高峰のキャラクターデザイナー兼身体物理監査官です。
+画像をミリ単位で超精密にスキャンし、指定されたJSONを出力してください。
 【絶対ルール】
-1. 純粋なJSONのみ出力。
+1. 純粋なJSONのみ。解説・装飾厳禁。
 2. キー名は【対象リスト】と完全一致。
 3. 値はネストせずフラットな1つの文字列。
-4. 【重要】値は全て【日本語】で記述。
+4. 不明項目も空文字で出力。
+5. 【重要】値は全て【日本語】で記述。英語は禁止。
 【監査項目】
 - expression/facs: 動的変化(ウインク等)はここに集約。
-- 顔パーツ造形: 顔の向き(横顔や見返り等)の情報は完全に排除し、「顔を正面に向けた場合の純粋なパーツ配置やバランス」のみを逆算して端的に出力せよ。
+- 顔パーツ造形: 顔の向き(横顔や見返り等)の情報は完全に排除し、「顔を正面に向けた場合の純粋なパーツ配置やバランス」のみを逆算して端的に出力せよ。顔の向き自体は記述しないこと。
 - height/threeSizes/facePlacement: 数値は避け日本語テキストで。特にバストの重力感や豊満さを詳細に。
-- skinTexture / bodyFrame: 肉質の差(引き締まっているが柔らかい等)を詳細に。
-- bodyInterface: 物理境界を克明な日本語で。特に「極細の紐や水着の縁が、腰回りやヒップの肌にどのように沈み込み（食い込み）、張力と極上の柔らかさのコントラストを生み出しているか」、および「ハイレグのカッティングが腰骨のどの位置まで切り込まれ、脚の長さや曲線をどう強調しているか」を精密に言語化せよ。
+- skinTexture / bodyType: 肉質の差(引き締まっているが柔らかい等)を詳細に。
+- bodyInterface: 物理境界を克明な日本語で。
 - pose: 下半身の接地状態・自重のかかり方を明記。正座・膝立ち等は明確に区別せよ。
 - bodyLine: ポーズやアングルによって生み出される「縦のライン（脚長効果など）」や「S字カーブなどの曲線美」を美的・解剖学的な視点で日本語で出力せよ。
-- lighting: 光の方向（順光、逆光、サイド等）、光の種類、光の質（硬い、柔らかい）、およびそれらが肌や身体の曲線に落とす陰影（グラデーション）を精密にスキャンし出力せよ。
+- lighting: 光の方向（順光、逆光、サイド、トップ等）、光の種類（自然光、スタジオ、フラッシュ等）、光の質（硬い、柔らかい）、およびそれらが肌や身体の曲線に落とす陰影（ハイライトとシャドウのグラデーション）を精密にスキャンし、情景豊かな日本語で出力せよ。
 - additionalNotes: AIが推測したモデルの人種（例：日本人、アジア系など）を必ず追記に含めること。
 【対象リスト】
 ${keyListString}`;
@@ -394,7 +398,8 @@ ${keyListString}`;
                 attempt++;
                 if (attempt < 5) {
                     setStatusMessage('全モデル混雑中。待機して再試行...');
-                    await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, attempt - 1)));
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
                 }
             }
 
@@ -458,6 +463,7 @@ ${keyListString}`;
         setIsProcessing(true);
         setStatusMessage('生成中...');
         
+        let delay = 1000;
         let responseData = null;
         let success = false;
 
@@ -466,17 +472,18 @@ ${keyListString}`;
             const activeData = { ...selections };
             if (expressionMode === 'facs') activeData.expression = ""; else activeData.facs = "";
 
-            // 顔の呪縛解除：表情もポーズグループへ移動したため、全体の構成をより自然に配置
+            // 顔の呪縛解除：構図を優先するため、顔の要素を後ろに追いやる
             const PRIORITY_ORDER = [
-                'artStyle', 'cameraAngle', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting',
+                'artStyle', 'cameraAngle', 'pose', 'bodyLine', 'situation', 'lighting',
                 'age', 'height', 'bodyFrame', 'threeSizes',
                 'skinColor', 'skinTexture', 'bodyInterface',
                 'outfit', 'hairAccessory',
                 'hairStyle', 'hairBangs', 'hairColor', 'hairTexture',
                 'aesthetic', 'additionalNotes',
-                'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle'
+                'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs'
             ];
 
+            // 安全な自動ソート機構：PRIORITY_ORDERにない新項目があっても末尾に拾い上げる
             const allActiveKeys = Object.keys(activeData);
             const remainingKeys = allActiveKeys.filter(k => !PRIORITY_ORDER.includes(k) && !['orientation', 'ratio'].includes(k));
             const FULL_ORDER = [...PRIORITY_ORDER, ...remainingKeys];
@@ -497,10 +504,12 @@ ${keyListString}`;
 
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
                 routeSpecificInstruction = `
-- 【極小指定】"micro", "tiny"等は禁止。"minimalist triangular cut", "narrow fabric panels", "ultra-fine string construction" 等幾何学的用語へ変換。
-- 【面積増大防止】"top", "shorts"単体禁止。露出構造明記。ネガティブに"full coverage, sports bra, tank top, roomwear, boxers, camisole"追加。`;
+- 【面積増大・部屋着化の徹底防止】: AIが露出を恐れて服の面積を増やすのを防げ。"top", "shorts"といった丈が長くなりやすい単語の使用を禁止し、"underwire bralette", "minimalist triangular cut", "narrow fabric panels" 等の「構造を狭くする・短くする」アパレル用語へ変換せよ。
+- お腹周りの露出を強制するため、英語テキスト内に "ultra-cropped midriff-baring design revealing the navel" などのレイアウト用語を組み込め。
+- "b*a", "p*nties", "undergarments" 等の直接的な下着名称は使用禁止。"two-piece ensemble", "matching seamless bottoms" 等へ置き換えよ。
+- ネガティブプロンプトに必ず以下を追加せよ: \`boy-shorts, boxers, roomwear, camisole, full back coverage, bustier, corset, fabric covering the belly, hidden navel, long top\``;
             } else {
-                routeSpecificInstruction = `- 衣装カッティングを幾何学的に英訳。`;
+                routeSpecificInstruction = `- 衣装カッティングを幾何学的に英訳せよ。`;
             }
 
             const artStyleText = selections.artStyle && (selections.artStyle || selections.ratio) ? ((selections.artStyle || "") + " " + (selections.ratio || "")).toLowerCase() : "";
@@ -509,32 +518,27 @@ ${keyListString}`;
             if (artStyleText.match(/(54:86|cheki|polaroid|instant|analog|vintage)/i)) {
                 const borderSide = selections.orientation === 'landscape' ? 'RIGHT' : 'BOTTOM';
                 artStyleSpecificInstruction = `
-- 【チェキ風Lo-Fi画質の完全ロック】: AIが "Photorealistic" などのスタジオライティング系キーワードをポジティブに追加することを徹底的に禁止。冒頭から "Lo-fi analog instant camera film, heavy grainy texture" をメイン画質トーンとして強制適用し、"Classic white instant photo frame with a wide, thick white border on the ${borderSide} side" というフレーム記述を英語プロンプトの文中に盛り込むこと。`;
+- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風」が指定されています。AIが "Photorealistic" などのスタジオライティング系キーワードをポジティブプロンプトへ追加することを【徹底的に禁止】せよ。
+- 代わりに、プロンプトの冒頭から "Lo-fi analog instant camera film, heavy grainy texture" をメイン画質トーンとして強制適用せよ。さらに "Classic white instant photo frame with a wide, thick white border on the ${borderSide} side" というフレーム記述を英語プロンプトの文中に盛り込むこと。`;
             } else {
                 artStyleSpecificInstruction = `
-- 【チェキ風画質の完全排除】: 通常時条件として "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" などを適用し、ライティングや演出を精緻に反映せよ。"non-existent person" を組み込み非実在性を明記せよ。`;
+- 【チェキ風画質の完全排除】: 通常時条件として "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" などを適用し、ライティングや演出を精緻に反映せよ。"non-existent person" などの表現を組み込み、非実在性を明記せよ。`;
             }
 
+            // 【超重要】12項目の完璧なロンダリングルールをAIに適用
             const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}
-【表現最適化ガイドライン】
-1. 肉体描写の言い換え: "b*st v*lume", "cl*avage", "h*ge br*asts", "e*otic fl*sh", "f*t"等は絶対禁止。代わりに "graceful feminine silhouette", "generously full upper contours" 等のアパレル用語・デッサン用語へロンダリングせよ。胸の重みは "plush upper volume with a natural, elegant heavy drape gracefully supported by the fabric" と表現せよ。
-2. 形容詞("s*xy"等)禁止 ➔ "captivating aura"等へ。
-3. 過激素材("m*cro","w*t-l*ok"等)禁止 ➔ "minimal","matte finish"等へ。
-4. 極小表現禁止 ➔ "minimalist triangular cut"等へ。ネガティブに"full coverage, sports bra, large cups"等追加。
-5. ネガティブメタ単語("n*fw","c*nsorship")禁止 ➔ "inappropriate attire"等へ。
-6. 影表現("sh*dow b*lge")禁止 ➔ "artifacts on clothes"等へ。
-7. 直接的脱衣表現禁止 ➔ "off-shoulder clothing layout"等レイアウト用語へ。
-8. 下着名称("b*a","p*nties"等)禁止 ➔ "two-piece ensemble"等へ。
-9. ルーズ化防止: "top","shorts"単体禁止 ➔ 構造明記。ネガティブに"roomwear, camisole"追加。
-10. 姿勢の崩壊防止: 座り・膝立ち等の場合、ネガティブに"chair, stool, bench, standing, unnatural leg anatomy, floating"を追加。
-11. 【マシュマロ物理と張力・食い込みの高級英訳】: 
-  - 腰回りの紐の食い込みは "delicate thread-like side ties creating a soft, yielding indentation against the exceptionally plush waistline" 等の「張力(tension)」と「沈み込み(yielding contour)」の対比を用いて極上の柔らかさを視覚化せよ。
-  - ハイレグカッティングは "dramatic high-rise leg openings extending elegantly above the hip bone" 等の高級アパレル用語へロンダリングし脚長効果を強調せよ。
-  - バックスタイルのヒップへの食い込みは "minimalist cheeky cut back elegantly tracing and gently sinking into the plush contours" 等と表現せよ。
-12. ボディ・曲線美(bodyLine)は、"elegant S-curve silhouette", "graceful vertical body line" 等のデッサン表現へ変換せよ。
-13. 光演出(lighting)は、"cinematic volumetric lighting", "dramatic rim light", "soft diffused daylight" 等の写真・照明用語に変換し、光の方向と陰影を強調せよ。
-14. FACSは"AU12C"のみ反映。
-15. aesthetic("cute"/"beautiful")を自然に追加。
+【ハイエンド・ポートレート最適化ガイドライン（絶対厳守）】
+1. 直接的な肉体・部位表現の禁止: "b*st v*lume", "cl*avage", "h*ge br*asts", "f*t", "hip b*ne"等は絶対禁止。代わりに "graceful feminine silhouette", "elegant high-cut leg lines", "defined curves" 等の洗練されたシルエット・ファッション構造用語へロンダリングせよ。
+2. 形容詞の洗練: "s*xy"等禁止 ➔ "captivating aura", "alluring"等へ。
+3. 過激素材の回避: "m*cro", "w*t-l*ok"等禁止 ➔ "matte finish", "minimal"等へ。
+4. 食い込み表現の回避: 肌への食い込み("soft overspill", "sinking into")は、"fitting smoothly and seamlessly against the skin" (シームレスな密着感) や "naturally complementing the graceful feminine silhouette" へと言い換えよ。
+5. 肌見せのアパレル表現: 肌の露出を直接記述せず、"sleek open-back", "off-shoulder clothing layout" 等のデザインレイアウトとして表現せよ。
+6. シルエットと曲線美: "elegant S-curve silhouette", "graceful vertical body line" 等のデッサン表現へ変換せよ。
+7. 光演出: "cinematic volumetric lighting", "dramatic rim light" 等の写真・照明用語に変換し、陰影の美しさを強調せよ。
+8. 姿勢の崩壊防止: 座り等の場合、ネガティブに"chair, stool, standing, unnatural leg anatomy, floating"を追加せよ。
+9. ネガティブへのメタワード追加禁止: "n*fw", "c*nsorship", "s*hadow b*lge" 等のワードはネガティブプロンプトにも入れるな。代わりに "inappropriate attire", "unpolished composition", "artifacts on clothes", "unnatural fabric folds" を使え。
+10. FACSは"AU12C"のみ反映。非実在性("non-existent person")明記。
+11. aesthetic("cute"/"beautiful")を自然に追加。
 ${routeSpecificInstruction}
 ${artStyleSpecificInstruction}`;
 
@@ -563,6 +567,7 @@ ${artStyleSpecificInstruction}`;
                             responseData = await response.json();
                             const candidate = responseData.candidates?.[0];
                             
+                            // セーフティフィルタリングの検知
                             if (candidate?.finishReason === 'SAFETY') {
                                 throw new Error("SAFETY_BLOCK");
                             }
@@ -577,7 +582,7 @@ ${artStyleSpecificInstruction}`;
                         if (err.message === "SAFETY_BLOCK") {
                             setStatusMessage('エラー: セーフティ制限に抵触');
                             setIsProcessing(false);
-                            return; 
+                            return; // 制限に引っかかったら処理を中止
                         }
                         continue;
                     }
@@ -597,6 +602,7 @@ ${artStyleSpecificInstruction}`;
                 return;
             }
 
+            // 変数 responseData からデータを取り出すため、already read 例外が発生しない
             const rawText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
             
             const cleanText = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
@@ -621,7 +627,7 @@ ${artStyleSpecificInstruction}`;
                     <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                         <Icon name="sparkles" className="animate-pulse text-pink-500" /> IDOL Designer PRO
                     </h1>
-                    <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.9.8 Production Model</span>
+                    <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.9.5 Production Model</span>
                 </div>
                 <div className="flex gap-2">
                     <button 
@@ -731,7 +737,7 @@ ${artStyleSpecificInstruction}`;
 
                 <div className="h-6 flex items-center justify-center">
                     {statusMessage && (
-                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 bg-white ${statusMessage.includes('エラー') || statusMessage.includes('失敗') || statusMessage.includes('制限') ? 'text-red-500 border border-red-100' : 'text-pink-500 border border-pink-50'}`}>
+                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 bg-white text-pink-500`}>
                             {statusMessage.toUpperCase()}
                         </div>
                     )}
@@ -840,7 +846,6 @@ ${artStyleSpecificInstruction}`;
                         </div>
                     </div>
 
-                    {}
                     {sections.map((section, idx) => {
                         const fillCount = getSectionFillCount(section.fields);
                         const totalCount = section.fields.length;
@@ -867,7 +872,7 @@ ${artStyleSpecificInstruction}`;
 
                                 {openSections[idx] && (
                                     <div className="p-4 bg-white grid grid-cols-2 gap-3.5">
-                                        {idx === 3 && (
+                                        {idx === 1 && (
                                             <div className="col-span-2 mb-2 bg-slate-50 p-2 rounded-2xl border border-slate-100">
                                                 <div className="flex gap-1 text-[10px] font-bold">
                                                     <button type="button" onClick={() => setExpressionMode('standard')} className={`flex-1 py-2 rounded-xl transition-all ${expressionMode === 'standard' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}>STANDARD 表情 🎭</button>
@@ -967,7 +972,6 @@ ${artStyleSpecificInstruction}`;
                     </div>
                 </div>
 
-                {}
                 <div ref={resultRef} className="pb-40 space-y-4 animate-fade-in">
                     {englishPrompt && (
                         <div className="space-y-4">
@@ -994,7 +998,7 @@ ${artStyleSpecificInstruction}`;
                 </div>
             </main>
 
-            {}
+            {/* ズームエディタ */}
             {focusField && (
                 <div className="fixed inset-0 bg-slate-950/95 z-[1000] flex flex-col justify-between p-4 animate-fade-in">
                     <div className="flex justify-between items-center pb-3 border-b border-slate-800">
@@ -1052,7 +1056,6 @@ ${artStyleSpecificInstruction}`;
                 </div>
             )}
             
-            {}
             {copyFeedback && !FIELD_KEYS.includes(copyFeedback) && (
                 <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-full shadow-2xl text-[10px] font-black z-[110] border border-slate-700 animate-in fade-in slide-in-from-bottom-4 tracking-widest uppercase">
                     Copied
