@@ -4,6 +4,7 @@ window.apiKey = ""; // 本番テスト時やCanvasランタイムでは空文字
 window.proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
 window.getApiUrl = (endpoint, modelOverride) => {
+    // 優先フォールバックで指定されたモデルを使用、指定がなければデフォルト(3.5)を適用
     const model = modelOverride || "gemini-3.5-flash";
     if (window.isPreview) {
         return `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${window.apiKey}`;
