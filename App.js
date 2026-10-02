@@ -34,10 +34,10 @@ const Icon = ({ name, className = "" }) => {
 
 function App() {
     const sections = [
-        { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
-        { title: "顔・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle', 'aesthetic'] },
-        { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyFrame', 'threeSizes'] },
-        { title: "衣装・ポーズ・演出設定", fields: ['hairAccessory', 'outfit', 'bodyInterface', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
+        { title: "1. 髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
+        { title: "2. 顔・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle', 'aesthetic'] },
+        { title: "3. 身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyFrame', 'threeSizes'] },
+        { title: "4. 衣装・ポーズ・演出", fields: ['hairAccessory', 'outfit', 'bodyInterface', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
     ];
 
     const createEmptyState = () => {
@@ -310,48 +310,29 @@ function App() {
         });
     };
 
-    const handleUpload = async (e, mode) => {
-        const file = e.target.files?.[0];
-        if (!file || isAnalyzing) return;
-        setIsAnalyzing(mode);
-        setStatusMessage('分析中...');
-        try {
-            const { b64, pUrl, b64Preview } = await safeProcessImage(file);
-            setPreviews(prev => ({ ...prev, [mode]: pUrl, [`${mode}Stored`]: b64Preview }));
-            await runAnalysis(b64, mode);
-        } catch (err) {
-            setStatusMessage('Error');
-            setIsAnalyzing(null);
-        } finally { if(e.target) e.target.value = ''; }
-    };
-
     const runAnalysis = async (base64, mode) => {
-        let delay = 2000;
+        let delay = 2000; // API制限回避のための初期遅延
         let responseData = null;
         let success = false;
         
         const keyListString = FIELD_KEYS.join(', ');
 
-        const analysisSystemInstruction = `
-- 役割: 最高峰のキャラクターデザイナー兼身体物理監査官。
-- タスク: 画像をミリ単位で超精密にスキャンし、指定されたJSONを出力せよ。
-- 絶対ルール:
-  1. 純粋なJSONのみ。解説・装飾厳禁。
-  2. キー名は【対象リスト】と完全一致。
-  3. 値はネストせずフラットな1つの文字列。
-  4. 不明項目も空文字で出力。
-  5. 【重要】値は全て【日本語】で記述。英語は禁止。
-- 監査項目:
-  - expression/facs: 動的変化(ウインク等)はここに集約。
-  - 顔パーツ造形: 顔の向き(横顔や見返り等)の情報は完全に排除し、「顔を正面に向けた場合の純粋なパーツ配置やバランス」のみを逆算して端的に出力せよ。
-  - height/threeSizes/facePlacement: 数値は避け日本語テキストで。特にバストの重力感や豊満さを詳細に。
-  - skinTexture: 肉質の差(引き締まっているが柔らかい等)を詳細に。
-  - bodyInterface: 物理境界を克明な日本語で。特に「極細の紐や水着の縁が、腰回りやヒップの肌にどのように沈み込み（食い込み）、張力と極上の柔らかさのコントラストを生み出しているか」を精密に言語化せよ。
-  - pose: 下半身の接地状態・自重のかかり方を明記。
-  - bodyLine: ポーズやアングルによって生み出される「縦のライン（脚長効果など）」や「S字カーブなどの曲線美」を美的・解剖学的な視点で出力せよ。
-  - lighting: 光の方向（順光、逆光、サイド、トップ等）、種類、質、および陰影のグラデーションを精密にスキャンし出力せよ。
-  - additionalNotes: モデルの人種（例：日本人、アジア系など）を必ず含めること。
-- 対象リスト: ${keyListString}`;
+        const analysisSystemInstruction = `あなたは世界最高峰のポートレート・グラビア監査官です。
+画像をミリ単位で超精密にスキャンし、指定されたキーのJSONのみを出力してください。
+【絶対ルール】
+1. 純粋なJSONのみ。解説・装飾厳禁。
+2. キー名は【対象リスト】と完全一致させること。
+3. 値は全て【日本語】で記述。
+【攻めの監査項目】
+- expression/facs: 動的変化(ウインク等)はここに集約。
+- 顔パーツ造形: 顔の向き(横顔や見返り等)の情報は完全に排除し、「顔を正面に向けた場合の純粋なパーツ配置やバランス」のみを逆算して端的に出力せよ。
+- height/threeSizes: 「こぼれるような豊かなボリューム」「マシュマロのようなふくよかさ」など、重力感や肉感の美しさを克明な日本語で書き出せ。
+- bodyInterface: 物理境界を徹底的に攻めよ。「極細の紐が放つ張力と、それに優しく沈み込むマシュマロのような肌のコントラスト」「ボトムスの鋭く高いレッグカッティング（ハイレグ）が腰骨の優美なラインを強調している」「ミニマルなバックカッティングがヒップの豊かな輪郭になぞりながら柔らかく沈み込んでいる」などを執拗に観察し、克明に言語化せよ。
+- bodyLine: ポーズやアングルが生み出す「縦のライン（脚長効果など）」や「S字カーブの曲線美」を美術解剖学的に出力せよ。
+- lighting: 光の方向、種類、質、およびそれらが肌や身体の曲線に落とす陰影（ハイライトとシャドウのグラデーション）を精密にスキャンせよ。
+- additionalNotes: AIが推測したモデルの人種（日本人、アジア系等）を必ず追記に含めること。
+【対象リスト】
+${keyListString}`;
 
         try {
             const FALLBACK_MODELS = ['gemini-3.5-flash', 'gemini-3.0-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
@@ -370,7 +351,6 @@ function App() {
                             body: JSON.stringify({
                                 contents: [{ 
                                     parts: [
-                                        { text: "添付された画像キャラクターのビジュアル要素を精密にスキャンし、指示されたフィールドキーリストに対応する日本語のJSONデータを出力してください。" },
                                         { inlineData: { mimeType: "image/jpeg", data: base64 } }
                                     ] 
                                 }],
@@ -385,7 +365,7 @@ function App() {
                             success = true;
                             break;
                         } else if (response.status === 404 || response.status === 429 || response.status === 503) {
-                            // Too Many Requests: 次のモデルへ行く前に少し待機
+                            // 制限エラー時はスマートに待機して次のモデルへ
                             await new Promise(resolve => setTimeout(resolve, 500));
                             continue;
                         } else {
@@ -402,12 +382,12 @@ function App() {
                 if (attempt < 5) {
                     setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 1.5;
+                    delay *= 1.5; // バックオフ
                 }
             }
 
             if (!success || !responseData) {
-                setStatusMessage('制限中: 時間をおいてください');
+                setStatusMessage('制限中: しばらく待ってください');
                 return;
             }
 
@@ -457,7 +437,7 @@ function App() {
             setStatusMessage('解析失敗');
             console.error(e);
         } finally {
-            setIsAnalyzing(null);
+            setTimeout(() => setIsAnalyzing(null), 1000);
         }
     };
 
@@ -466,7 +446,7 @@ function App() {
         setIsProcessing(true);
         setStatusMessage('生成中...');
         
-        let delay = 2000;
+        let delay = 2000; // API制限回避のための初期遅延
         let responseData = null;
         let success = false;
 
@@ -475,15 +455,15 @@ function App() {
             const activeData = { ...selections };
             if (expressionMode === 'facs') activeData.expression = ""; else activeData.facs = "";
 
-            // 顔の呪縛解除：構図を優先するため、顔の要素を後ろに追いやる
+            // 顔の呪縛解除 ＆ アングルの絶対優先化
             const PRIORITY_ORDER = [
-                'artStyle', 'cameraAngle', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting',
-                'age', 'height', 'bodyFrame', 'threeSizes',
-                'skinColor', 'skinTexture', 'bodyInterface',
-                'outfit', 'hairAccessory',
-                'hairStyle', 'hairBangs', 'hairColor', 'hairTexture',
-                'aesthetic', 'additionalNotes',
-                'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle'
+                'cameraAngle', 'artStyle', 'pose', 'bodyLine', 'situation', 'lighting', // アングルと構図を最優先
+                'age', 'height', 'bodyFrame', 'threeSizes', // 次に全体的な体型
+                'skinColor', 'skinTexture', 'bodyInterface', // 肌や身体の詳細
+                'outfit', 'hairAccessory', // 衣装
+                'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', // 髪型
+                'aesthetic', 'additionalNotes', // 印象や追記
+                'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs' // 顔の詳細は最後
             ];
 
             const allActiveKeys = Object.keys(activeData);
@@ -506,10 +486,10 @@ function App() {
 
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
                 routeSpecificInstruction = `
-- 露出構造明記。ネガティブに"roomwear, camisole, boxers"追加。
-- お腹周りの露出強制 ➔ "midriff-baring design revealing the navel"。ネガティブに"fabric covering the belly"追加。`;
+- 【極小・露出表現の高級化】"m*cro", "t*ny"等は禁止。"minimalist triangular cut", "narrow fabric panels"等へ変換。
+- 【面積増大・部屋着化防止】"top", "shorts"単体禁止。ネガティブに"full coverage, sports bra, tank top, roomwear, boxers, camisole, hidden navel"を必ず追加せよ。`;
             } else {
-                routeSpecificInstruction = `- 衣装カッティングを幾何学的に英訳。`;
+                routeSpecificInstruction = `- 衣装カッティングを幾何学的でエレガントな英語に翻訳せよ。`;
             }
 
             const artStyleText = selections.artStyle && (selections.artStyle || selections.ratio) ? ((selections.artStyle || "") + " " + (selections.ratio || "")).toLowerCase() : "";
@@ -518,24 +498,23 @@ function App() {
             if (artStyleText.match(/(54:86|cheki|polaroid|instant|analog|vintage)/i)) {
                 const borderSide = selections.orientation === 'landscape' ? 'RIGHT' : 'BOTTOM';
                 artStyleSpecificInstruction = `
-- プロンプトの冒頭から "Lo-fi analog instant camera film, heavy grainy texture" をメイン画質トーンとして強制適用せよ。さらに "Classic white instant photo frame with a wide, thick white border on the ${borderSide} side" というフレーム記述を英語プロンプトの文中に盛り込むこと。`;
+- 【チェキ風Lo-Fi画質ロック】: "Photorealistic, 8k" 等は絶対禁止。"Lo-fi analog instant camera film, heavy grainy texture" を冒頭に配置せよ。また "Classic white instant photo frame with a wide, thick white border on the ${borderSide} side" を必ず含めよ。`;
             } else {
                 artStyleSpecificInstruction = `
-- 通常時条件として "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" などを適用し、ライティングや演出を精緻に反映せよ。"non-existent person" を組み込み非実在性を明記せよ。`;
+- 【チェキ風画質の完全排除】: "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" を適用し、"non-existent person" を含めて非実在性を明記せよ。`;
             }
 
-            // セーフティフィルター誤爆防止の伏字化とルール短縮
-            const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}
-- 肉体・露出・形容の洗練: "b*st", "cl*avage", "h*ge br*asts", "f*t", "s*xy"等は絶対禁止。"graceful feminine silhouette", "captivating aura" 等へロンダリング。
-- 極小表現禁止: "m*cro", "t*ny"禁止 ➔ "minimalist triangular cut"等へ。ネガに"full coverage, sports bra"追加。
-- メタ単語禁止: "n*fw", "c*nsorship", "sh*dow b*lge"禁止 ➔ "inappropriate attire", "artifacts on clothes"等へ。
-- 下着名称・脱衣禁止: "b*a", "p*nties", "open-t*rso"禁止 ➔ "two-piece ensemble", "off-shoulder clothing layout"等へ。
-- 姿勢の崩壊防止: 座り等の場合、ネガに"chair, standing, floating"を追加。
-- 【食い込み・沈み込みの安全な表現】: "y*elding ind*ntation", "s*nking into"等の過激な食い込み表現は禁止。代わりに "fitting smoothly and seamlessly against the skin" (肌にスムーズかつシームレスに密着する) や "naturally complementing the graceful feminine silhouette" へロンダリングせよ。
-- ハイレグ・カッティング表現: "h*gh-leg"禁止 ➔ "dramatic high-rise leg openings extending elegantly above the hip" 等の高級アパレル用語へ。
-- ボディ・曲線美(bodyLine): "elegant S-curve silhouette", "graceful vertical body line" 等。
-- 光演出(lighting): "cinematic volumetric lighting", "dramatic rim light" 等のプロ写真用語へ変換。
-- FACSは"AU12C"のみ反映。
+            const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力: {"positive": "...", "negative": "..."}
+【表現最適化ガイドライン(攻めと守り)】
+1. 【アングルの絶対遵守】生成プロンプトの冒頭(品質タグの直後)に、カメラアングルと構図(全景/寄りなど)を最優先で配置し、写真・映画用語で強調せよ。ネガティブプロンプトにも、アングルと矛盾する単語(全身指定時のクロップ等)を追加して防衛せよ。
+2. 肉体直接描写の言い換え: "b*st", "cl*avage", "e*otic", "f*t"等は絶対禁止。➔ "graceful feminine silhouette", "plush upper volume with a natural heavy drape gracefully supported by the fabric" 等のデッサン用語へロンダリングせよ。
+3. セクシー形容詞("s*xy"等)禁止 ➔ "captivating aura"等へ。
+4. 過激素材・メタ単語("n*fw", "w*t-look")禁止 ➔ "inappropriate attire", "matte finish"等へ。
+5. 【ハイレグと食い込みの高級化】: "h*gh-leg"は "dramatic high-rise leg openings extending elegantly above the hip"、"t-b*ck"は "minimalist cheeky cut back elegantly tracing and gently sinking into the plush contours"、極細紐の食い込みは "delicate thread-like side ties creating a soft, yielding indentation against the exceptionally plush waistline" とし、張力と極上の柔らかさのコントラストを視覚化せよ。
+6. ボディ曲線美(bodyLine)は "elegant S-curve silhouette", "graceful vertical body line" 等へ変換せよ。
+7. 光演出(lighting)は "cinematic volumetric lighting", "dramatic rim light" 等の写真用語へ変換せよ。
+8. FACSは"AU12C"等のみ。非実在性("non-existent person")明記。
+9. aesthetic("cute"/"beautiful")を自然に追加。
 ${routeSpecificInstruction}
 ${artStyleSpecificInstruction}`;
 
@@ -569,8 +548,7 @@ ${artStyleSpecificInstruction}`;
                             success = true;
                             break;
                         } else if (response.status === 404 || response.status === 429 || response.status === 503) {
-                            // 制限時は少し待ってから次のモデルへ
-                            await new Promise(resolve => setTimeout(resolve, 500));
+                            await new Promise(resolve => setTimeout(resolve, 500)); // 短い待機でスパム判定回避
                             continue;
                         } else {
                             throw new Error("HTTP " + response.status);
@@ -579,7 +557,7 @@ ${artStyleSpecificInstruction}`;
                         if (err.message === "SAFETY_BLOCK") {
                             setStatusMessage('エラー: セーフティ制限に抵触');
                             setIsProcessing(false);
-                            return;
+                            return; 
                         }
                         continue;
                     }
@@ -591,12 +569,12 @@ ${artStyleSpecificInstruction}`;
                 if (attempt < 5) {
                     setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 1.5;
+                    delay *= 1.5; // バックオフ
                 }
             }
 
             if (!success || !responseData) {
-                setStatusMessage('制限中: 時間をおいてください');
+                setStatusMessage('制限中: しばらく待ってください');
                 return;
             }
 
@@ -721,15 +699,6 @@ ${artStyleSpecificInstruction}`;
                         ))}
                     </div>
                 </section>
-
-                <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl text-[9px]">
-                     <div className="flex items-start gap-2">
-                         <Icon name="info" className="text-blue-500 w-4 h-4 mt-0.5 shrink-0" />
-                         <div>
-                            <p className="text-blue-700 font-bold italic">【FICTION】生成内容はすべて架空の創作物であり、実在の人物とは関係ありません。</p>
-                         </div>
-                     </div>
-                </div>
 
                 <div className="h-6 flex items-center justify-center">
                     {statusMessage && (
@@ -868,7 +837,6 @@ ${artStyleSpecificInstruction}`;
 
                                 {openSections[idx] && (
                                     <div className="p-4 bg-white grid grid-cols-2 gap-3.5">
-                                        {}
                                         {idx === 3 && (
                                             <div className="col-span-2 mb-2 bg-slate-50 p-2 rounded-2xl border border-slate-100">
                                                 <div className="flex gap-1 text-[10px] font-bold">
@@ -888,7 +856,7 @@ ${artStyleSpecificInstruction}`;
                                             if (id === 'facs' && !isFACSMode) disabledOpacity = 'opacity-30 pointer-events-none grayscale';
 
                                             return (
-                                                <div key={id} className={`${id === 'additionalNotes' || id === 'outfit' || id === 'situation' || id === 'bodyInterface' || id === 'aesthetic' ? 'col-span-2' : ''} ${disabledOpacity} transition-all duration-300`}>
+                                                <div key={id} className={`${id === 'additionalNotes' || id === 'situation' || id === 'bodyInterface' || id === 'aesthetic' ? 'col-span-2' : ''} ${disabledOpacity} transition-all duration-300`}>
                                                     <div className="flex justify-between items-center mb-1">
                                                         <label className="text-[7px] font-black text-slate-400 uppercase">{LABEL_MAP[id] || id}</label>
                                                         <div className="flex items-center gap-1.5">
@@ -995,7 +963,7 @@ ${artStyleSpecificInstruction}`;
                 </div>
             </main>
 
-            {}
+            {/* ズームエディタ */}
             {focusField && (
                 <div className="fixed inset-0 bg-slate-950/95 z-[1000] flex flex-col justify-between p-4 animate-fade-in">
                     <div className="flex justify-between items-center pb-3 border-b border-slate-800">

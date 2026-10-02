@@ -1,10 +1,9 @@
 // config.js
 window.isPreview = typeof __app_id !== 'undefined';
-window.apiKey = ""; // 本番テスト時やCanvasランタイムでは空文字のままで動作します
+window.apiKey = ""; 
 window.proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
 window.getApiUrl = (endpoint, modelOverride) => {
-    // 優先フォールバックで指定されたモデルを使用、指定がなければデフォルト(3.5)を適用
     const model = modelOverride || "gemini-3.5-flash";
     if (window.isPreview) {
         return `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${window.apiKey}`;
@@ -12,7 +11,6 @@ window.getApiUrl = (endpoint, modelOverride) => {
     return `${window.proxyBaseUrl}/v1beta/models/${model}:${endpoint}`;
 };
 
-// 共通セーフティ設定
 window.safetySettings = [
     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
     { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
@@ -20,7 +18,6 @@ window.safetySettings = [
     { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
 ];
 
-// 43項目定義 (outfitDetail, bodyTypeを廃止し、expressionを移動)
 window.FIELD_KEYS = [
     'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', 
     'faceOutline', 'facePlacement', 
@@ -34,7 +31,6 @@ window.FIELD_KEYS = [
     'aesthetic', 'additionalNotes'
 ];
 
-// ラベルマッピング定義
 window.LABEL_MAP = {
     hairStyle: '髪型', hairBangs: '前髪', hairColor: '髪色', hairAccessory: 'ヘアアクセ', hairTexture: '髪質',
     faceOutline: '輪郭', facePlacement: '顔のパーツ配置比率', 
@@ -48,23 +44,20 @@ window.LABEL_MAP = {
     artStyle: '画風', cameraAngle: 'アングル', aesthetic: '印象補正', additionalNotes: '追記' 
 };
 
-// サジェスト辞書（bodyTypeの内容をthreeSizesに統合、日本人追加）
+// 攻めのサジェスト辞書（アングルを専門写真用語に強化）
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
         { label: 'ボブカット 👩', value: 'Asymmetric sleek bob cut with clean razor-sharp edges' },
-        { label: 'ストレートロング ✨', value: 'Flawless waist-length silky straight hair falling naturally' },
-        { label: 'お団子 🍡', value: 'Cute double space buns (odango layout)' }
+        { label: 'ストレートロング ✨', value: 'Flawless waist-length silky straight hair falling naturally' }
     ],
     hairBangs: [
         { label: 'パッツン ✂️', value: 'Neat straight-cut bangs resting perfectly right above eyebrows' },
-        { label: 'シースルー 💨', value: 'Trendy light and airy see-through bangs' },
-        { label: 'ななめ流し 🧭', value: 'Soft side-swept bangs cascading to the side' }
+        { label: 'シースルー 💨', value: 'Trendy light and airy see-through bangs' }
     ],
     hairColor: [
         { label: '艶黒髪 🖤', value: 'Deep obsidian black with high-gloss reflective silver highlights' },
-        { label: 'アッシュブラウン 🪵', value: 'Soft smoky mist ash brown' },
-        { label: 'ミルクティー ☕', value: 'Warm creamy milk tea beige' }
+        { label: 'アッシュブラウン 🪵', value: 'Soft smoky mist ash brown' }
     ],
     hairAccessory: [
         { label: '白いリボン 🤍', value: 'Oversized double silk white ribbon bows' },
@@ -144,9 +137,9 @@ window.FIELD_SUGGESTIONS = {
         { label: 'てへぺろ 😜', value: 'Playful cheeky wink with a delicate pink tongue peeking out' }
     ],
     facs: [
-        { label: '笑顔 😃', value: 'AU12C + AU6B (smirk + eye squeeze)' },
-        { label: '眠たげ 😴', value: 'AU43 (drooping eyelids) + AU26 (lips parted)' },
-        { label: '微不満 😐', value: 'AU15D (lip corner depress) + AU17B (chin raise)' }
+        { label: '笑顔 😃', value: 'AU12C + AU6B' },
+        { label: '眠たげ 😴', value: 'AU43 + AU26' },
+        { label: '微不満 😐', value: 'AU15D + AU17B' }
     ],
     makeupStyle: [
         { label: 'ステージ盛 ✨', value: 'Glistening stage-ready professional idol make-up, sparkling high-fidelity pigments' },
@@ -161,11 +154,10 @@ window.FIELD_SUGGESTIONS = {
         { label: 'リアル毛穴 📸', value: 'Hyper-realistic raw skin texture with fine pores, peach fuzz, and natural oils' }
     ],
     bodyInterface: [
-        { label: '深いハイレグの境界 🍑', value: 'ボトムスが腰骨の上まで鋭角に深く切り込まれたハイカットラインを描き、むっちりとした脚の長さとヒップの優雅な曲線をドラマチックに強調している' },
-        { label: 'ヒップラインの美しい沈み込み 🍑', value: 'ボトムスのバックカッティングが極めて柔らかいヒップの曲線に沿って優しく沈み込み、なめらかで豊かな肉の起伏と美しい脚線美を強調している' },
-        { label: '極細紐の張力と肌の沈み込み 🎀', value: '極細の糸のような紐の確かな張力と、それに優しく沈み込む極めて柔らかいマシュマロのような肌のコントラストが、極上の柔らかさと自然な肉感を視覚化している' },
-        { label: '柔らかい肌への沈み込み ☁️', value: '布地が極めて柔らかくしなやかな肌に優しく沈み込み、マシュマロのようなふかふかの質感と身体の自然な柔らかさを際立たせている' },
-        { label: '胸の自重と谷間 🕊️', value: '極細の布地がこぼれるような豊かなボリュームと自然な重みを優雅に支え、深く開いたネックラインに沿ってリアルで美しい起伏と陰影を生み出している' }
+        { label: '極細紐の沈み込み 🎀', value: '極細のサイドストリングが放つ確かな張力と、それに優しく沈み込むマシュマロのように柔らかな肌のコントラストが、極上の肉感とふくよかさを克明に視覚化している' },
+        { label: 'ハイレグの構造美 🍑', value: 'ボトムスの鋭く高いレッグカッティングが、腰骨の優美なラインと脚の長さを強調し、優雅な曲線美を最大化している' },
+        { label: 'ヒップへの食い込み 🍑', value: 'ミニマルなバックカッティングが、ヒップの豊かな輪郭を優雅になぞりながら柔らかく沈み込み、なめらかな肉の起伏を強調している' },
+        { label: '胸の自重と谷間 🕊️', value: '布地がこぼれるような豊かなボリュームと自然な重み（ドレープ感）を優雅に支え、深く開いたカッティングに沿ってリアルで美しい起伏と陰影を生み出している' }
     ], 
     molesFreckles: [
         { label: '泣きぼくろ 👁️', value: 'Single charming dark beauty mark right below her left eye corner' },
@@ -185,14 +177,12 @@ window.FIELD_SUGGESTIONS = {
     ],
     threeSizes: [
         { label: 'スレンダー×マシュマロ 🌿☁️', value: 'Toned yet exceptionally soft body contour, delicate balance of a slender frame and plush, yielding curves especially around the hips' },
-        { label: '重力を感じる豊満さ ☁️', value: 'Generously full upper torso with plush volume and a natural heavy drape resting naturally, creating a breathtaking and elegant silhouette' },
-        { label: '引き締まりと柔らかさの同居 ⏳', value: 'Gentle firmness in the waist combined with yielding plush softness in the hips and lower torso, balanced elegant proportions' },
-        { label: 'スレンダー 🧵', value: 'Slender graceful silhouette, delicate collarbones, flat midriff' }
+        { label: '重力を感じる豊満さ ☁️', value: 'Voluptuous silhouette with generously full upper contours featuring a natural, elegant heavy drape gracefully supported by the garment' },
+        { label: '引き締まりと柔らかさの同居 ⏳', value: 'Gentle firmness in the waist combined with yielding plush softness in the hips and lower torso, balanced elegant proportions' }
     ],
     outfit: [
-        { label: '極小の白紐ビキニ 👙', value: 'Minimalist white string two-piece swimwear with triangular cups and delicate thread-like side-ties providing structural tension' },
-        { label: 'シアーハイレグスーツ 🩱', value: 'Elegant white high-cut bodysuit with sheer mesh side panels and delicate floral lace appliqué on the bust' },
-        { label: '繊細なブルーレースのセット 🎀', value: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire, sheer lace net linings, and scalloped edges softly resting against the skin' },
+        { label: '極小の白紐ビキニ 👙', value: 'Minimalist white string two-piece swimwear featuring ultra-fine thread-like side-ties and minimalist triangular cuts' },
+        { label: 'シアーハイレグスーツ 🩱', value: 'Elegant white bodysuit with sheer mesh panels, delicate lace appliqué, and dramatic high-rise leg openings extending elegantly above the hip' },
         { label: '王道ドレス 👗', value: 'Tier-layered chiffon frilled idol stage dress' },
         { label: '夏祭り浴衣 👘', value: 'Traditional summer cotton yukata adorned with floral motifs, tied with a contrasting obi sash' }
     ],
@@ -213,29 +203,31 @@ window.FIELD_SUGGESTIONS = {
         { label: '白いベッドシーツ 🛏️', value: 'Resting on soft, wrinkled white bed sheets in a bright morning room' }
     ],
     lighting: [
-        { label: '窓からの自然光 ☀️', value: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours' },
+        { label: '窓からの自然光 ☀️️', value: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours' },
         { label: 'スタジオ照明 💡', value: 'Cinematic key studio light with a soft volumetric hair backlight' }
     ],
     artStyle: [
         { label: '実写DSLRグラビア 📷', value: 'Hyper-realistic gravure raw photograph taken with high-end DSLR, sharp focus, photo masterclass 8k' },
         { label: 'アニメアート 🎨', value: 'Modern aesthetic high-fidelity digital anime illustration, clean lines, vibrant cell shading' }
     ],
+    // ★アングル表現の強力化★
     cameraAngle: [
-        { label: 'アイレベル正面 👁️', value: 'Straight-on eye-level portrait shot, making intense direct eye contact' },
-        { label: '後ろ・斜めローアングル 🔄', value: 'Captured from a middle-low angle from behind, emphasizing the elegant S-curve and full silhouette from the back to the lower torso' }
+        { label: 'ハイアングル(俯瞰) 🦅', value: 'high angle shot, looking down at her, dynamic foreshortening' },
+        { label: 'ローアングル(煽り) 🐛', value: 'low angle shot, looking up at her, emphasizing vertical lines and stature' },
+        { label: '全身ショット 🧍‍♀️', value: 'full body shot, establishing shot, visible head to toe, wide angle' },
+        { label: '後ろから(背面) 🔄', value: 'shot from behind, framing her back profile, emphasizing the elegant S-curve silhouette' }
     ],
     aesthetic: [
         { label: 'かわいい系 💕', value: 'cute' },
         { label: '美人/きれい系 🔮', value: 'beautiful' }
     ],
     additionalNotes: [
-        { label: '日本人 🇯🇵', value: 'Japanese idol facial features, delicate pure Asian aesthetic' },
+        { label: '日本人顔指定 🇯🇵', value: 'Japanese idol facial features, delicate pure Asian aesthetic' },
         { label: '傑作/高詳細 🏆', value: 'masterpiece, highly detailed features, intricate clothing cuts' },
         { label: 'シネマチック深み 🎬', value: 'award-winning portrait photography, cinematic depth of field, sharp focus' }
     ]
 };
 
-// 共通インスピレーション用テーマプリセット
 window.INSPI_THEMES = {
     plain_model: {
         name: '人物のみクリア 👤',
@@ -266,8 +258,10 @@ window.INSPI_THEMES = {
     voluptuous_bikini: {
         name: '豊満×極細紐ビキニ 🏖️',
         data: {
-            bodyInterface: '極細の糸のような紐の確かな張力と、それに優しく沈み込む極めて柔らかいマシュマロのような肌のコントラストが、極上の柔らかさと自然な肉感を視覚化している',
-            outfit: 'Minimalist white string two-piece swimwear with triangular cups and delicate thread-like side-ties providing structural tension',
+            threeSizes: 'Generously full upper torso with plush volume resting naturally, creating a breathtaking and elegant silhouette',
+            skinTexture: 'Extremely soft, supple skin texture, smooth and yielding like marshmallow',
+            bodyInterface: '極細のサイドストリングが放つ確かな張力と、それに優しく沈み込むマシュマロのように柔らかな肌のコントラストが、極上の肉感とふくよかさを克明に視覚化している',
+            outfit: 'Minimalist white string two-piece swimwear featuring ultra-fine thread-like side-ties and minimalist triangular cuts',
             pose: 'Kneeling pose, resting on both knees, upright torso, gently pulling the side string of the bottoms',
             situation: 'Kneeling on a beautiful sunlit sandy beach with clear blue ocean waves in the background',
             lighting: 'Bright, radiant sun-kissed lighting, highlighting the smooth skin contours',
@@ -278,8 +272,10 @@ window.INSPI_THEMES = {
     slender_marshmallow: {
         name: 'スレンダー×マシュマロ 🎀',
         data: {
-            bodyInterface: '衣装の縁や極細のストラップが腰回りやヒップの肌になめらかに密着・沈み込み、自然な物理的フィット感と極上の柔らかさを視覚化している',
-            outfit: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire, delicate scalloped sheer lace net linings, and scalloped edges softly resting against the skin',
+            threeSizes: 'Gentle firmness in the waist combined with yielding plush softness in the hips and lower torso, balanced elegant proportions',
+            skinTexture: 'Pale porcelain ivory skin, translucent texture, soft-matte studio-airbrushed finish',
+            bodyInterface: 'ミニマルなバックカッティングが、ヒップの豊かな輪郭を優雅になぞりながら柔らかく沈み込み、なめらかな肉の起伏を強調している',
+            outfit: 'Intricate pale blue lace-trimmed two-piece ensemble with structured underwire and scalloped edges softly resting against the skin',
             pose: 'seiza sitting pose, resting her soft weight naturally on her calves, emphasizing the beautiful, full spread and supple curves of her lower body',
             situation: 'Resting on soft, wrinkled white bed sheets in a bright morning room',
             lighting: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours',
