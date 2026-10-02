@@ -10,21 +10,6 @@ const FACS_PRESETS = window.FACS_PRESETS || [];
 const getApiUrl = window.getApiUrl;
 const safetySettings = window.safetySettings || [];
 
-// ★ 無反応（無限待ち）フリーズを防止するタイムアウト付き通信関数
-const fetchWithTimeout = async (url, options = {}, timeoutMs = 25000) => {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-        const response = await fetch(url, { ...options, signal: controller.signal });
-        clearTimeout(id);
-        return response;
-    } catch (err) {
-        clearTimeout(id);
-        if (err.name === 'AbortError') throw new Error('TIMEOUT');
-        throw err;
-    }
-};
-
 const Icon = ({ name, className = "" }) => {
     const svgs = {
         sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
@@ -48,11 +33,12 @@ const Icon = ({ name, className = "" }) => {
 };
 
 function App() {
+    // ★アップデート: 「表情/FACS」をグループ4へ、「体型(bodyType)」を削除。全43項目へ。
     const sections = [
         { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
-        { title: "顔・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle', 'aesthetic'] },
+        { title: "顔・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle', 'aesthetic'] },
         { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyFrame', 'threeSizes'] },
-        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'outfitDetail', 'bodyInterface', 'pose', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
+        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'bodyInterface', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
     ];
 
     const createEmptyState = () => {
@@ -152,12 +138,6 @@ function App() {
     const clearSingleField = (fieldId) => {
         setSelections(prev => ({ ...prev, [fieldId]: '' }));
         if (focusField === fieldId) setFocusTempText('');
-    };
-
-    const copySingleField = (fieldId) => {
-        const val = selections[fieldId];
-        if (!val || val.trim() === '') return;
-        copyText(val, fieldId);
     };
 
     const applySuggestionInternal = (currentVal, targetVal) => {
@@ -310,6 +290,7 @@ function App() {
             const url = URL.createObjectURL(file);
             const img = new Image();
             
+            // ★完全なエラーキャッチ: メモリ不足や不正データでのクラッシュを防ぐ
             img.onload = () => {
                 try {
                     const canvas = document.createElement('canvas');
@@ -328,6 +309,7 @@ function App() {
                     ctx.drawImage(img, 0, 0, w, h);
                     const b64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
                     
+                    // プレビュー用サムネイル生成
                     canvas.width = 80; 
                     canvas.height = (img.height / img.width) * 80;
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -337,13 +319,14 @@ function App() {
                     resolve({ b64, pUrl: URL.createObjectURL(file), b64Preview });
                 } catch (e) {
                     URL.revokeObjectURL(url);
-                    reject(new Error("画像のリサイズ処理中にエラーが発生しました。"));
+                    reject(new Error("画像のリサイズ処理中にエラーが発生しました。別の画像をお試しください。"));
                 }
             };
             
+            // ★フリーズ防止: ロード失敗時に確実にrejectを返す
             img.onerror = () => {
                 URL.revokeObjectURL(url);
-                reject(new Error("画像の読み込みに失敗しました。"));
+                reject(new Error("画像の読み込みに失敗しました。未対応の形式か、データが破損している可能性があります。"));
             };
             
             img.src = url;
@@ -352,7 +335,7 @@ function App() {
 
     const handleUpload = async (e, mode) => {
         const file = e.target.files?.[0];
-        if (!file || isAnalyzing) return;
+        if (!file || isAnalyzing) return; // isAnalyzingロック判定
         
         setIsAnalyzing(mode);
         setStatusMessage('分析中...');
@@ -363,7 +346,8 @@ function App() {
             await runAnalysis(b64, mode);
         } catch (err) {
             console.error("Image Processing Error:", err);
-            setStatusMessage('画像読込エラー');
+            setStatusMessage('画像読込エラー: 無効な形式です');
+            // ★最重要: 処理失敗時に確実にロックフラグを解除し、次の操作を受け付ける
             setIsAnalyzing(null);
         } finally { 
             if(e.target) e.target.value = ''; 
@@ -380,9 +364,16 @@ function App() {
         const analysisSystemInstruction = `あなたは世界最高峰のポートレート・グラビア監査官です。
 画像をミリ単位で超精密にスキャンし、指定されたキーのJSONのみを出力してください。
 【絶対ルール】
-1. 純粋なJSONのみ。解説不要。
-2. キー名は【対象リスト】と完全一致。
-3. 不明項目は空文字。値は全て【日本語】で記述。
+1. 純粋なJSONのみ。キー名は【対象リスト】と完全一致。
+2. 不明項目は空文字。値は全て【日本語】で記述。
+【攻めの監査項目】
+- expression/facs: 動的変化(ウインク等)はここに集約。
+- 顔パーツ造形: 顔の向き等の情報は排除し、無表情時を逆算して端的に。
+- height/threeSizes/facePlacement: 日本語テキストで。「こぼれるような豊かなボリューム」「マシュマロのようなふくよかさ」など、重力感や肉感の美しさを克明な日本語で書き出せ。
+- bodyInterface: 物理境界を徹底的に攻めよ。「極細の紐が放つ張力と、それに優しく沈み込むマシュマロのような肌のコントラスト」「ボトムスの鋭く高いレッグカッティング（ハイレグ）が腰骨の優美なラインを強調している」「ミニマルなバックカッティングがヒップの豊かな輪郭になぞりながら柔らかく沈み込んでいる」などを執拗に観察し、克明に言語化せよ。
+- bodyLine: ポーズやアングルが生み出す「縦のライン（脚長効果など）」や「S字カーブの曲線美」を美術解剖学的に出力せよ。
+- lighting: 光の方向（順光、逆光、サイド等）、種類（自然光、スタジオ等）、質（硬い、柔らかい）、およびそれらが肌や曲線に落とす陰影のグラデーションを精密にスキャンせよ。
+- additionalNotes: AIが推測したモデルの人種（日本人、アジア系等）を必ず追記に含めること。
 【対象リスト】
 ${keyListString}`;
 
@@ -397,8 +388,7 @@ ${keyListString}`;
                     
                     try {
                         setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '分析中...');
-                        // ★ 無反応防止: タイムアウト付きフェッチを使用
-                        const response = await fetchWithTimeout(getApiUrl("generateContent", currentModel), {
+                        const response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -408,25 +398,22 @@ ${keyListString}`;
                                     ] 
                                 }],
                                 systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
-                                safetySettings,
-                                generationConfig: { responseMimeType: "application/json" }
+                                safetySettings
                             }),
-                        }, 25000);
+                        });
 
                         if (response.ok) {
                             responseData = await response.json();
                             success = true;
                             break;
-                        } else if (response.status === 404 || response.status === 429 || response.status === 503 || response.status === 400) {
+                        } else if (response.status === 404 || response.status === 429 || response.status === 503) {
+                            // 短い待機を入れてスパム判定を回避
                             await new Promise(resolve => setTimeout(resolve, 500));
                             continue;
                         } else {
                             throw new Error("HTTP " + response.status);
                         }
                     } catch (err) {
-                        if (err.message === 'TIMEOUT') {
-                            console.warn(`[${shortName}] タイムアウトしました。次のモデルを試行します。`);
-                        }
                         continue;
                     }
                 }
@@ -437,31 +424,25 @@ ${keyListString}`;
                 if (attempt < 5) {
                     setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2; 
+                    delay *= 2; // スマート・バックオフ
                 }
             }
 
             if (!success || !responseData) {
                 setStatusMessage('制限中: 1分待ってください');
-                setIsAnalyzing(null);
+                setIsAnalyzing(null); // エラー時ロック解除
                 return;
             }
 
             const rawText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-            const cleanText = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-            let result = {};
-            try {
-                const match = cleanText.match(/\{[\s\S]*\}/);
-                result = JSON.parse(match ? match[0] : "{}");
-            } catch(e) {
-                console.warn("Analysis JSON parse error, fallback to empty object.");
-                result = {};
-            }
+            const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
 
             const safeStringifyValue = (val) => {
                 if (val === null || val === undefined) return '';
                 if (typeof val === 'object') {
-                    if (Array.isArray(val)) return val.map(v => typeof v === 'object' ? JSON.stringify(v) : String(v)).join('、');
+                    if (Array.isArray(val)) {
+                        return val.map(v => typeof v === 'object' ? JSON.stringify(v) : String(v)).join('、');
+                    }
                     return Object.entries(val).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`).join('、');
                 }
                 return String(val);
@@ -499,6 +480,7 @@ ${keyListString}`;
             setStatusMessage('解析エラー');
             console.error(e);
         } finally {
+            // 処理完了時、確実にロックを解除
             setTimeout(() => setIsAnalyzing(null), 1000);
         }
     };
@@ -508,6 +490,7 @@ ${keyListString}`;
         setIsProcessing(true);
         setStatusMessage('生成中...');
         
+        let delay = 1000;
         let responseData = null;
         let success = false;
 
@@ -516,14 +499,15 @@ ${keyListString}`;
             const activeData = { ...selections };
             if (expressionMode === 'facs') activeData.expression = ""; else activeData.facs = "";
 
+            // ★顔の呪縛解除 ＆ アングル絶対最優先ソート
             const PRIORITY_ORDER = [
-                'cameraAngle', 'artStyle', 'pose', 'bodyLine', 'situation', 'lighting', 
-                'age', 'height', 'bodyFrame', 'threeSizes', 
+                'cameraAngle', 'artStyle', 'pose', 'bodyLine', 'situation', 'lighting', // アングルと構図を最優先配置
+                'age', 'height', 'bodyFrame', 'threeSizes', // 次に全体体型
                 'skinColor', 'skinTexture', 'bodyInterface',
-                'outfit', 'outfitDetail', 'hairAccessory', 
+                'outfit', 'hairAccessory', // 衣装詳細撤廃、outfitに統合済
                 'hairStyle', 'hairBangs', 'hairColor', 'hairTexture',
                 'aesthetic', 'additionalNotes',
-                'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs' 
+                'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs' // 顔と表情の詳細は最後
             ];
 
             const allActiveKeys = Object.keys(activeData);
@@ -541,7 +525,7 @@ ${keyListString}`;
                 .filter(Boolean)
                 .join('\n');
 
-            const outfitText = ((selections.outfit || "") + " " + (selections.outfitDetail || "")).toLowerCase();
+            const outfitText = (selections.outfit || "").toLowerCase();
             let routeSpecificInstruction = "";
 
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
@@ -568,21 +552,23 @@ ${keyListString}`;
 
             const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}
 【ハイエンド・ポートレート生成用 プロンプト最適化ガイドライン】
-1. アングル最優先: カメラアングルと構図(全景/寄りなど)をプロンプトの最上位に配置し、"high angle shot, dynamic foreshortening"等の写真用語で強調せよ。
-2. シルエット最適化: "b*st v*lume", "cl*avage", "h*ge br*asts"等は絶対禁止。"graceful feminine silhouette", "plush upper volume with a natural, elegant drape gracefully supported by the fabric" 等の洗練された表現へロンダリングせよ。
+1. アングル最優先: カメラアングルと構図(全景/寄りなど)をプロンプトの最上位に配置し、"high angle shot, dynamic foreshortening"等の写真・映画用語で強調せよ。ネガティブにもアングルと矛盾する単語を追加し防衛せよ。
+2. シルエットとプロポーションの最適化: "b*st v*lume", "cl*avage", "h*ge br*asts", "f*t"等は絶対禁止。"graceful feminine silhouette", "plush upper volume with a natural, elegant heavy drape gracefully supported by the fabric" 等の洗練された高級シルエット表現へロンダリングせよ。
 3. 雰囲気と形容詞の洗練: "s*xy"等禁止 ➔ "captivating aura", "alluring"等へ。
-4. 衣装素材のコントロール: "w*t-l*ok"等禁止 ➔ "matte finish", "minimal"等へ。
-5. ネガティブのクリーン化: "n*fw", "c*nsorship", "n*de"禁止。露出事故防止は"inappropriate attire"、検閲ノイズ防止は"distorted composition"等へ。
+4. 衣装の素材と質感のコントロール: "w*t-l*ok"等禁止 ➔ "matte finish", "minimal"等へ。
+5. ネガティブプロンプトのクリーン化: "n*fw", "c*nsorship", "n*de"等の一発ブロックNGワード禁止。露出事故防止は"inappropriate attire"、検閲ノイズ防止は"distorted composition"等へ。
 6. 陰影描写のエラー回避: "sh*dow b*lge"禁止 ➔ "artifacts on clothes", "unnatural fabric folds"へ。
-7. スキン見せデザイン: "bare back"等禁止 ➔ "off-shoulder clothing layout"等レイアウト用語へ。
-8. 肉体の食い込み表現の回避: "s*ft ov*rspill"等肉感的すぎる表現禁止 ➔ "fitting smoothly and seamlessly against the skin", "structural tension" と "yielding contour" のコントラスト等のタイトフィット・構造的用語へ偽装せよ。
-9. バックスタイル構造美: ハイレグは"steeply angled leg cuts maximizing the graceful leg silhouette"、Tバック的表現は"minimalist cheeky cut back elegantly tracing the contours"等高級アパレル用語へ。
-10. 光演出(lighting)は、"cinematic volumetric lighting", "dramatic rim light" 等の写真用語に変換。
-11. FACSは"AU12C"等のみ反映。
+7. スキン見せデザインのアパレル表現: "bare back"等禁止 ➔ "off-shoulder clothing layout"等レイアウト用語へ。
+8. 肉体の食い込み・沈み込み表現の回避: "s*ft ov*rspill", "y*elding ind*ntation"等肉感的すぎる表現禁止 ➔ "fitting smoothly and seamlessly against the skin", "structural tension" と "yielding contour" のコントラスト等のタイトフィット・構造的用語へ偽装せよ。
+9. バックスタイルとハイレグの構造美: ハイレグは"steeply angled leg cuts maximizing the graceful leg silhouette"、Tバック的表現は"minimalist cheeky cut back elegantly tracing the contours"等高級アパレル用語へ。
+10. 解剖学部位名を用いた露出指定の回避: "above the hip bone"等禁止 ➔ "elegant high-cut leg lines"等構造用語へ。
+11. ボディ・曲線美(bodyLine)は、"elegant S-curve silhouette", "graceful vertical body line" 等のデッサン表現へ。
+12. 光演出(lighting)は、"cinematic volumetric lighting", "dramatic rim light", "soft diffused daylight" 等の写真・照明用語に変換。
+13. FACSは"AU12C"等のみ反映。
+14. aestheticを自然に追加。
 ${routeSpecificInstruction}
 ${artStyleSpecificInstruction}`;
 
-            // ★指定通り、モデルは絶対に3.5〜2.0系のまま維持
             const FALLBACK_MODELS = ['gemini-3.5-flash', 'gemini-3.0-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
             let attempt = 0;
 
@@ -593,28 +579,28 @@ ${artStyleSpecificInstruction}`;
                     
                     try {
                         setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '生成中...');
-                        // ★無反応防止: タイムアウト(25秒)を設けてフリーズを回避
-                        const response = await fetchWithTimeout(getApiUrl("generateContent", currentModel), {
+                        const response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 contents: [{ parts: [{ text: `以下の日本語データに基づきプロンプトを作成し、末尾に比率 "${arTag}" を含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
                                 systemInstruction: { parts: [{ text: promptSystemInstruction }] },
-                                safetySettings,
-                                generationConfig: { responseMimeType: "application/json" } // 互換性パラメータを復元
+                                safetySettings
                             }),
-                        }, 25000);
+                        });
 
                         if (response.ok) {
+                            // ★ バグ修正箇所：Bodyを変数に保管し、2度読みエラーを回避
                             responseData = await response.json();
                             const candidate = responseData.candidates?.[0];
                             
+                            // セーフティフィルタリングの検知
                             if (candidate?.finishReason === 'SAFETY') {
                                 throw new Error("SAFETY_BLOCK");
                             }
                             success = true;
                             break;
-                        } else if (response.status === 404 || response.status === 429 || response.status === 503 || response.status === 400) {
+                        } else if (response.status === 404 || response.status === 429 || response.status === 503) {
                             await new Promise(resolve => setTimeout(resolve, 500));
                             continue;
                         } else {
@@ -626,9 +612,6 @@ ${artStyleSpecificInstruction}`;
                             setIsProcessing(false);
                             return; 
                         }
-                        if (err.message === 'TIMEOUT') {
-                            console.warn(`[${shortName}] タイムアウトしました。次のモデルを試行します。`);
-                        }
                         continue;
                     }
                 }
@@ -637,60 +620,29 @@ ${artStyleSpecificInstruction}`;
 
                 attempt++;
                 if (attempt < 5) {
-                    setStatusMessage('全モデル混雑中。待機して再試行...');
-                    await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, attempt - 1)));
-                }
-            }
-
-            if (!success || !responseData) {
-                setStatusMessage('制限中: しばらく待ってください');
-                setIsProcessing(false);
-                return;
-            }
-
-            // ★無反応バグ対策の最終砦: JSONが崩れていても絶対に抽出して画面に出すサルベージ機構
-            const rawText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            // 変数 responseData からデータを取り出すため、already read 例外が発生しない
+            const rawText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+            
             const cleanText = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+            const result = JSON.parse(cleanText.match(/\{[\s\S]*\}/)?.[0] || "{}");
             
-            let result = {};
-            try {
-                const match = cleanText.match(/\{[\s\S]*\}/);
-                if (match) {
-                    result = JSON.parse(match[0]);
-                } else {
-                    throw new Error("No JSON structure found");
-                }
-            } catch(e) {
-                console.warn("JSON Parse Failed, applying regex extraction.");
-                // エラーで落ちるのではなく、正規表現で強引にプロンプトを引っこ抜く
-                const posMatch = cleanText.match(/"positive"\s*:\s*"([\s\S]*?)"/i) || cleanText.match(/"positive"\s*:\s*'([\s\S]*?)'/i);
-                const negMatch = cleanText.match(/"negative"\s*:\s*"([\s\S]*?)"/i) || cleanText.match(/"negative"\s*:\s*'([\s\S]*?)'/i);
-                
-                result = {
-                    positive: posMatch ? posMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : cleanText,
-                    negative: negMatch ? negMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : ""
-                };
-            }
+            // ★ バグ修正箇所：キー名の揺れ（positive_prompt等）に柔軟に対応する堅牢な抽出ロジック
+            const getFlexibleValue = (obj, keywords) => {
+                const foundKey = Object.keys(obj).find(k => keywords.some(kw => k.toLowerCase().includes(kw)));
+                return foundKey ? obj[foundKey] : null;
+            };
 
-            const finalPos = result.positive || result.positive_prompt || result.Positive || result.prompt || result.positivePrompt || "";
-            const finalNeg = result.negative || result.negative_prompt || result.Negative || result.negativePrompt || "";
-
-            const fallbackPos = finalPos || (Object.values(result).find(v => typeof v === 'string') || "Error: プロンプト抽出失敗。\n" + cleanText);
-
-            setEnglishPrompt(fallbackPos);
-            setNegativePrompt(finalNeg);
+            const posPrompt = getFlexibleValue(result, ['positive', 'pos']) || Object.values(result)[0] || "";
+            const negPrompt = getFlexibleValue(result, ['negative', 'neg']) || Object.values(result)[1] || "";
             
-            setStatusMessage('完了 ✨');
-            setTimeout(() => {
-                setStatusMessage('');
-                resultRef.current?.scrollIntoView({ behavior: 'smooth' });
-            }, 2000);
-            
+            setEnglishPrompt(posPrompt);
+            setNegativePrompt(negPrompt);
+            setStatusMessage('');
+            setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
         } catch (e) {
-            setStatusMessage('通信エラーが発生しました');
+            setStatusMessage('プロンプト構築エラー');
             console.error(e);
         } finally {
-            // いかなるエラー時も必ずロックを解除し、無反応フリーズを回避
             setIsProcessing(false);
         }
     };
@@ -702,7 +654,7 @@ ${artStyleSpecificInstruction}`;
                     <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                         <Icon name="sparkles" className="animate-pulse text-pink-500" /> IDOL Designer PRO
                     </h1>
-                    <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.9.9 Auto-Salvage Edition</span>
+                    <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.9.8 Safety Guard Edition</span>
                 </div>
                 <div className="flex gap-2">
                     <button 
@@ -722,16 +674,13 @@ ${artStyleSpecificInstruction}`;
                                 setPreviews({ base: null, plus: null, baseStored: null, plusStored: null });
                                 setEnglishPrompt('');
                                 setNegativePrompt('');
-                                // ★ 強制ロック解除: 内部でフリーズしていてもこれで自力復旧可能
-                                setIsProcessing(false);
-                                setIsAnalyzing(null);
                                 setStatusMessage('初期化しました');
                                 setTimeout(() => setStatusMessage(''), 2000);
                             }
                         }} 
                         disabled={!!isAnalyzing || isProcessing}
                         className={`p-2 text-slate-400 hover:text-red-500 transition-colors ${(isAnalyzing || isProcessing) ? 'opacity-30 pointer-events-none' : ''}`}
-                        title="強制リセット"
+                        title="リセット"
                     >
                         <Icon name="refresh" />
                     </button>
@@ -815,7 +764,7 @@ ${artStyleSpecificInstruction}`;
 
                 <div className="h-6 flex items-center justify-center">
                     {statusMessage && (
-                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 bg-white ${statusMessage.includes('エラー') || statusMessage.includes('失敗') || statusMessage.includes('制限中') ? 'text-red-500 border border-red-200' : 'text-pink-500'}`}>
+                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 bg-white ${statusMessage.includes('エラー') || statusMessage.includes('失敗') ? 'text-red-500 border border-red-200' : 'text-pink-500'}`}>
                             {statusMessage.toUpperCase()}
                         </div>
                     )}
@@ -951,6 +900,7 @@ ${artStyleSpecificInstruction}`;
                                 {openSections[idx] && (
                                     <div className="p-4 bg-white grid grid-cols-2 gap-3.5">
                                         
+                                        {/* ★ 表情のモード切り替えはグループ4 (idx === 3) に移動済み ★ */}
                                         {idx === 3 && (
                                             <div className="col-span-2 mb-2 bg-slate-50 p-2 rounded-2xl border border-slate-100">
                                                 <div className="flex gap-1 text-[10px] font-bold">

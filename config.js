@@ -1,10 +1,9 @@
 // config.js
 window.isPreview = typeof __app_id !== 'undefined';
-window.apiKey = ""; // 本番テスト時やCanvasランタイムでは空文字のままで動作します
+window.apiKey = ""; 
 window.proxyBaseUrl = "https://idol-designer-proxy.gris-aile.workers.dev"; 
 
 window.getApiUrl = (endpoint, modelOverride) => {
-    // 優先フォールバックで指定されたモデルを使用、指定がなければデフォルト(3.5)を適用
     const model = modelOverride || "gemini-3.5-flash";
     if (window.isPreview) {
         return `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${window.apiKey}`;
@@ -12,7 +11,6 @@ window.getApiUrl = (endpoint, modelOverride) => {
     return `${window.proxyBaseUrl}/v1beta/models/${model}:${endpoint}`;
 };
 
-// 共通セーフティ設定
 window.safetySettings = [
     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
     { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
@@ -20,7 +18,6 @@ window.safetySettings = [
     { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
 ];
 
-// 44項目定義
 window.FIELD_KEYS = [
     'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', 
     'faceOutline', 'facePlacement', 
@@ -34,7 +31,6 @@ window.FIELD_KEYS = [
     'aesthetic', 'additionalNotes'
 ];
 
-// ラベルマッピング定義
 window.LABEL_MAP = {
     hairStyle: '髪型', hairBangs: '前髪', hairColor: '髪色', hairAccessory: 'ヘアアクセ', hairTexture: '髪質',
     faceOutline: '輪郭', facePlacement: '顔のパーツ配置比率', 
@@ -48,7 +44,7 @@ window.LABEL_MAP = {
     artStyle: '画風', cameraAngle: 'アングル', aesthetic: '印象補正', additionalNotes: '追記' 
 };
 
-// 表現ルールを適用した極上の事前サジェスト辞書
+// 攻めのサジェスト辞書（アングルを専門写真用語に強化）
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -207,13 +203,14 @@ window.FIELD_SUGGESTIONS = {
         { label: '白いベッドシーツ 🛏️', value: 'Resting on soft, wrinkled white bed sheets in a bright morning room' }
     ],
     lighting: [
-        { label: '窓からの自然光 ☀', value: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours' },
+        { label: '窓からの自然光 ☀️️', value: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours' },
         { label: 'スタジオ照明 💡', value: 'Cinematic key studio light with a soft volumetric hair backlight' }
     ],
     artStyle: [
         { label: '実写DSLRグラビア 📷', value: 'Hyper-realistic gravure raw photograph taken with high-end DSLR, sharp focus, photo masterclass 8k' },
         { label: 'アニメアート 🎨', value: 'Modern aesthetic high-fidelity digital anime illustration, clean lines, vibrant cell shading' }
     ],
+    // ★アングル表現の強力化★
     cameraAngle: [
         { label: 'ハイアングル(俯瞰) 🦅', value: 'high angle shot, looking down at her, dynamic foreshortening' },
         { label: 'ローアングル(煽り) 🐛', value: 'low angle shot, looking up at her, emphasizing vertical lines and stature' },
@@ -250,7 +247,6 @@ window.INSPI_THEMES = {
             hairAccessory: '',
             outfit: 'minimalist unbranded heather-grey sporty two-piece ensemble, solid light grey bralette top and matching basic bottoms, plain wide elastic bands with strictly no logos or text, sleek and seamless design',
             pose: 'standing naturally, simple straight posture to clearly show body proportions',
-            bodyLine: 'clean vertical straight body line, neutral silhouette',
             situation: 'pure white seamless studio backdrop, minimalist setting',
             lighting: 'clean, even soft studio lighting for clear visibility of body contours',
             bodyInterface: 'fitting smoothly against the skin, highlighting the natural body contour',
