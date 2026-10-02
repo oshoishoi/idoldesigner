@@ -44,7 +44,6 @@ window.LABEL_MAP = {
     artStyle: '画風', cameraAngle: 'アングル', aesthetic: '印象補正', additionalNotes: '追記' 
 };
 
-// 攻めのサジェスト辞書（アングルを専門写真用語に強化）
 window.FIELD_SUGGESTIONS = {
     hairStyle: [
         { label: 'ツインテール 🎀', value: 'Long twin-tails with soft bouncy curls, perfectly symmetrical' },
@@ -85,7 +84,7 @@ window.FIELD_SUGGESTIONS = {
         { label: '黒目がち 👀', value: 'Enlarged deep expressive irises, prominent pupil-to-sclera ratio' }
     ],
     eyeCorners: [
-        { label: 'シャープ目頭 👁️', value: 'Sharply defined inner corners (epicanthic fold detail), clean outer corners' }
+        { label: 'シャープ目頭 👁️️', value: 'Sharply defined inner corners (epicanthic fold detail), clean outer corners' }
     ],
     eyeColor: [
         { label: 'ルビー赤 🟥', value: 'Deep luminous crystal ruby red' },
@@ -156,7 +155,7 @@ window.FIELD_SUGGESTIONS = {
     bodyInterface: [
         { label: '極細紐の沈み込み 🎀', value: '極細のサイドストリングが放つ確かな張力と、それに優しく沈み込むマシュマロのように柔らかな肌のコントラストが、極上の肉感とふくよかさを克明に視覚化している' },
         { label: 'ハイレグの構造美 🍑', value: 'ボトムスの鋭く高いレッグカッティングが、腰骨の優美なラインと脚の長さを強調し、優雅な曲線美を最大化している' },
-        { label: 'ヒップへの食い込み 🍑', value: 'ミニマルなバックカッティングが、ヒップの豊かな輪郭を優雅になぞりながら柔らかく沈み込み、なめらかな肉の起伏を強調している' },
+        { label: 'ヒップラインの美しい沈み込み 🍑', value: 'ミニマルなバックカッティングが、ヒップの豊かな輪郭を優雅になぞりながら柔らかく沈み込み、なめらかな肉の起伏を強調している' },
         { label: '胸の自重と谷間 🕊️', value: '布地がこぼれるような豊かなボリュームと自然な重み（ドレープ感）を優雅に支え、深く開いたカッティングに沿ってリアルで美しい起伏と陰影を生み出している' }
     ], 
     molesFreckles: [
@@ -203,14 +202,13 @@ window.FIELD_SUGGESTIONS = {
         { label: '白いベッドシーツ 🛏️', value: 'Resting on soft, wrinkled white bed sheets in a bright morning room' }
     ],
     lighting: [
-        { label: '窓からの自然光 ☀️️', value: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours' },
+        { label: '窓からの自然光 ☀', value: 'Soft natural daylight filtering through the window, highlighting the smooth skin contours' },
         { label: 'スタジオ照明 💡', value: 'Cinematic key studio light with a soft volumetric hair backlight' }
     ],
     artStyle: [
         { label: '実写DSLRグラビア 📷', value: 'Hyper-realistic gravure raw photograph taken with high-end DSLR, sharp focus, photo masterclass 8k' },
         { label: 'アニメアート 🎨', value: 'Modern aesthetic high-fidelity digital anime illustration, clean lines, vibrant cell shading' }
     ],
-    // ★アングル表現の強力化★
     cameraAngle: [
         { label: 'ハイアングル(俯瞰) 🦅', value: 'high angle shot, looking down at her, dynamic foreshortening' },
         { label: 'ローアングル(煽り) 🐛', value: 'low angle shot, looking up at her, emphasizing vertical lines and stature' },

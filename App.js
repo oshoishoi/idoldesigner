@@ -33,11 +33,12 @@ const Icon = ({ name, className = "" }) => {
 };
 
 function App() {
+    /* STREAMING_CHUNK:Refactoring UI groups and cleaning up redundant fields... */
     const sections = [
         { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
-        { title: "顔・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle', 'aesthetic'] },
+        { title: "顔・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle', 'aesthetic'] },
         { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyFrame', 'threeSizes'] },
-        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'outfitDetail', 'bodyInterface', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
+        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'bodyInterface', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
     ];
 
     const createEmptyState = () => {
@@ -437,7 +438,7 @@ function App() {
 - height/threeSizes/facePlacement: 日本語テキストで。「こぼれるような豊かなボリューム」「マシュマロのようなふくよかさ」など、重力感や肉感の美しさを克明な日本語で書き出せ。
 - bodyInterface: 物理境界を徹底的に攻めよ。「極細の紐が放つ張力と、それに優しく沈み込むマシュマロのような肌のコントラスト」「ボトムスの鋭く高いレッグカッティング（ハイレグ）が腰骨の優美なラインを強調している」「ミニマルなバックカッティングがヒップの豊かな輪郭になぞりながら柔らかく沈み込んでいる」などを執拗に観察し、克明に言語化せよ。
 - bodyLine: ポーズやアングルが生み出す「縦のライン（脚長効果など）」や「S字カーブの曲線美」を美術解剖学的に出力せよ。
-- lighting: 光の方向（順光、逆光、サイド等）、種類（自然光、スタジオ等）、質（硬い、柔らかい）、およびそれらが肌や曲線に落付す陰影のグラデーションを精密にスキャンせよ。
+- lighting: 光の方向（順光、逆光、サイド等）、種類（自然光、スタジオ等）、質（硬い、柔らかい）、およびそれらが肌や曲線に落とす陰影のグラデーションを精密にスキャンせよ。
 - additionalNotes: AIが推測したモデルの人種（日本人、アジア系等）を必ず追記に含めること。
 【対象リスト】
 ${keyListString}`;
@@ -587,6 +588,7 @@ ${keyListString}`;
                 .filter(Boolean)
                 .join('\n');
 
+            /* STREAMING_CHUNK:Configuring contextual prompt guidelines and laundering rules... */
             const outfitText = (selections.outfit || "").toLowerCase();
             let routeSpecificInstruction = "";
 
@@ -612,18 +614,19 @@ ${keyListString}`;
 - 【チェキ風画質の完全排除】: 通常時条件として "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" などを適用し、ライティングや演出を精緻に反映せよ。"non-existent person" を組み込み、非実在性を明記せよ。`;
             }
 
+            /* STREAMING_CHUNK:Injecting the ultimate 12-point laundering strategy... */
             const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}
 【ハイエンド・ポートレート生成用 プロンプト最適化ガイドライン】
-1. アングル最優先: カメラアングルと構図(全景/寄りなど)をプロンプトの最上位に配置し、"high angle shot, dynamic foreshortening"等の写真・映画用語で強調せよ。ネガティブにもアングルと矛盾する単語を追加し防衛せよ。
-2. シルエットとプロポーションの最適化: "b*st v*lume", "cl*avage", "h*ge br*asts", "f*t"等は絶対禁止。"graceful feminine silhouette", "plush upper volume with a natural, elegant heavy drape gracefully supported by the fabric" 等の洗練された高級シルエット表現へロンダリングせよ。
-3. 雰囲気と形容詞の洗練: "s*xy"等禁止 ➔ "captivating aura", "alluring"等へ。
-4. 衣装の素材と質感のコントロール: "w*t-l*ok"等禁止 ➔ "matte finish", "minimal"等へ。
-5. ネガティブプロンプトのクリーン化: "n*fw", "c*nsorship", "n*de"等の一発ブロックNGワード禁止。露出事故防止は"inappropriate attire"、検閲ノイズ防止は"distorted composition"等へ。
-6. 陰影描写のエラー回避: "sh*dow b*lge"禁止 ➔ "artifacts on clothes", "unnatural fabric folds"へ。
-7. スキン見せデザインのアパレル表現: "bare back"等禁止 ➔ "off-shoulder clothing layout"等レイアウト用語へ。
-8. 肉体の食い込み・沈み込み表現の回避: "s*ft ov*rspill", "y*elding ind*ntation"等肉感的すぎる表現禁止 ➔ "fitting smoothly and seamlessly against the skin", "structural tension" と "yielding contour" のコントラスト等のタイトフィット・構造的用語へ偽装せよ。
-9. バックスタイルとハイレグの構造美: ハイレグは"steeply angled leg cuts maximizing the graceful leg silhouette"、Tバック的表現は"minimalist cheeky cut back elegantly tracing the contours"等高級アパレル用語へ。
-10. 解剖学部位名を用いた露出指定の回避: "above the hip bone"等禁止 ➔ "elegant high-cut leg lines"等構造用語へ。
+1. シルエットとプロポーション: "b*st v*lume", "cl*avage", "h*ge br*asts", "f*t"等は絶対禁止。"graceful feminine silhouette", "plush upper volume with a natural, elegant heavy drape gracefully supported by the fabric" 等の洗練された高級シルエット表現へロンダリングせよ。
+2. 雰囲気と形容詞の洗練: "s*xy"等禁止 ➔ "captivating aura", "alluring presence"等へ。
+3. 衣装の素材と質感: "w*t-l*ok"等禁止 ➔ "matte finish", "intricate lace patterns"等へ。
+4. ネガティブプロンプトのクリーン化: "n*fw", "c*nsorship", "n*de"等の一発ブロックNGワード禁止。露出事故防止は"inappropriate attire"、検閲ノイズ防止は"distorted composition"等へ。
+5. 陰影描写のエラー回避: "sh*dow b*lge"禁止 ➔ "artifacts on clothes", "unnatural fabric folds"へ。
+6. スキン見せデザインのアパレル表現: "bare back"等禁止 ➔ "off-shoulder clothing layout", "midriff-baring fashion layout"等レイアウト用語へ。
+7. 肉体の食い込み・沈み込み表現の回避: "s*ft ov*rspill", "y*elding ind*ntation"等肉感的すぎる表現禁止 ➔ "fitting smoothly and seamlessly against the skin", "naturally complementing the graceful feminine silhouette" へ偽装せよ。
+8. 直接的な下着名称の言い換え: "b*a", "p*nties"等禁止 ➔ "two-piece ensemble", "minimalist lace-trimmed top"等へ。
+9. 面積の少ないデザインの構造的指定: "m*cro", "t*ny"禁止 ➔ "minimalist triangular cut", "slender string-based construction"へ。
+10. アングル最優先とポーズ干渉防止: カメラアングルをプロンプト最上位に配置し "high angle shot, dynamic foreshortening" 等の写真・映画用語で強調せよ。ポーズ崩壊防止のためネガティブに "unnatural leg anatomy, floating" 等を追加。
 11. ボディ・曲線美(bodyLine)は、"elegant S-curve silhouette", "graceful vertical body line" 等のデッサン表現へ。
 12. 光演出(lighting)は、"cinematic volumetric lighting", "dramatic rim light", "soft diffused daylight" 等の写真・照明用語に変換。
 13. FACSは"AU12C"等のみ反映。
@@ -988,6 +991,7 @@ ${artStyleSpecificInstruction}`;
                                             if (id === 'expression' && isFACSMode) disabledOpacity = 'opacity-30 pointer-events-none grayscale';
                                             if (id === 'facs' && !isFACSMode) disabledOpacity = 'opacity-30 pointer-events-none grayscale';
 
+                                            /* STREAMING_CHUNK:Rendering unified dynamic fields... */
                                             return (
                                                 <div key={id} className={`${id === 'additionalNotes' || id === 'situation' || id === 'bodyInterface' || id === 'aesthetic' ? 'col-span-2' : ''} ${disabledOpacity} transition-all duration-300`}>
                                                     <div className="flex justify-between items-center mb-1">
