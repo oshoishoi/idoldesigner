@@ -33,16 +33,15 @@ const Icon = ({ name, className = "" }) => {
 };
 
 function App() {
-    // ★アップデート: 「表情/FACS」をグループ4へ、「体型(bodyType)」を削除。全43項目へ。
     const sections = [
         { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
-        { title: "顔・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle', 'aesthetic'] },
+        { title: "顔・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'expression', 'facs', 'makeupStyle', 'aesthetic'] },
         { title: "身体・肌・詳細", fields: ['skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyFrame', 'threeSizes'] },
-        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'bodyInterface', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
+        { title: "衣装・演出設定", fields: ['hairAccessory', 'outfit', 'outfitDetail', 'bodyInterface', 'pose', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'] }
     ];
 
     const createEmptyState = () => {
-        const obj = { orientation: 'portrait', ratio: '3:4', aesthetic: '' };
+        const obj = { orientation: 'portrait', ratio: '9:16', aesthetic: '' };
         FIELD_KEYS.forEach(k => obj[k] = '');
         return obj;
     };
@@ -61,8 +60,16 @@ function App() {
     const [previews, setPreviews] = useState({ base: null, plus: null, baseStored: null, plusStored: null });
     const [memorySlots, setMemorySlots] = useState(Array(10).fill(null));
 
-    const [openSections, setOpenSections] = useState({ 0: true, 1: false, 2: false, 3: false });
-    const [mergeOpenSections, setMergeOpenSections] = useState({ 0: true, 1: true, 2: true, 3: true });
+    const [openSections, setOpenSections] = useState({
+        0: true,  
+        1: false, 
+        2: false, 
+        3: false  
+    });
+
+    const [mergeOpenSections, setMergeOpenSections] = useState({
+        0: true, 1: true, 2: true, 3: true
+    });
 
     const [focusField, setFocusField] = useState(null); 
     const [focusTempText, setFocusTempText] = useState(''); 
@@ -91,6 +98,17 @@ function App() {
 
     const copyText = (text, type) => {
         if (!text) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                setCopyFeedback(type);
+                setTimeout(() => setCopyFeedback(null), 1500);
+            }).catch(() => fallbackCopyText(text, type));
+        } else {
+            fallbackCopyText(text, type);
+        }
+    };
+
+    const fallbackCopyText = (text, type) => {
         const el = document.createElement("textarea");
         el.value = text;
         document.body.appendChild(el);
@@ -99,7 +117,9 @@ function App() {
             document.execCommand('copy');
             setCopyFeedback(type);
             setTimeout(() => setCopyFeedback(null), 1500);
-        } catch (err) {}
+        } catch (err) {
+            console.error("Fallback copy failed", err);
+        }
         document.body.removeChild(el);
     };
 
@@ -109,12 +129,19 @@ function App() {
     };
 
     const toggleSection = (idx) => {
-        setOpenSections(prev => ({ ...prev, [idx]: !prev[idx] }));
+        setOpenSections(prev => ({
+            ...prev,
+            [idx]: !prev[idx]
+        }));
     };
 
     const getSectionFillCount = (fields) => {
         let count = 0;
-        fields.forEach(f => { if (selections[f] && selections[f].trim() !== '') count++; });
+        fields.forEach(f => {
+            if (selections[f] && selections[f].trim() !== '') {
+                count++;
+            }
+        });
         return count;
     };
 
@@ -126,7 +153,9 @@ function App() {
         setSelections(prev => {
             const next = { ...prev };
             Object.entries(theme.data).forEach(([key, val]) => {
-                if (FIELD_KEYS.includes(key)) next[key] = val;
+                if (FIELD_KEYS.includes(key)) {
+                    next[key] = val;
+                }
             });
             return next;
         });
@@ -137,23 +166,42 @@ function App() {
 
     const clearSingleField = (fieldId) => {
         setSelections(prev => ({ ...prev, [fieldId]: '' }));
-        if (focusField === fieldId) setFocusTempText('');
+        if (focusField === fieldId) {
+            setFocusTempText('');
+        }
+    };
+
+    const copySingleField = (fieldId) => {
+        const val = selections[fieldId];
+        if (!val || val.trim() === '') return;
+        copyText(val, fieldId);
     };
 
     const applySuggestionInternal = (currentVal, targetVal) => {
         if (sugMode === 'replace') {
             return currentVal === targetVal ? '' : targetVal;
         } else {
-            if (!currentVal || currentVal.trim() === '') return targetVal;
+            if (!currentVal || currentVal.trim() === '') {
+                return targetVal;
+            }
             if (currentVal.includes(targetVal)) {
-                return currentVal.split(',').map(x => x.trim()).filter(x => x !== targetVal && x !== '').join(', ');
+                const cleaned = currentVal
+                    .split(',')
+                    .map(x => x.trim())
+                    .filter(x => x !== targetVal && x !== '')
+                    .join(', ');
+                return cleaned;
             }
             return `${currentVal.trim().replace(/,$/, '')}, ${targetVal}`;
         }
     };
 
     const applySuggestion = (fieldId, val) => {
-        setSelections(prev => ({ ...prev, [fieldId]: applySuggestionInternal(prev[fieldId] || '', val) }));
+        setSelections(prev => {
+            const currentVal = prev[fieldId] || '';
+            const nextVal = applySuggestionInternal(currentVal, val);
+            return { ...prev, [fieldId]: nextVal };
+        });
     };
 
     const applySuggestionInFocus = (val) => {
@@ -166,6 +214,7 @@ function App() {
         const start = ta.selectionStart;
         const end = ta.selectionEnd;
         const currentText = ta.value;
+
         let nextVal = "";
         let newCursorPos = 0;
 
@@ -174,19 +223,27 @@ function App() {
             newCursorPos = nextVal.length;
         } else {
             if (currentText.includes(val)) {
-                nextVal = currentText.split(',').map(x => x.trim()).filter(x => x !== val && x !== '').join(', ');
+                nextVal = currentText
+                    .split(',')
+                    .map(x => x.trim())
+                    .filter(x => x !== val && x !== '')
+                    .join(', ');
                 newCursorPos = Math.min(start, nextVal.length);
             } else {
                 const before = currentText.substring(0, start).trim();
                 const after = currentText.substring(end).trim();
+                
                 let insertStr = val;
                 if (before && !before.endsWith(',')) insertStr = ', ' + insertStr;
                 if (after && !after.startsWith(',')) insertStr = insertStr + ', ';
+
                 nextVal = currentText.substring(0, start) + insertStr + currentText.substring(end);
                 newCursorPos = start + insertStr.length;
             }
         }
+
         setFocusTempText(nextVal);
+        
         setTimeout(() => {
             if (focusTextAreaRef.current) {
                 focusTextAreaRef.current.focus();
@@ -213,8 +270,11 @@ function App() {
         const ta = focusTextAreaRef.current;
         if (!ta) return;
         let start = ta.selectionStart;
-        if (direction === 'left' && start > 0) ta.setSelectionRange(start - 1, start - 1);
-        else if (direction === 'right' && start < ta.value.length) ta.setSelectionRange(start + 1, start + 1);
+        if (direction === 'left' && start > 0) {
+            ta.setSelectionRange(start - 1, start - 1);
+        } else if (direction === 'right' && start < ta.value.length) {
+            ta.setSelectionRange(start + 1, start + 1);
+        }
         ta.focus();
     };
 
@@ -222,18 +282,26 @@ function App() {
         try {
             const text = await navigator.clipboard.readText();
             if (text) {
-                setFocusTempText(prev => (!prev || prev.trim() === '' ? text : prev + " " + text));
+                setFocusTempText(prev => {
+                    if (!prev || prev.trim() === '') return text;
+                    return prev + " " + text;
+                });
                 setStatusMessage('ペーストしました');
                 setTimeout(() => setStatusMessage(''), 1500);
             }
-        } catch (err) {}
+        } catch (err) {
+            setStatusMessage('手動ペーストしてください');
+            setTimeout(() => setStatusMessage(''), 2500);
+        }
     };
 
     const clearSectionFields = (fields, sectionTitle) => {
         if (window.confirm(`「${sectionTitle}」のすべての項目をリセットしますか？`)) {
             setSelections(prev => {
                 const next = { ...prev };
-                fields.forEach(f => next[f] = '');
+                fields.forEach(f => {
+                    next[f] = '';
+                });
                 return next;
             });
         }
@@ -271,6 +339,7 @@ function App() {
         });
     };
 
+    // ★ バグ修正：handleOrientationChange を復活させ ReferenceError を解消
     const handleOrientationChange = (orientation) => {
         setSelections(prev => {
             const next = { ...prev, orientation };
@@ -290,7 +359,6 @@ function App() {
             const url = URL.createObjectURL(file);
             const img = new Image();
             
-            // ★完全なエラーキャッチ: メモリ不足や不正データでのクラッシュを防ぐ
             img.onload = () => {
                 try {
                     const canvas = document.createElement('canvas');
@@ -309,7 +377,6 @@ function App() {
                     ctx.drawImage(img, 0, 0, w, h);
                     const b64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
                     
-                    // プレビュー用サムネイル生成
                     canvas.width = 80; 
                     canvas.height = (img.height / img.width) * 80;
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -323,7 +390,6 @@ function App() {
                 }
             };
             
-            // ★フリーズ防止: ロード失敗時に確実にrejectを返す
             img.onerror = () => {
                 URL.revokeObjectURL(url);
                 reject(new Error("画像の読み込みに失敗しました。未対応の形式か、データが破損している可能性があります。"));
@@ -335,7 +401,7 @@ function App() {
 
     const handleUpload = async (e, mode) => {
         const file = e.target.files?.[0];
-        if (!file || isAnalyzing) return; // isAnalyzingロック判定
+        if (!file || isAnalyzing) return;
         
         setIsAnalyzing(mode);
         setStatusMessage('分析中...');
@@ -347,7 +413,6 @@ function App() {
         } catch (err) {
             console.error("Image Processing Error:", err);
             setStatusMessage('画像読込エラー: 無効な形式です');
-            // ★最重要: 処理失敗時に確実にロックフラグを解除し、次の操作を受け付ける
             setIsAnalyzing(null);
         } finally { 
             if(e.target) e.target.value = ''; 
@@ -372,7 +437,7 @@ function App() {
 - height/threeSizes/facePlacement: 日本語テキストで。「こぼれるような豊かなボリューム」「マシュマロのようなふくよかさ」など、重力感や肉感の美しさを克明な日本語で書き出せ。
 - bodyInterface: 物理境界を徹底的に攻めよ。「極細の紐が放つ張力と、それに優しく沈み込むマシュマロのような肌のコントラスト」「ボトムスの鋭く高いレッグカッティング（ハイレグ）が腰骨の優美なラインを強調している」「ミニマルなバックカッティングがヒップの豊かな輪郭になぞりながら柔らかく沈み込んでいる」などを執拗に観察し、克明に言語化せよ。
 - bodyLine: ポーズやアングルが生み出す「縦のライン（脚長効果など）」や「S字カーブの曲線美」を美術解剖学的に出力せよ。
-- lighting: 光の方向（順光、逆光、サイド等）、種類（自然光、スタジオ等）、質（硬い、柔らかい）、およびそれらが肌や曲線に落とす陰影のグラデーションを精密にスキャンせよ。
+- lighting: 光の方向（順光、逆光、サイド等）、種類（自然光、スタジオ等）、質（硬い、柔らかい）、およびそれらが肌や曲線に落付す陰影のグラデーションを精密にスキャンせよ。
 - additionalNotes: AIが推測したモデルの人種（日本人、アジア系等）を必ず追記に含めること。
 【対象リスト】
 ${keyListString}`;
@@ -407,7 +472,6 @@ ${keyListString}`;
                             success = true;
                             break;
                         } else if (response.status === 404 || response.status === 429 || response.status === 503) {
-                            // 短い待機を入れてスパム判定を回避
                             await new Promise(resolve => setTimeout(resolve, 500));
                             continue;
                         } else {
@@ -424,13 +488,13 @@ ${keyListString}`;
                 if (attempt < 5) {
                     setStatusMessage('全モデル混雑中。待機して再試行...');
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2; // スマート・バックオフ
+                    delay *= 2; 
                 }
             }
 
             if (!success || !responseData) {
                 setStatusMessage('制限中: 1分待ってください');
-                setIsAnalyzing(null); // エラー時ロック解除
+                setIsAnalyzing(null); 
                 return;
             }
 
@@ -480,7 +544,6 @@ ${keyListString}`;
             setStatusMessage('解析エラー');
             console.error(e);
         } finally {
-            // 処理完了時、確実にロックを解除
             setTimeout(() => setIsAnalyzing(null), 1000);
         }
     };
@@ -499,15 +562,14 @@ ${keyListString}`;
             const activeData = { ...selections };
             if (expressionMode === 'facs') activeData.expression = ""; else activeData.facs = "";
 
-            // ★顔の呪縛解除 ＆ アングル絶対最優先ソート
             const PRIORITY_ORDER = [
-                'cameraAngle', 'artStyle', 'pose', 'bodyLine', 'situation', 'lighting', // アングルと構図を最優先配置
-                'age', 'height', 'bodyFrame', 'threeSizes', // 次に全体体型
+                'cameraAngle', 'artStyle', 'pose', 'bodyLine', 'situation', 'lighting', 
+                'age', 'height', 'bodyFrame', 'threeSizes', 
                 'skinColor', 'skinTexture', 'bodyInterface',
-                'outfit', 'hairAccessory', // 衣装詳細撤廃、outfitに統合済
+                'outfit', 'hairAccessory', 
                 'hairStyle', 'hairBangs', 'hairColor', 'hairTexture',
                 'aesthetic', 'additionalNotes',
-                'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs' // 顔と表情の詳細は最後
+                'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs'
             ];
 
             const allActiveKeys = Object.keys(activeData);
@@ -590,11 +652,9 @@ ${artStyleSpecificInstruction}`;
                         });
 
                         if (response.ok) {
-                            // ★ バグ修正箇所：Bodyを変数に保管し、2度読みエラーを回避
                             responseData = await response.json();
                             const candidate = responseData.candidates?.[0];
                             
-                            // セーフティフィルタリングの検知
                             if (candidate?.finishReason === 'SAFETY') {
                                 throw new Error("SAFETY_BLOCK");
                             }
@@ -620,13 +680,22 @@ ${artStyleSpecificInstruction}`;
 
                 attempt++;
                 if (attempt < 5) {
-            // 変数 responseData からデータを取り出すため、already read 例外が発生しない
+                    setStatusMessage('全モデル混雑中。待機して再試行...');
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2; 
+                }
+            }
+
+            if (!success || !responseData) {
+                setStatusMessage('制限中: 1分待ってください');
+                return;
+            }
+
+            // ★ バグ修正箇所：波括弧の崩壊を修正し、構文構造を正常化
             const rawText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-            
             const cleanText = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
             const result = JSON.parse(cleanText.match(/\{[\s\S]*\}/)?.[0] || "{}");
             
-            // ★ バグ修正箇所：キー名の揺れ（positive_prompt等）に柔軟に対応する堅牢な抽出ロジック
             const getFlexibleValue = (obj, keywords) => {
                 const foundKey = Object.keys(obj).find(k => keywords.some(kw => k.toLowerCase().includes(kw)));
                 return foundKey ? obj[foundKey] : null;
@@ -639,6 +708,7 @@ ${artStyleSpecificInstruction}`;
             setNegativePrompt(negPrompt);
             setStatusMessage('');
             setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
+
         } catch (e) {
             setStatusMessage('プロンプト構築エラー');
             console.error(e);
@@ -777,7 +847,7 @@ ${artStyleSpecificInstruction}`;
                     </div>
                     <div onClick={() => !isAnalyzing && plusInputRef.current?.click()} className="flex-1 aspect-square border-2 border-dashed border-pink-100 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 relative cursor-pointer hover:border-pink-300 transition-colors">
                         {previews.plus ? <img src={previews.plus} className="w-full h-full object-cover animate-fade-in" /> : <span className="text-[8px] font-bold text-pink-400">プラス画像</span>}
-                        {isAnalyzing === 'plus' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center animate-spin"><div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div></div>}
+                        {isAnalyzing === 'plus' && <div className="absolute inset-0 bg-white/70 flex items-center justify-center"><div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div></div>}
                     </div>
                     <input type="file" ref={baseInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'base')} />
                     <input type="file" ref={plusInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'plus')} />
@@ -880,7 +950,7 @@ ${artStyleSpecificInstruction}`;
                             <div key={idx} className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm animate-fade-in">
                                 <div className="w-full px-4 py-3 bg-slate-50/60 text-left flex justify-between items-center font-black cursor-pointer" onClick={() => toggleSection(idx)}>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-slate-600 uppercase">{idx + 1}. {section.title}</span>
+                                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{idx + 1}. {section.title}</span>
                                         <span className="text-[8px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-400">{fillCount} / {totalCount}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -900,7 +970,6 @@ ${artStyleSpecificInstruction}`;
                                 {openSections[idx] && (
                                     <div className="p-4 bg-white grid grid-cols-2 gap-3.5">
                                         
-                                        {/* ★ 表情のモード切り替えはグループ4 (idx === 3) に移動済み ★ */}
                                         {idx === 3 && (
                                             <div className="col-span-2 mb-2 bg-slate-50 p-2 rounded-2xl border border-slate-100">
                                                 <div className="flex gap-1 text-[10px] font-bold">
@@ -924,7 +993,7 @@ ${artStyleSpecificInstruction}`;
                                                     <div className="flex justify-between items-center mb-1">
                                                         <label className="text-[7px] font-black text-slate-400 uppercase">{LABEL_MAP[id] || id}</label>
                                                         <div className="flex items-center gap-1.5">
-                                                            <button type="button" onClick={() => startFocusEdit(id)} className="text-pink-500 bg-pink-50 p-1 rounded text-[8px] font-bold"><Icon name="zoom" /> ズーム</button>
+                                                            <button type="button" onClick={() => startFocusEdit(id)} className="text-pink-500 bg-pink-50 p-1 rounded text-[8px] font-bold flex items-center gap-1 hover:bg-pink-100/50"><Icon name="zoom" /> ズーム</button>
                                                             {hasVal && (
                                                                 <div className="flex gap-1 animate-fade-in">
                                                                     <button type="button" onClick={() => copySingleField(id)} className="text-[8px] text-slate-400">コピー</button>
@@ -952,7 +1021,7 @@ ${artStyleSpecificInstruction}`;
                                                         </div>
                                                     ) : (
                                                         <>
-                                                            <textarea rows="2" className={`w-full p-2.5 border rounded-xl bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:border-pink-200 transition-colors resize-none ${hasVal ? 'text-pink-700' : ''}`} value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
+                                                            <textarea disabled={disabledOpacity !== ''} rows="2" className={`w-full p-2.5 border rounded-xl bg-slate-50 text-xs font-bold focus:bg-white focus:outline-none focus:border-pink-200 transition-colors resize-none ${hasVal ? 'text-pink-700' : ''}`} value={selections[id] || ''} onChange={(e) => setSelections(p=>({...p, [id]: e.target.value}))} />
                                                             <div className="mt-1.5 flex gap-1 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap">
                                                                 {suggestions.map((sug, sIdx) => {
                                                                     const isSelected = selections[id] && (selections[id] === sug.value || selections[id].includes(sug.value));
@@ -1097,9 +1166,10 @@ ${artStyleSpecificInstruction}`;
 const saveToSlot = (index, memorySlots, selections, previews, setMemorySlots, setStatusMessage) => {
     try {
         const newSlots = [...memorySlots];
+        const existingPreview = memorySlots[index]?.preview || null;
         newSlots[index] = {
             data: { ...selections },
-            preview: previews.baseStored || previews.plusStored || null
+            preview: previews.baseStored || previews.plusStored || existingPreview
         };
         setMemorySlots(newSlots);
         localStorage.setItem('idol_designer_slots_v195', JSON.stringify(newSlots));
@@ -1114,8 +1184,13 @@ const loadFromSlot = (index, memorySlots, setSelections, setPreviews, setStatusM
     const slot = memorySlots[index];
     if (!slot) return;
     setSelections(slot.data);
+    
     if (slot.preview) {
-        setPreviews(prev => ({ ...prev, base: slot.preview, baseStored: slot.preview }));
+        setPreviews(prev => ({
+            ...prev,
+            base: slot.preview,
+            baseStored: slot.preview
+        }));
     }
     setStatusMessage(`Slot ${index + 1} Loaded`);
     setTimeout(() => setStatusMessage(''), 2000);
