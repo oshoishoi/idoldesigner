@@ -1,7 +1,6 @@
 // App.js
 const { useState, useEffect, useRef, useMemo } = React;
 
-// config.jsからグローバル定数を安全に受け渡す
 const FIELD_KEYS = window.FIELD_KEYS || [];
 const LABEL_MAP = window.LABEL_MAP || {};
 const FIELD_SUGGESTIONS = window.FIELD_SUGGESTIONS || {};
@@ -12,7 +11,7 @@ const safetySettings = window.safetySettings || [];
 
 const Icon = ({ name, className = "" }) => {
     const svgs = {
-        sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
+        sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
         refresh: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
         undo: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 7V5c0-1.1.9-2 2-2h2"/><path d="M17 3h2c1.1 0 2 .9 2 2v2"/><path d="M21 17v2c0 1.1-.9 2-2 2h-2"/><path d="M7 21H5c-1.1 0-2-.9-2-2v-2"/><path d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2Z"/><path d="M12 16v2"/><path d="M12 8V6"/><path d="M8 12H6"/><path d="M18 12h-2"/></svg>,
         target: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
@@ -33,7 +32,7 @@ const Icon = ({ name, className = "" }) => {
 };
 
 function App() {
-    /* STREAMING_CHUNK:Refactoring UI groups and cleaning up redundant fields... */
+    // 体型・衣装詳細を削除し、表情・FACSを演出設定グループへ移動
     const sections = [
         { title: "髪のデザイン", fields: ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture'] },
         { title: "顔・目の極限監査", fields: ['faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle', 'aesthetic'] },
@@ -51,32 +50,28 @@ function App() {
     const [globalHistory, setGlobalHistory] = useState([]);
     const [stagedData, setStagedData] = useState(null);
     const [selectedFields, setSelectedFields] = useState({});
+    
+    // プロセス状態
     const [isProcessing, setIsProcessing] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(null); 
     const [expressionMode, setExpressionMode] = useState('facs'); 
     
-    /* STREAMING_CHUNK:Adding fixed prompts (Vault) state and initialization... */
+    // プロンプト出力と固定（Vault）用
+    const [promptScope, setPromptScope] = useState('all'); 
     const [englishPrompt, setEnglishPrompt] = useState('');
     const [negativePrompt, setNegativePrompt] = useState('');
+    const [generatedFragments, setGeneratedFragments] = useState({ character: '', environment: '' }); 
+    const [fixedPrompts, setFixedPrompts] = useState({ character: '', environment: '' }); 
+    
     const [copyFeedback, setCopyFeedback] = useState(null); 
     const [statusMessage, setStatusMessage] = useState('');
     const [previews, setPreviews] = useState({ base: null, plus: null, baseStored: null, plusStored: null });
     const [memorySlots, setMemorySlots] = useState(Array(10).fill(null));
-    const [fixedPrompts, setFixedPrompts] = useState({ character: '', environment: '' }); // ★ 固定プロンプトのStateを追加
 
-    const [promptScope, setPromptScope] = useState('all'); 
+    const [openSections, setOpenSections] = useState({ 0: true, 1: false, 2: false, 3: false });
+    const [mergeOpenSections, setMergeOpenSections] = useState({ 0: true, 1: true, 2: true, 3: true });
 
-    const [openSections, setOpenSections] = useState({
-        0: true,  
-        1: false, 
-        2: false, 
-        3: false  
-    });
-
-    const [mergeOpenSections, setMergeOpenSections] = useState({
-        0: true, 1: true, 2: true, 3: true
-    });
-
+    // フォーカスエディタ用
     const [focusField, setFocusField] = useState(null); 
     const [focusTempText, setFocusTempText] = useState(''); 
     const [sugMode, setSugMode] = useState('append'); 
@@ -101,7 +96,6 @@ function App() {
             }
         } catch (e) { console.error("Restore failed:", e); }
 
-        // ★ 固定プロンプトの復元
         try {
             const savedPinned = localStorage.getItem('idol_designer_pinned_prompts');
             if (savedPinned) {
@@ -111,6 +105,7 @@ function App() {
     }, []);
 
     const pinPrompt = (type, text) => {
+        if (!text) return;
         setFixedPrompts(prev => {
             const next = { ...prev, [type]: text };
             localStorage.setItem('idol_designer_pinned_prompts', JSON.stringify(next));
@@ -163,10 +158,7 @@ function App() {
     };
 
     const toggleSection = (idx) => {
-        setOpenSections(prev => ({
-            ...prev,
-            [idx]: !prev[idx]
-        }));
+        setOpenSections(prev => ({ ...prev, [idx]: !prev[idx] }));
     };
 
     const getSectionFillCount = (fields) => {
@@ -182,14 +174,11 @@ function App() {
     const applyInspiTheme = (themeKey) => {
         const theme = INSPI_THEMES[themeKey];
         if (!theme) return;
-
         setGlobalHistory(prev => [selections, ...prev].slice(0, 3));
         setSelections(prev => {
             const next = { ...prev };
             Object.entries(theme.data).forEach(([key, val]) => {
-                if (FIELD_KEYS.includes(key)) {
-                    next[key] = val;
-                }
+                if (FIELD_KEYS.includes(key)) { next[key] = val; }
             });
             return next;
         });
@@ -200,9 +189,7 @@ function App() {
 
     const clearSingleField = (fieldId) => {
         setSelections(prev => ({ ...prev, [fieldId]: '' }));
-        if (focusField === fieldId) {
-            setFocusTempText('');
-        }
+        if (focusField === fieldId) { setFocusTempText(''); }
     };
 
     const copySingleField = (fieldId) => {
@@ -219,23 +206,14 @@ function App() {
                 return targetVal;
             }
             if (currentVal.includes(targetVal)) {
-                const cleaned = currentVal
-                    .split(',')
-                    .map(x => x.trim())
-                    .filter(x => x !== targetVal && x !== '')
-                    .join(', ');
-                return cleaned;
+                return currentVal.split(',').map(x => x.trim()).filter(x => x !== targetVal && x !== '').join(', ');
             }
             return `${currentVal.trim().replace(/,$/, '')}, ${targetVal}`;
         }
     };
 
     const applySuggestion = (fieldId, val) => {
-        setSelections(prev => {
-            const currentVal = prev[fieldId] || '';
-            const nextVal = applySuggestionInternal(currentVal, val);
-            return { ...prev, [fieldId]: nextVal };
-        });
+        setSelections(prev => ({ ...prev, [fieldId]: applySuggestionInternal(prev[fieldId] || '', val) }));
     };
 
     const applySuggestionInFocus = (val) => {
@@ -244,7 +222,6 @@ function App() {
             setFocusTempText(prev => applySuggestionInternal(prev, val));
             return;
         }
-
         const start = ta.selectionStart;
         const end = ta.selectionEnd;
         const currentText = ta.value;
@@ -257,27 +234,19 @@ function App() {
             newCursorPos = nextVal.length;
         } else {
             if (currentText.includes(val)) {
-                nextVal = currentText
-                    .split(',')
-                    .map(x => x.trim())
-                    .filter(x => x !== val && x !== '')
-                    .join(', ');
+                nextVal = currentText.split(',').map(x => x.trim()).filter(x => x !== val && x !== '').join(', ');
                 newCursorPos = Math.min(start, nextVal.length);
             } else {
                 const before = currentText.substring(0, start).trim();
                 const after = currentText.substring(end).trim();
-                
                 let insertStr = val;
                 if (before && !before.endsWith(',')) insertStr = ', ' + insertStr;
                 if (after && !after.startsWith(',')) insertStr = insertStr + ', ';
-
                 nextVal = currentText.substring(0, start) + insertStr + currentText.substring(end);
                 newCursorPos = start + insertStr.length;
             }
         }
-
         setFocusTempText(nextVal);
-        
         setTimeout(() => {
             if (focusTextAreaRef.current) {
                 focusTextAreaRef.current.focus();
@@ -304,11 +273,8 @@ function App() {
         const ta = focusTextAreaRef.current;
         if (!ta) return;
         let start = ta.selectionStart;
-        if (direction === 'left' && start > 0) {
-            ta.setSelectionRange(start - 1, start - 1);
-        } else if (direction === 'right' && start < ta.value.length) {
-            ta.setSelectionRange(start + 1, start + 1);
-        }
+        if (direction === 'left' && start > 0) { ta.setSelectionRange(start - 1, start - 1); } 
+        else if (direction === 'right' && start < ta.value.length) { ta.setSelectionRange(start + 1, start + 1); }
         ta.focus();
     };
 
@@ -316,10 +282,7 @@ function App() {
         try {
             const text = await navigator.clipboard.readText();
             if (text) {
-                setFocusTempText(prev => {
-                    if (!prev || prev.trim() === '') return text;
-                    return prev + " " + text;
-                });
+                setFocusTempText(prev => (!prev || prev.trim() === '' ? text : prev + " " + text));
                 setStatusMessage('ペーストしました');
                 setTimeout(() => setStatusMessage(''), 1500);
             }
@@ -333,9 +296,7 @@ function App() {
         if (window.confirm(`「${sectionTitle}」のすべての項目をリセットしますか？`)) {
             setSelections(prev => {
                 const next = { ...prev };
-                fields.forEach(f => {
-                    next[f] = '';
-                });
+                fields.forEach(f => { next[f] = ''; });
                 return next;
             });
         }
@@ -391,7 +352,6 @@ function App() {
         return new Promise((resolve, reject) => {
             const url = URL.createObjectURL(file);
             const img = new Image();
-            
             img.onload = () => {
                 try {
                     const canvas = document.createElement('canvas');
@@ -405,13 +365,11 @@ function App() {
                         if (h > MAX) { w *= MAX / h; h = MAX; } 
                     }
                     
-                    canvas.width = w; 
-                    canvas.height = h;
+                    canvas.width = w; canvas.height = h;
                     ctx.drawImage(img, 0, 0, w, h);
                     const b64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
                     
-                    canvas.width = 80; 
-                    canvas.height = (img.height / img.width) * 80;
+                    canvas.width = 80; canvas.height = (img.height / img.width) * 80;
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     const b64Preview = canvas.toDataURL('image/jpeg', 0.4);
                     
@@ -419,15 +377,10 @@ function App() {
                     resolve({ b64, pUrl: URL.createObjectURL(file), b64Preview });
                 } catch (e) {
                     URL.revokeObjectURL(url);
-                    reject(new Error("画像のリサイズ処理中にエラーが発生しました。別の画像をお試しください。"));
+                    reject(new Error("画像のリサイズ処理エラー"));
                 }
             };
-            
-            img.onerror = () => {
-                URL.revokeObjectURL(url);
-                reject(new Error("画像の読み込みに失敗しました。未対応の形式か、データが破損している可能性があります。"));
-            };
-            
+            img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("読み込みエラー")); };
             img.src = url;
         });
     };
@@ -435,42 +388,33 @@ function App() {
     const handleUpload = async (e, mode) => {
         const file = e.target.files?.[0];
         if (!file || isAnalyzing) return;
-        
         setIsAnalyzing(mode);
         setStatusMessage('分析中...');
-        
         try {
             const { b64, pUrl, b64Preview } = await safeProcessImage(file);
             setPreviews(prev => ({ ...prev, [mode]: pUrl, [`${mode}Stored`]: b64Preview }));
             await runAnalysis(b64, mode);
         } catch (err) {
-            console.error("Image Processing Error:", err);
-            setStatusMessage('画像読込エラー: 無効な形式です');
+            console.error("Image Error:", err);
+            setStatusMessage('画像読込エラー');
             setIsAnalyzing(null);
-        } finally { 
-            if(e.target) e.target.value = ''; 
-        }
+        } finally { if(e.target) e.target.value = ''; }
     };
 
     const runAnalysis = async (base64, mode) => {
-        let delay = 1000;
+        let delay = 2000;
         let responseData = null;
         let success = false;
-        
         const keyListString = FIELD_KEYS.join(', ');
 
-        const analysisSystemInstruction = `あなたは世界最高峰のポートレート・グラビア監査官です。
-画像をミリ単位で超精密にスキャンし、指定されたキーのJSONのみを出力してください。
-【絶対ルール】
-1. 純粋なJSONのみ。キー名は【対象リスト】と完全一致。
-2. 不明項目は空文字。値は全て【日本語】で記述。
-【攻めの監査項目】
+        const analysisSystemInstruction = `あなたは世界最高峰のポートレート・グラビア監査官です。画像をミリ単位で超精密にスキャンし、指定されたキーのJSONのみを出力してください。
+【絶対ルール】純粋なJSONのみ。解説厳禁。キー名は【対象リスト】と完全一致。不明項目は空文字。値は全て【日本語】で記述。
+【監査項目】
 - expression/facs: 動的変化(ウインク等)はここに集約。
-- 顔パーツ造形: 顔の向き等の情報は排除し、無表情時を逆算して端的に。
-- height/threeSizes/facePlacement: 日本語テキストで。「こぼれるような豊かなボリューム」「マシュマロのようなふくよかさ」など、重力感や肉感の美しさを克明な日本語で書き出せ。
-- bodyInterface: 物理境界を徹底的に攻めよ。「極細の紐が放つ張力と、それに優しく沈み込むマシュマロのような肌のコントラスト」「ボトムスの鋭く高いレッグカッティング（ハイレグ）が腰骨の優美なラインを強調している」「ミニマルなバックカッティングがヒップの豊かな輪郭になぞりながら柔らかく沈み込んでいる」などを執拗に観察し、克明に言語化せよ。
-- bodyLine: ポーズやアングルが生み出す「縦のライン（脚長効果など）」や「S字カーブの曲線美」を美術解剖学的に出力せよ。
-- lighting: 光の方向（順光、逆光、サイド等）、種類（自然光、スタジオ等）、質（硬い、柔らかい）、およびそれらが肌や曲線に落とす陰影のグラデーションを精密にスキャンせよ。
+- height/threeSizes: 日本語テキストで。「こぼれるような豊かなボリューム」「マシュマロのようなふくよかさ」など、重力感や肉感の美しさを克明な日本語で書き出せ。
+- bodyInterface: 物理境界を徹底的に攻めよ。「極細の紐が放つ張力と、それに優しく沈み込むマシュマロのような肌のコントラスト」「ボトムスの鋭く高いレッグカッティングが腰骨の優美なラインを強調している」「ミニマルなバックカッティングがヒップの豊かな輪郭になぞりながら柔らかく沈み込んでいる」などを執拗に観察し言語化せよ。
+- bodyLine: ポーズやアングルが生み出す「縦のライン（脚長効果など）」や「S字カーブの曲線美」を出力せよ。
+- lighting: 光の方向、種類、質、およびそれらが肌や曲線に落とす陰影のグラデーションを精密にスキャンせよ。
 - additionalNotes: AIが推測したモデルの人種（日本人、アジア系等）を必ず追記に含めること。
 【対象リスト】
 ${keyListString}`;
@@ -482,73 +426,53 @@ ${keyListString}`;
             while (attempt < 5 && !success) {
                 for (let i = 0; i < FALLBACK_MODELS.length; i++) {
                     const currentModel = FALLBACK_MODELS[i];
-                    const shortName = currentModel.replace('gemini-', '');
-                    
                     try {
-                        setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '分析中...');
+                        setStatusMessage((attempt > 0 || i > 0) ? `[${currentModel.replace('gemini-', '')}] 試行中...` : '分析中...');
                         const response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{ 
-                                    parts: [
-                                        { inlineData: { mimeType: "image/jpeg", data: base64 } }
-                                    ] 
-                                }],
+                                contents: [{ parts: [{ inlineData: { mimeType: "image/jpeg", data: base64 } }] }],
                                 systemInstruction: { parts: [{ text: analysisSystemInstruction }] },
                                 safetySettings
                             }),
                         });
-
                         if (response.ok) {
                             responseData = await response.json();
                             success = true;
                             break;
-                        } else if (response.status === 404 || response.status === 429 || response.status === 503) {
+                        } else if ([404, 429, 503].includes(response.status)) {
                             await new Promise(resolve => setTimeout(resolve, 500));
                             continue;
-                        } else {
-                            throw new Error("HTTP " + response.status);
-                        }
-                    } catch (err) {
-                        continue;
-                    }
+                        } else { throw new Error("HTTP " + response.status); }
+                    } catch (err) { continue; }
                 }
-
                 if (success) break;
-
                 attempt++;
                 if (attempt < 5) {
-                    setStatusMessage('全モデル混雑中。待機して再試行...');
+                    setStatusMessage(`全モデル混雑中。待機して再試行 (${attempt}/5)...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                     delay *= 2; 
                 }
             }
 
-            if (!success || !responseData) {
-                setStatusMessage('制限中: 1分待ってください');
-                setIsAnalyzing(null); 
-                return;
-            }
+            if (!success || !responseData) { setStatusMessage('制限中: 1分待ってください'); return; }
 
             const rawText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-            const result = JSON.parse(rawText.match(/\{[\s\S]*\}/)?.[0] || "{}");
+            const cleanText = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+            const result = JSON.parse(cleanText.match(/\{[\s\S]*\}/)?.[0] || "{}");
 
             const safeStringifyValue = (val) => {
                 if (val === null || val === undefined) return '';
                 if (typeof val === 'object') {
-                    if (Array.isArray(val)) {
-                        return val.map(v => typeof v === 'object' ? JSON.stringify(v) : String(v)).join('、');
-                    }
+                    if (Array.isArray(val)) return val.map(v => typeof v === 'object' ? JSON.stringify(v) : String(v)).join('、');
                     return Object.entries(val).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`).join('、');
                 }
                 return String(val);
             };
 
             const normalizedResult = {};
-            Object.keys(result).forEach(rawKey => {
-                normalizedResult[rawKey.trim().toLowerCase()] = safeStringifyValue(result[rawKey]);
-            });
+            Object.keys(result).forEach(rawKey => { normalizedResult[rawKey.trim().toLowerCase()] = safeStringifyValue(result[rawKey]); });
 
             if (mode === 'base') {
                 setSelections(prev => {
@@ -563,22 +487,14 @@ ${keyListString}`;
                 });
             } else {
                 const mergedStaged = {};
-                FIELD_KEYS.forEach(k => {
-                    mergedStaged[k] = normalizedResult[k.toLowerCase()] !== undefined ? normalizedResult[k.toLowerCase()] : '';
-                });
+                FIELD_KEYS.forEach(k => { mergedStaged[k] = normalizedResult[k.toLowerCase()] !== undefined ? normalizedResult[k.toLowerCase()] : ''; });
                 setStagedData(mergedStaged);
-                setSelectedFields(FIELD_KEYS.reduce((a, k) => {
-                    a[k] = mergedStaged[k] !== 'none' && mergedStaged[k] !== '不明' && mergedStaged[k] !== '';
-                    return a;
-                }, {}));
+                setSelectedFields(FIELD_KEYS.reduce((a, k) => { a[k] = mergedStaged[k] !== 'none' && mergedStaged[k] !== '不明' && mergedStaged[k] !== ''; return a; }, {}));
             }
             setStatusMessage('');
         } catch (e) {
             setStatusMessage('解析エラー');
-            console.error(e);
-        } finally {
-            setTimeout(() => setIsAnalyzing(null), 1000);
-        }
+        } finally { setTimeout(() => setIsAnalyzing(null), 500); }
     };
 
     const generatePrompt = async () => {
@@ -586,7 +502,7 @@ ${keyListString}`;
         setIsProcessing(true);
         setStatusMessage('生成中...');
         
-        let delay = 1000;
+        let delay = 2000;
         let responseData = null;
         let success = false;
 
@@ -595,33 +511,19 @@ ${keyListString}`;
             const activeData = { ...selections };
             if (expressionMode === 'facs') activeData.expression = ""; else activeData.facs = "";
 
-            /* STREAMING_CHUNK:Filtering fields based on the selected prompt scope... */
             let targetFields = FIELD_KEYS;
             if (promptScope === 'character') {
-                targetFields = [
-                    'hairStyle', 'hairBangs', 'hairColor', 'hairTexture',
-                    'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle',
-                    'skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyFrame', 'threeSizes',
-                    'aesthetic', 'additionalNotes'
-                ];
+                targetFields = ['hairStyle', 'hairBangs', 'hairColor', 'hairTexture', 'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle', 'skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyFrame', 'threeSizes', 'aesthetic', 'additionalNotes'];
             } else if (promptScope === 'environment') {
-                targetFields = [
-                    'hairAccessory', 'outfit', 'bodyInterface', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'
-                ];
+                targetFields = ['hairAccessory', 'outfit', 'bodyInterface', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'];
             }
 
-            // ターゲット以外のフィールドはAIに渡すデータから除外する
-            Object.keys(activeData).forEach(k => {
-                if (!targetFields.includes(k)) activeData[k] = '';
-            });
+            Object.keys(activeData).forEach(k => { if (!targetFields.includes(k)) activeData[k] = ''; });
 
             const PRIORITY_ORDER = [
                 'cameraAngle', 'artStyle', 'pose', 'bodyLine', 'situation', 'lighting', 
-                'age', 'height', 'bodyFrame', 'threeSizes', 
-                'skinColor', 'skinTexture', 'bodyInterface',
-                'outfit', 'hairAccessory', 
-                'hairStyle', 'hairBangs', 'hairColor', 'hairTexture',
-                'aesthetic', 'additionalNotes',
+                'age', 'height', 'bodyFrame', 'threeSizes', 'skinColor', 'skinTexture', 'bodyInterface',
+                'outfit', 'hairAccessory', 'hairStyle', 'hairBangs', 'hairColor', 'hairTexture', 'aesthetic', 'additionalNotes',
                 'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'molesFreckles', 'makeupStyle', 'expression', 'facs'
             ];
 
@@ -630,44 +532,29 @@ ${keyListString}`;
             const FULL_ORDER = [...PRIORITY_ORDER, ...remainingKeys];
 
             const activeText = FULL_ORDER
-                .map(key => {
-                    const value = activeData[key];
-                    if (value && value !== '' && !['orientation', 'ratio'].includes(key)) {
-                        return `${LABEL_MAP[key] || key}: ${value}`;
-                    }
-                    return null;
-                })
-                .filter(Boolean)
-                .join('\n');
+                .map(key => { const value = activeData[key]; if (value && value !== '' && !['orientation', 'ratio'].includes(key)) return `${LABEL_MAP[key] || key}: ${value}`; return null; })
+                .filter(Boolean).join('\n');
 
-            /* STREAMING_CHUNK:Configuring contextual prompt guidelines and laundering rules... */
             const outfitText = (selections.outfit || "").toLowerCase();
             let routeSpecificInstruction = "";
-
             if (outfitText.match(/(水着|ビキニ|マイクロ|ストラップ|紐|ブラ|下着|swimwear|bikini)/i)) {
-                routeSpecificInstruction = `
-- 【面積増大・部屋着化防止】"top", "shorts"単体禁止。露出構造明記。ネガティブに"boy-shorts, boxers, roomwear, camisole, hidden navel, full back coverage"追加。
-- 【キャミソール化防止】"bra"単体禁止 ➔ "underwire bralette"等へ。腹部露出強制"ultra-cropped midriff-baring design revealing the navel"。ネガティブに"bustier, corset, fabric covering the belly, long top"追加。
-- 【過激露出の安全表現化】"m*cro", "t*ny", "barely covering"等は禁止。"minimalist triangular cut", "narrow fabric panels", "slender string-based construction" 等の幾何学的・構造的用語へ変換。`;
-            } else {
-                routeSpecificInstruction = `- 衣装カッティングを幾何学的に英訳。`;
-            }
+                routeSpecificInstruction = `\n- 【面積増大・部屋着化防止】"top", "shorts"単体禁止。露出構造明記。ネガティブに"boy-shorts, boxers, roomwear, camisole, hidden navel, full back coverage"追加。\n- 【キャミソール化防止】"bra"単体禁止 ➔ "underwire bralette"等へ。腹部露出強制"ultra-cropped midriff-baring design revealing the navel"。ネガティブに"bustier, corset, fabric covering the belly, long top"追加。\n- 【過激露出の安全表現化】"m*cro", "t*ny", "barely covering"等は禁止。"minimalist triangular cut", "narrow fabric panels", "slender string-based construction" 等の幾何学的・構造的用語へ変換。`;
+            } else { routeSpecificInstruction = `\n- 衣装カッティングを幾何学的に英訳。`; }
 
             const artStyleText = selections.artStyle && (selections.artStyle || selections.ratio) ? ((selections.artStyle || "") + " " + (selections.ratio || "")).toLowerCase() : "";
             let artStyleSpecificInstruction = "";
-            
             if (artStyleText.match(/(54:86|cheki|polaroid|instant|analog|vintage)/i)) {
                 const borderSide = selections.orientation === 'landscape' ? 'RIGHT' : 'BOTTOM';
-                artStyleSpecificInstruction = `
-- 【チェキ風Lo-Fi画質の完全ロック】: 現在「チェキ風」が指定されています。AIが "Photorealistic" などのスタジオライティング系キーワードを追加することを【徹底的に禁止】せよ。
-- 代わりに、プロンプトの冒頭から "Lo-fi analog instant camera film, heavy grainy texture" をメイン画質トーンとして強制適用せよ。さらに "Classic white instant photo frame with a wide, thick white border on the ${borderSide} side" を必ず文中に盛り込むこと。`;
-            } else {
-                artStyleSpecificInstruction = `
-- 【チェキ風画質の完全排除】: 通常時条件として "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" などを適用し、ライティングや演出を精緻に反映せよ。"non-existent person" を組み込み、非実在性を明記せよ。`;
-            }
+                artStyleSpecificInstruction = `\n- 【チェキ風Lo-Fi画質の完全ロック】: AIが "Photorealistic" などを追加することを【徹底的に禁止】せよ。代わりに "Lo-fi analog instant camera film, heavy grainy texture" をメイン画質トーンとして強制適用し、"Classic white instant photo frame with a wide, thick white border on the ${borderSide} side" を文中に盛り込むこと。`;
+            } else { artStyleSpecificInstruction = `\n- 【チェキ風画質の排除】: 通常時条件として "Photorealistic, RAW photo, high-fidelity skin texture, sharp focus, 8k" などを適用し、ライティングや演出を精緻に反映せよ。"non-existent person" を組み込み非実在性を明記せよ。`; }
 
-            /* STREAMING_CHUNK:Injecting the ultimate 12-point laundering strategy... */
-            const promptSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}
+            const promptSystemInstruction = `最高品質の英語プロンプトを以下のJSON形式で厳密に出力せよ：
+{
+  "positive": "入力データを全て統合した最高品質のポジティブプロンプト",
+  "negative": "ネガティブプロンプト",
+  "character_only": "positiveの中から『人物の身体的特徴・顔立ち・肌・髪型・年齢・体型』のみを抽出・分離したプロンプト（背景・ポーズ・衣装・アングルは絶対含めない）",
+  "environment_only": "positiveの中から『構図、背景、衣装、ライティング、ポーズ、画風、アングル』のみを抽出・分離したプロンプト（人物の固有の顔立ちや体型特徴は含めない）"
+}
 【ハイエンド・ポートレート生成用 プロンプト最適化ガイドライン】
 1. シルエットとプロポーション: "b*st v*lume", "cl*avage", "h*ge br*asts", "f*t"等は絶対禁止。"graceful feminine silhouette", "plush upper volume with a natural, elegant heavy drape gracefully supported by the fabric" 等の洗練された高級シルエット表現へロンダリングせよ。
 2. 雰囲気と形容詞の洗練: "s*xy"等禁止 ➔ "captivating aura", "alluring presence"等へ。
@@ -682,75 +569,57 @@ ${keyListString}`;
 11. ボディ・曲線美(bodyLine)は、"elegant S-curve silhouette", "graceful vertical body line" 等のデッサン表現へ。
 12. 光演出(lighting)は、"cinematic volumetric lighting", "dramatic rim light", "soft diffused daylight" 等の写真・照明用語に変換。
 13. FACSは"AU12C"等のみ反映。
-14. aestheticを自然に追加。
-${routeSpecificInstruction}
-${artStyleSpecificInstruction}`;
+14. aestheticを自然に追加。${routeSpecificInstruction}${artStyleSpecificInstruction}`;
+
+            let finalSystemInstruction = promptSystemInstruction;
+            if (promptScope === 'character') {
+                finalSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}\n【人物特化モード（キャラクター固定用）の絶対厳守事項】\n1. 今回は「顔立ち、髪型、体型、肌の質感」など『人物の身体的特徴』のみを純粋に出力してください。\n2. 【絶対禁止】背景(situation)、ポーズ(pose)、衣装(outfit)、ライティング(lighting)、カメラアングル(cameraAngle)に関する記述は一切含めないでください。AIの推測による補完も固く禁じます。\n3. シルエット表現: "b*st", "f*t"等は禁止。"graceful feminine silhouette" 等の高級用語を使用。\n4. 解剖学部位名: 骨や露骨な肉感描写は避け、全体的な体型の美しさに留める。\n5. ネガティブプロンプト: "nsfw"等の一発ブロック用語は避け "inappropriate attire" などを適用。`;
+            } else if (promptScope === 'environment') {
+                finalSystemInstruction = `最高品質の英語プロンプトをJSONで出力せよ：{"positive": "...", "negative": "..."}\n【環境・演出特化モード（シチュエーション固定用）の絶対厳守事項】\n1. 今回は「構図、背景、衣装、ライティング、画風」など『演出と環境』のみを純粋に出力してください。\n2. 【絶対禁止】モデルの顔立ち、髪型、年齢、詳細な体型など、固有の人物を特定・描写する記述は一切含めないでください。\n3. アングル最優先: カメラアングルをプロンプト最上位に配置し、映画用語で強調。\n4. 衣装表現の最適化: "w*t-l*ok"等禁止➔"matte finish"へ。面積極小指定禁止➔"minimalist triangular cut"等へ。\n5. 食い込み表現の回避: "fitting smoothly and seamlessly against the skin" 等のシームレス・タイトフィット用語へ偽装。\n6. 光演出: "cinematic volumetric lighting" 等の写真用語に変換。${routeSpecificInstruction}${artStyleSpecificInstruction}`;
+            }
 
             const FALLBACK_MODELS = ['gemini-3.5-flash', 'gemini-3.0-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
             let attempt = 0;
-            
-            // ★ モードに応じたAIへの特別指示
-            const modeInstruction = promptScope === 'character' ? '【重要】今回は「人物の身体的特徴・顔立ち」のみのプロンプトを生成します。背景や構図、衣装の要素は含めず、純粋なキャラクターデザインの定義として出力してください。' :
-                                    promptScope === 'environment' ? '【重要】今回は「構図、背景、衣装、演出」のみのプロンプトを生成します。人物の詳細な顔立ちや肉体的特徴は含めず、純粋なシチュエーションとスタイルの定義として出力してください。' : '';
 
             while (attempt < 5 && !success) {
                 for (let i = 0; i < FALLBACK_MODELS.length; i++) {
                     const currentModel = FALLBACK_MODELS[i];
-                    const shortName = currentModel.replace('gemini-', '');
-                    
                     try {
-                        setStatusMessage((attempt > 0 || i > 0) ? `[${shortName}] 試行中...` : '生成中...');
+                        setStatusMessage((attempt > 0 || i > 0) ? `[${currentModel.replace('gemini-', '')}] 試行中...` : '生成中...');
                         const response = await fetch(getApiUrl("generateContent", currentModel), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{ parts: [{ text: `以下の日本語データに基づきプロンプトを作成し、末尾に比率 "${arTag}" を含めて出力せよ。\n${modeInstruction}\n\nデータ:\n${activeText}` }] }],
-                                systemInstruction: { parts: [{ text: promptSystemInstruction }] },
+                                contents: [{ parts: [{ text: `以下のデータに基づきプロンプトを作成し、末尾に比率 "${arTag}" を含めよ。\n\nデータ:\n${activeText}` }] }],
+                                systemInstruction: { parts: [{ text: finalSystemInstruction }] },
                                 safetySettings
                             }),
                         });
-
                         if (response.ok) {
                             responseData = await response.json();
-                            const candidate = responseData.candidates?.[0];
-                            
-                            if (candidate?.finishReason === 'SAFETY') {
-                                throw new Error("SAFETY_BLOCK");
-                            }
+                            if (responseData.candidates?.[0]?.finishReason === 'SAFETY') throw new Error("SAFETY_BLOCK");
                             success = true;
                             break;
-                        } else if (response.status === 404 || response.status === 429 || response.status === 503) {
+                        } else if ([404, 429, 503].includes(response.status)) {
                             await new Promise(resolve => setTimeout(resolve, 500));
                             continue;
-                        } else {
-                            throw new Error("HTTP " + response.status);
-                        }
+                        } else { throw new Error("HTTP " + response.status); }
                     } catch (err) {
-                        if (err.message === "SAFETY_BLOCK") {
-                            setStatusMessage('エラー: セーフティ制限に抵触');
-                            setIsProcessing(false);
-                            return; 
-                        }
+                        if (err.message === "SAFETY_BLOCK") { setStatusMessage('セーフティ制限抵触'); setIsProcessing(false); return; }
                         continue;
                     }
                 }
-
                 if (success) break;
-
                 attempt++;
                 if (attempt < 5) {
-                    setStatusMessage('全モデル混雑中。待機して再試行...');
+                    setStatusMessage(`全モデル混雑中。待機して再試行 (${attempt}/5)...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                     delay *= 2; 
                 }
             }
 
-            if (!success || !responseData) {
-                setStatusMessage('制限中: 1分待ってください');
-                return;
-            }
+            if (!success || !responseData) { setStatusMessage('制限中: しばらく待ってください'); return; }
 
-            // ★ バグ修正箇所：波括弧の崩壊を修正し、構文構造を正常化
             const rawText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
             const cleanText = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
             const result = JSON.parse(cleanText.match(/\{[\s\S]*\}/)?.[0] || "{}");
@@ -762,18 +631,18 @@ ${artStyleSpecificInstruction}`;
 
             const posPrompt = getFlexibleValue(result, ['positive', 'pos']) || Object.values(result)[0] || "";
             const negPrompt = getFlexibleValue(result, ['negative', 'neg']) || Object.values(result)[1] || "";
+            const charPrompt = getFlexibleValue(result, ['character_only', 'character', 'char']) || "";
+            const envPrompt = getFlexibleValue(result, ['environment_only', 'environment', 'env']) || "";
             
             setEnglishPrompt(posPrompt);
             setNegativePrompt(negPrompt);
+            setGeneratedFragments({ character: charPrompt, environment: envPrompt });
             setStatusMessage('');
             setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
-
         } catch (e) {
             setStatusMessage('プロンプト構築エラー');
             console.error(e);
-        } finally {
-            setIsProcessing(false);
-        }
+        } finally { setIsProcessing(false); }
     };
 
     return (
@@ -783,56 +652,29 @@ ${artStyleSpecificInstruction}`;
                     <h1 className="font-bold text-base text-pink-600 italic flex items-center gap-2 tracking-tight">
                         <Icon name="sparkles" className="animate-pulse text-pink-500" /> IDOL Designer PRO
                     </h1>
-                    <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.9.8 Safety Guard Edition</span>
+                    <span className="text-[8px] font-black text-slate-300 ml-7 tracking-widest uppercase">Version 1.9.9 Master Edition</span>
                 </div>
                 <div className="flex gap-2">
-                    <button 
-                        type="button"
-                        onClick={() => globalHistory.length > 0 && setSelections(globalHistory[0])} 
-                        disabled={!!isAnalyzing || isProcessing}
-                        className={`p-2 text-slate-400 hover:text-pink-500 transition-colors active:scale-90 ${(isAnalyzing || isProcessing) ? 'opacity-30 pointer-events-none' : ''}`}
-                        title="元に戻す"
-                    >
-                        <Icon name="undo" />
-                    </button>
-                    <button 
-                        type="button"
-                        onClick={() => {
-                            if (window.confirm('すべての入力パラメータをクリアしますか？')) {
-                                setSelections(createEmptyState());
-                                setPreviews({ base: null, plus: null, baseStored: null, plusStored: null });
-                                setEnglishPrompt('');
-                                setNegativePrompt('');
-                                setStatusMessage('初期化しました');
-                                setTimeout(() => setStatusMessage(''), 2000);
-                            }
-                        }} 
-                        disabled={!!isAnalyzing || isProcessing}
-                        className={`p-2 text-slate-400 hover:text-red-500 transition-colors ${(isAnalyzing || isProcessing) ? 'opacity-30 pointer-events-none' : ''}`}
-                        title="リセット"
-                    >
-                        <Icon name="refresh" />
-                    </button>
+                    <button type="button" onClick={() => globalHistory.length > 0 && setSelections(globalHistory[0])} disabled={!!isAnalyzing || isProcessing} className={`p-2 text-slate-400 hover:text-pink-500 transition-colors active:scale-90 ${(isAnalyzing || isProcessing) ? 'opacity-30 pointer-events-none' : ''}`} title="元に戻す"><Icon name="undo" /></button>
+                    <button type="button" onClick={() => {
+                        if (window.confirm('すべての入力パラメータをクリアしますか？')) {
+                            setSelections(createEmptyState());
+                            setPreviews({ base: null, plus: null, baseStored: null, plusStored: null });
+                            setEnglishPrompt(''); setNegativePrompt(''); setStatusMessage('初期化しました');
+                            setTimeout(() => setStatusMessage(''), 2000);
+                        }
+                    }} disabled={!!isAnalyzing || isProcessing} className={`p-2 text-slate-400 hover:text-red-500 transition-colors ${(isAnalyzing || isProcessing) ? 'opacity-30 pointer-events-none' : ''}`} title="リセット"><Icon name="refresh" /></button>
                 </div>
             </header>
 
             <main className="max-w-xl mx-auto px-4 mt-4 space-y-6">
                 <section className="bg-white p-5 rounded-[2rem] border border-pink-100/50 shadow-sm space-y-3">
                     <div className="flex items-center justify-between pb-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic flex items-center gap-1">
-                            🚀 Design Inspiration (テーマパッチ)
-                        </span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic flex items-center gap-1">🚀 Design Inspiration (テーマパッチ)</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                         {Object.entries(INSPI_THEMES).map(([key, theme]) => (
-                            <button
-                                type="button"
-                                key={key}
-                                onClick={() => applyInspiTheme(key)}
-                                className="bg-pink-50 hover:bg-pink-500 hover:text-white text-pink-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-pink-100/30 transition-all flex items-center gap-1 active:scale-95"
-                            >
-                                {theme.name}
-                            </button>
+                            <button type="button" key={key} onClick={() => applyInspiTheme(key)} className="bg-pink-50 hover:bg-pink-500 hover:text-white text-pink-700 text-[10px] font-bold px-3 py-1.5 rounded-full border border-pink-100/30 transition-all flex items-center gap-1 active:scale-95">{theme.name}</button>
                         ))}
                     </div>
                 </section>
@@ -842,40 +684,12 @@ ${artStyleSpecificInstruction}`;
                     <div className="grid grid-cols-5 gap-2">
                         {memorySlots.map((slot, i) => (
                             <div key={i} className="space-y-1">
-                                <button 
-                                    type="button"
-                                    onClick={() => slot ? loadFromSlot(i, memorySlots, setSelections, setPreviews, setStatusMessage) : saveToSlot(i, memorySlots, selections, previews, setMemorySlots, setStatusMessage)}
-                                    disabled={!!isAnalyzing || isProcessing}
-                                    className={`w-full aspect-square rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all relative ${slot ? 'border-pink-400 bg-white shadow-sm' : 'border-slate-200 bg-slate-50/50'} ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}
-                                >
-                                    {slot ? (
-                                        <>
-                                            <img src={slot.preview} className="w-full h-full object-cover opacity-80 animate-fade-in" />
-                                            <div className="absolute inset-0 flex items-center justify-center font-black text-[9px] text-pink-600 bg-white/20">{i+1}</div>
-                                        </>
-                                    ) : (
-                                        <span className="text-[10px] text-slate-300 font-bold uppercase">{i+1}</span>
-                                    )}
+                                <button type="button" onClick={() => slot ? loadFromSlot(i, memorySlots, setSelections, setPreviews, setStatusMessage) : saveToSlot(i, memorySlots, selections, previews, setMemorySlots, setStatusMessage)} disabled={!!isAnalyzing || isProcessing} className={`w-full aspect-square rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden transition-all relative ${slot ? 'border-pink-400 bg-white shadow-sm' : 'border-slate-200 bg-slate-50/50'} ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}>
+                                    {slot ? <><img src={slot.preview} className="w-full h-full object-cover opacity-80 animate-fade-in" /><div className="absolute inset-0 flex items-center justify-center font-black text-[9px] text-pink-600 bg-white/20">{i+1}</div></> : <span className="text-[10px] text-slate-300 font-bold uppercase">{i+1}</span>}
                                 </button>
                                 <div className="flex gap-1">
-                                    <button 
-                                        type="button"
-                                        onClick={() => saveToSlot(i, memorySlots, selections, previews, setMemorySlots, setStatusMessage)} 
-                                        disabled={!!isAnalyzing || isProcessing}
-                                        className={`flex-1 py-1 text-[7px] font-black bg-slate-50 text-slate-500 rounded border border-slate-100 uppercase active:scale-95 ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}
-                                    >
-                                        保存
-                                    </button>
-                                    {slot && (
-                                        <button 
-                                            type="button"
-                                            onClick={(e) => { e.stopPropagation(); const newSlots = [...memorySlots]; newSlots[i] = null; setMemorySlots(newSlots); localStorage.setItem('idol_designer_slots_v195', JSON.stringify(newSlots)); setStatusMessage(`スロット ${i + 1} をクリア`); setTimeout(() => setStatusMessage(''), 2000); }} 
-                                            disabled={!!isAnalyzing || isProcessing}
-                                            className="px-1 text-[7px] font-black bg-red-50 text-red-500 rounded border border-red-100 active:scale-95"
-                                        >
-                                            ✕
-                                        </button>
-                                    )}
+                                    <button type="button" onClick={() => saveToSlot(i, memorySlots, selections, previews, setMemorySlots, setStatusMessage)} disabled={!!isAnalyzing || isProcessing} className={`flex-1 py-1 text-[7px] font-black bg-slate-50 text-slate-500 rounded border border-slate-100 uppercase active:scale-95 ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}>保存</button>
+                                    {slot && <button type="button" onClick={(e) => { e.stopPropagation(); const newSlots = [...memorySlots]; newSlots[i] = null; setMemorySlots(newSlots); localStorage.setItem('idol_designer_slots_v195', JSON.stringify(newSlots)); setStatusMessage(`スロット ${i + 1} をクリア`); setTimeout(() => setStatusMessage(''), 2000); }} disabled={!!isAnalyzing || isProcessing} className="px-1 text-[7px] font-black bg-red-50 text-red-500 rounded border border-red-100 active:scale-95">✕</button>}
                                 </div>
                             </div>
                         ))}
@@ -885,18 +699,12 @@ ${artStyleSpecificInstruction}`;
                 <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl text-[9px]">
                      <div className="flex items-start gap-2">
                          <Icon name="info" className="text-blue-500 w-4 h-4 mt-0.5 shrink-0" />
-                         <div>
-                            <p className="text-blue-700 font-bold italic">【FICTION】生成内容はすべて架空の創作物であり、実在の人物とは関係ありません。</p>
-                         </div>
+                         <div><p className="text-blue-700 font-bold italic">【FICTION】生成内容はすべて架空の創作物であり、実在の人物とは関係ありません。</p></div>
                      </div>
                 </div>
 
                 <div className="h-6 flex items-center justify-center">
-                    {statusMessage && (
-                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 bg-white ${statusMessage.includes('エラー') || statusMessage.includes('失敗') ? 'text-red-500 border border-red-200' : 'text-pink-500'}`}>
-                            {statusMessage.toUpperCase()}
-                        </div>
-                    )}
+                    {statusMessage && <div className={`px-4 py-1.5 rounded-full text-[10px] font-black shadow-sm flex items-center gap-3 bg-white ${statusMessage.includes('エラー') || statusMessage.includes('失敗') ? 'text-red-500 border border-red-200' : 'text-pink-500'}`}>{statusMessage.toUpperCase()}</div>}
                 </div>
 
                 <section className={`bg-white rounded-3xl p-5 shadow-sm border border-pink-50 flex gap-4 ${(isAnalyzing || isProcessing) ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -912,7 +720,6 @@ ${artStyleSpecificInstruction}`;
                     <input type="file" ref={plusInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'plus')} />
                 </section>
 
-                {/* PLUS画像マージモーダル */}
                 {stagedData && (
                     <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
                         <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
@@ -920,39 +727,18 @@ ${artStyleSpecificInstruction}`;
                                 マージ選択
                                 <button type="button" onClick={() => setStagedData(null)} className="p-1 hover:bg-white/20 rounded-full transition-colors"><Icon name="x" className="w-4 h-4" /></button>
                             </div>
-                            <div className="bg-pink-50 text-[9px] text-pink-600 font-bold p-2 text-center border-b border-pink-100">
-                                抽出されたパラメータをグループごとに選択してマージできます
-                            </div>
                             <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50 custom-scrollbar">
                                 {sections.map((section, idx) => {
                                     const validFields = section.fields.filter(f => stagedData[f] && stagedData[f] !== 'none' && stagedData[f] !== '不明');
                                     if (validFields.length === 0) return null;
-
                                     const allChecked = validFields.every(f => selectedFields[f]);
-
                                     return (
                                         <div key={idx} className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
                                             <div className="px-3 py-2 bg-slate-100/50 border-b border-slate-100 flex justify-between items-center">
-                                                <button 
-                                                    type="button" 
-                                                    className="flex items-center gap-2 font-black text-[10px] text-slate-700 flex-1 text-left"
-                                                    onClick={() => setMergeOpenSections(prev => ({...prev, [idx]: !prev[idx]}))}
-                                                >
-                                                    {mergeOpenSections[idx] ? <Icon name="chevronUp" className="w-3 h-3 text-pink-500" /> : <Icon name="chevronDown" className="w-3 h-3 text-slate-400" />}
-                                                    {section.title}
+                                                <button type="button" className="flex items-center gap-2 font-black text-[10px] text-slate-700 flex-1 text-left" onClick={() => setMergeOpenSections(prev => ({...prev, [idx]: !prev[idx]}))}>
+                                                    {mergeOpenSections[idx] ? <Icon name="chevronUp" className="w-3 h-3 text-pink-500" /> : <Icon name="chevronDown" className="w-3 h-3 text-slate-400" />} {section.title}
                                                 </button>
-                                                <button 
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setSelectedFields(prev => {
-                                                            const next = {...prev};
-                                                            const targetState = !allChecked;
-                                                            validFields.forEach(f => next[f] = targetState);
-                                                            return next;
-                                                        });
-                                                    }}
-                                                    className={`text-[9px] font-bold px-2 py-1 rounded-lg border transition-all active:scale-95 ${allChecked ? 'bg-pink-50 text-pink-600 border-pink-200' : 'bg-white text-slate-500 border-slate-200'}`}
-                                                >
+                                                <button type="button" onClick={() => { setSelectedFields(prev => { const next = {...prev}; const targetState = !allChecked; validFields.forEach(f => next[f] = targetState); return next; }); }} className={`text-[9px] font-bold px-2 py-1 rounded-lg border transition-all active:scale-95 ${allChecked ? 'bg-pink-50 text-pink-600 border-pink-200' : 'bg-white text-slate-500 border-slate-200'}`}>
                                                     {allChecked ? '全解除' : '一括チェック'}
                                                 </button>
                                             </div>
@@ -962,9 +748,7 @@ ${artStyleSpecificInstruction}`;
                                                         const val = stagedData[key];
                                                         return (
                                                             <div key={key} onClick={() => setSelectedFields(prev => ({ ...prev, [key]: !prev[key] }))} className={`p-2.5 rounded-xl border text-xs flex items-center gap-3 transition-all cursor-pointer active:scale-[0.98] ${selectedFields[key] ? 'bg-pink-50/50 border-pink-400 shadow-sm' : 'bg-white border-slate-100 opacity-60 hover:opacity-100'}`}>
-                                                                <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${selectedFields[key] ? 'bg-pink-500 border-pink-500 text-white' : 'bg-white border-slate-300'}`}>
-                                                                    {selectedFields[key] && <Icon name="check" className="w-3 h-3" />}
-                                                                </div>
+                                                                <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${selectedFields[key] ? 'bg-pink-500 border-pink-500 text-white' : 'bg-white border-slate-300'}`}>{selectedFields[key] && <Icon name="check" className="w-3 h-3" />}</div>
                                                                 <div className="min-w-0 flex-1">
                                                                     <span className="text-[7px] text-slate-400 block uppercase font-black tracking-tighter">{LABEL_MAP[key]}</span>
                                                                     <p className="font-bold truncate text-slate-800 text-[10px]">{String(val)}</p>
@@ -980,14 +764,7 @@ ${artStyleSpecificInstruction}`;
                             </div>
                             <div className="p-4 bg-white border-t flex gap-2">
                                 <button type="button" onClick={() => setStagedData(null)} className="flex-1 py-3 text-slate-400 font-bold text-xs uppercase tracking-tight active:scale-95 transition-transform bg-slate-100 rounded-xl hover:bg-slate-200">キャンセル</button>
-                                <button type="button" onClick={() => {
-                                    setSelections(prev => {
-                                        const next = { ...prev };
-                                        Object.keys(selectedFields).forEach(key => { if (selectedFields[key]) next[key] = String(stagedData[key]); });
-                                        return next;
-                                    });
-                                    setStagedData(null);
-                                }} className="flex-[2] bg-slate-900 text-white py-3 rounded-xl font-bold text-xs tracking-widest italic uppercase shadow-lg shadow-slate-900/20 active:scale-95 transition-transform hover:bg-pink-600">マージ実行</button>
+                                <button type="button" onClick={() => { setSelections(prev => { const next = { ...prev }; Object.keys(selectedFields).forEach(key => { if (selectedFields[key]) next[key] = String(stagedData[key]); }); return next; }); setStagedData(null); }} className="flex-[2] bg-slate-900 text-white py-3 rounded-xl font-bold text-xs tracking-widest italic uppercase shadow-lg shadow-slate-900/20 active:scale-95 transition-transform hover:bg-pink-600">マージ実行</button>
                             </div>
                         </div>
                     </div>
@@ -1013,22 +790,13 @@ ${artStyleSpecificInstruction}`;
                                         <span className="text-[8px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-400">{fillCount} / {totalCount}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {fillCount > 0 && (
-                                            <button 
-                                                type="button" 
-                                                onClick={(e) => { e.stopPropagation(); clearSectionFields(section.fields, section.title); }} 
-                                                className="text-[8px] text-red-400 hover:text-red-600 px-1 py-0.5 rounded bg-white border border-red-100"
-                                            >
-                                                リセット
-                                            </button>
-                                        )}
+                                        {fillCount > 0 && <button type="button" onClick={(e) => { e.stopPropagation(); clearSectionFields(section.fields, section.title); }} className="text-[8px] text-red-400 hover:text-red-600 px-1 py-0.5 rounded bg-white border border-red-100">リセット</button>}
                                         {openSections[idx] ? <Icon name="chevronUp" className="text-pink-400" /> : <Icon name="chevronDown" className="text-slate-400" />}
                                     </div>
                                 </div>
 
                                 {openSections[idx] && (
                                     <div className="p-4 bg-white grid grid-cols-2 gap-3.5">
-                                        
                                         {idx === 3 && (
                                             <div className="col-span-2 mb-2 bg-slate-50 p-2 rounded-2xl border border-slate-100">
                                                 <div className="flex gap-1 text-[10px] font-bold">
@@ -1037,17 +805,14 @@ ${artStyleSpecificInstruction}`;
                                                 </div>
                                             </div>
                                         )}
-
                                         {section.fields.map((id) => {
                                             const hasVal = selections[id] && selections[id].trim() !== '';
                                             const suggestions = FIELD_SUGGESTIONS[id] || [];
-                                            
                                             const isFACSMode = expressionMode === 'facs';
                                             let disabledOpacity = '';
                                             if (id === 'expression' && isFACSMode) disabledOpacity = 'opacity-30 pointer-events-none grayscale';
                                             if (id === 'facs' && !isFACSMode) disabledOpacity = 'opacity-30 pointer-events-none grayscale';
 
-                                            /* STREAMING_CHUNK:Rendering unified dynamic fields... */
                                             return (
                                                 <div key={id} className={`${id === 'additionalNotes' || id === 'situation' || id === 'bodyInterface' || id === 'aesthetic' ? 'col-span-2' : ''} ${disabledOpacity} transition-all duration-300`}>
                                                     <div className="flex justify-between items-center mb-1">
@@ -1062,7 +827,6 @@ ${artStyleSpecificInstruction}`;
                                                             )}
                                                         </div>
                                                     </div>
-
                                                     {id === 'facs' && isFACSMode && (
                                                         <div className="mb-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
                                                             <span className="text-[7px] text-slate-400 font-bold block mb-1">FACSパッチ:</span>
@@ -1073,7 +837,6 @@ ${artStyleSpecificInstruction}`;
                                                             </div>
                                                         </div>
                                                     )}
-
                                                     {id === 'aesthetic' ? (
                                                         <div className="flex gap-3 justify-center px-1">
                                                             <button type="button" onClick={() => setSelections(p => ({ ...p, aesthetic: p.aesthetic === 'cute' ? '' : 'cute' }))} className={`flex-1 py-3 rounded-full border text-[10px] font-black transition-all ${selections.aesthetic === 'cute' ? 'bg-pink-400 text-white border-pink-400 shadow-md scale-[1.02]' : 'bg-white text-slate-400 border-slate-100 hover:border-pink-200'}`}>かわいい系 💕</button>
@@ -1085,16 +848,7 @@ ${artStyleSpecificInstruction}`;
                                                             <div className="mt-1.5 flex gap-1 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap">
                                                                 {suggestions.map((sug, sIdx) => {
                                                                     const isSelected = selections[id] && (selections[id] === sug.value || selections[id].includes(sug.value));
-                                                                    return (
-                                                                        <button 
-                                                                            type="button" 
-                                                                            key={sIdx} 
-                                                                            onClick={() => applySuggestion(id, sug.value)} 
-                                                                            className={`text-[8.5px] font-bold px-2.5 py-1 rounded-full border transition-all shrink-0 select-none ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-sm scale-95 font-extrabold' : 'bg-white hover:bg-pink-50 text-slate-500 border-slate-200/60'}`}
-                                                                        >
-                                                                            {sug.label}
-                                                                        </button>
-                                                                    );
+                                                                    return <button type="button" key={sIdx} onClick={() => applySuggestion(id, sug.value)} className={`text-[8.5px] font-bold px-2.5 py-1 rounded-full border transition-all shrink-0 select-none ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-sm scale-95 font-extrabold' : 'bg-white hover:bg-pink-50 text-slate-500 border-slate-200/60'}`}>{sug.label}</button>;
                                                                 })}
                                                             </div>
                                                         </>
@@ -1109,7 +863,6 @@ ${artStyleSpecificInstruction}`;
                     })}
 
                     <div className="pt-6 border-t border-pink-50 space-y-4 text-center font-black">
-                        {/* ★ 出力スコープ選択UIの追加 */}
                         <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
                             <span className="text-[10px] font-black text-slate-500 block mb-2 uppercase tracking-widest">Output Scope (出力スコープ)</span>
                             <div className="flex gap-1.5 text-[10px] font-bold">
@@ -1141,12 +894,9 @@ ${artStyleSpecificInstruction}`;
                 </div>
 
                 <div ref={resultRef} className="pb-40 space-y-4 animate-fade-in">
-                    
-                    {/* ★ Pinned Vault (固定プロンプト) エリア */}
                     {(fixedPrompts.character || fixedPrompts.environment) && (
                         <div className="bg-slate-800 rounded-[2.5rem] p-6 border border-slate-700 shadow-xl space-y-4">
                             <h3 className="text-white text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5"><Icon name="save" className="w-4 h-4"/> Pinned Vault (固定プロンプト)</h3>
-                            
                             {fixedPrompts.character && (
                                 <div className="bg-slate-900 rounded-2xl p-4 border border-pink-500/40 shadow-inner">
                                     <div className="flex justify-between items-center mb-2">
@@ -1159,7 +909,6 @@ ${artStyleSpecificInstruction}`;
                                     <p className="text-pink-100/90 font-mono text-[9px] leading-relaxed break-all line-clamp-3 hover:line-clamp-none transition-all">{fixedPrompts.character}</p>
                                 </div>
                             )}
-                            
                             {fixedPrompts.environment && (
                                 <div className="bg-slate-900 rounded-2xl p-4 border border-blue-500/40 shadow-inner">
                                     <div className="flex justify-between items-center mb-2">
@@ -1187,11 +936,17 @@ ${artStyleSpecificInstruction}`;
                                             <button type="button" onClick={() => copyText(englishPrompt, 'pos')} className={`text-white text-[8px] font-black px-3 py-1.5 rounded-lg transition-all shadow-md ${copyFeedback === 'pos' ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-500'}`}>COPY POS</button>
                                         </div>
                                     </div>
-                                    {/* ★ ピン留め保存ボタン */}
                                     <div className="flex gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800">
                                         <span className="text-[8px] text-slate-500 font-bold self-center mr-1">保存📌</span>
-                                        <button type="button" onClick={() => pinPrompt('character', englishPrompt)} className="flex-1 bg-pink-900/40 hover:bg-pink-600 text-pink-300 hover:text-white border border-pink-700/50 text-[9px] font-black py-2 rounded-lg transition-all active:scale-95">人物プロンプトに固定</button>
-                                        <button type="button" onClick={() => pinPrompt('environment', englishPrompt)} className="flex-1 bg-blue-900/40 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-700/50 text-[9px] font-black py-2 rounded-lg transition-all active:scale-95">環境プロンプトに固定</button>
+                                        <button type="button" onClick={() => {
+                                            const textToPin = (promptScope === 'all' && generatedFragments.character) ? generatedFragments.character : englishPrompt;
+                                            pinPrompt('character', textToPin);
+                                        }} className="flex-1 bg-pink-900/40 hover:bg-pink-600 text-pink-300 hover:text-white border border-pink-700/50 text-[9px] font-black py-2 rounded-lg transition-all active:scale-95">人物プロンプトに固定</button>
+                                        
+                                        <button type="button" onClick={() => {
+                                            const textToPin = (promptScope === 'all' && generatedFragments.environment) ? generatedFragments.environment : englishPrompt;
+                                            pinPrompt('environment', textToPin);
+                                        }} className="flex-1 bg-blue-900/40 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-700/50 text-[9px] font-black py-2 rounded-lg transition-all active:scale-95">環境プロンプトに固定</button>
                                     </div>
                                 </div>
                                 <p className="text-pink-100 font-mono text-[10px] p-3 bg-slate-950 rounded-2xl border border-slate-850 italic break-all leading-relaxed">{englishPrompt}</p>
@@ -1244,12 +999,7 @@ ${artStyleSpecificInstruction}`;
                                 (FIELD_SUGGESTIONS[focusField] || []).map((sug, sIdx) => {
                                     const isSelected = focusTempText && (focusTempText === sug.value || focusTempText.includes(sug.value));
                                     return (
-                                        <button 
-                                            type="button" 
-                                            key={sIdx} 
-                                            onClick={() => applySuggestionInFocus(sug.value)} 
-                                            className={`text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-md font-black' : 'bg-slate-800 text-slate-300 border-slate-700'}`}
-                                        >
+                                        <button type="button" key={sIdx} onClick={() => applySuggestionInFocus(sug.value)} className={`text-[10px] font-bold px-3 py-1.5 rounded-full border transition-all ${isSelected ? 'bg-pink-500 text-white border-pink-500 shadow-md font-black' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
                                             {sug.label}
                                         </button>
                                     );
@@ -1279,31 +1029,19 @@ const saveToSlot = (index, memorySlots, selections, previews, setMemorySlots, se
     try {
         const newSlots = [...memorySlots];
         const existingPreview = memorySlots[index]?.preview || null;
-        newSlots[index] = {
-            data: { ...selections },
-            preview: previews.baseStored || previews.plusStored || existingPreview
-        };
+        newSlots[index] = { data: { ...selections }, preview: previews.baseStored || previews.plusStored || existingPreview };
         setMemorySlots(newSlots);
         localStorage.setItem('idol_designer_slots_v195', JSON.stringify(newSlots));
         setStatusMessage(`Slot ${index + 1} Saved`);
         setTimeout(() => setStatusMessage(''), 2000);
-    } catch(e) {
-        setStatusMessage('保存エラー');
-    }
+    } catch(e) { setStatusMessage('保存エラー'); }
 };
 
 const loadFromSlot = (index, memorySlots, setSelections, setPreviews, setStatusMessage) => {
     const slot = memorySlots[index];
     if (!slot) return;
     setSelections(slot.data);
-    
-    if (slot.preview) {
-        setPreviews(prev => ({
-            ...prev,
-            base: slot.preview,
-            baseStored: slot.preview
-        }));
-    }
+    if (slot.preview) { setPreviews(prev => ({ ...prev, base: slot.preview, baseStored: slot.preview })); }
     setStatusMessage(`Slot ${index + 1} Loaded`);
     setTimeout(() => setStatusMessage(''), 2000);
 };
