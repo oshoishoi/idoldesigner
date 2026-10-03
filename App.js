@@ -54,14 +54,17 @@ function App() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(null); 
     const [expressionMode, setExpressionMode] = useState('facs'); 
+    
+    /* STREAMING_CHUNK:Adding fixed prompts (Vault) state and initialization... */
     const [englishPrompt, setEnglishPrompt] = useState('');
     const [negativePrompt, setNegativePrompt] = useState('');
     const [copyFeedback, setCopyFeedback] = useState(null); 
     const [statusMessage, setStatusMessage] = useState('');
     const [previews, setPreviews] = useState({ base: null, plus: null, baseStored: null, plusStored: null });
     const [memorySlots, setMemorySlots] = useState(Array(10).fill(null));
+    const [fixedPrompts, setFixedPrompts] = useState({ character: '', environment: '' }); // ★ 固定プロンプトのStateを追加
 
-    const [promptScope, setPromptScope] = useState('all'); // ★ 出力スコープのStateを追加
+    const [promptScope, setPromptScope] = useState('all'); 
 
     const [openSections, setOpenSections] = useState({
         0: true,  
@@ -97,7 +100,35 @@ function App() {
                 }
             }
         } catch (e) { console.error("Restore failed:", e); }
+
+        // ★ 固定プロンプトの復元
+        try {
+            const savedPinned = localStorage.getItem('idol_designer_pinned_prompts');
+            if (savedPinned) {
+                setFixedPrompts(JSON.parse(savedPinned));
+            }
+        } catch (e) {}
     }, []);
+
+    const pinPrompt = (type, text) => {
+        setFixedPrompts(prev => {
+            const next = { ...prev, [type]: text };
+            localStorage.setItem('idol_designer_pinned_prompts', JSON.stringify(next));
+            return next;
+        });
+        setStatusMessage(`${type === 'character' ? '人物' : '環境'}プロンプトを固定しました📌`);
+        setTimeout(() => setStatusMessage(''), 2000);
+    };
+
+    const unpinPrompt = (type) => {
+        if (window.confirm(`${type === 'character' ? '人物' : '環境'}の固定プロンプトを解除しますか？`)) {
+            setFixedPrompts(prev => {
+                const next = { ...prev, [type]: '' };
+                localStorage.setItem('idol_designer_pinned_prompts', JSON.stringify(next));
+                return next;
+            });
+        }
+    };
 
     const copyText = (text, type) => {
         if (!text) return;
@@ -342,7 +373,6 @@ function App() {
         });
     };
 
-    // ★ バグ修正：handleOrientationChange を復活させ ReferenceError を解消
     const handleOrientationChange = (orientation) => {
         setSelections(prev => {
             const next = { ...prev, orientation };
@@ -1111,18 +1141,60 @@ ${artStyleSpecificInstruction}`;
                 </div>
 
                 <div ref={resultRef} className="pb-40 space-y-4 animate-fade-in">
+                    
+                    {/* ★ Pinned Vault (固定プロンプト) エリア */}
+                    {(fixedPrompts.character || fixedPrompts.environment) && (
+                        <div className="bg-slate-800 rounded-[2.5rem] p-6 border border-slate-700 shadow-xl space-y-4">
+                            <h3 className="text-white text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5"><Icon name="save" className="w-4 h-4"/> Pinned Vault (固定プロンプト)</h3>
+                            
+                            {fixedPrompts.character && (
+                                <div className="bg-slate-900 rounded-2xl p-4 border border-pink-500/40 shadow-inner">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-pink-400 text-[9px] font-black uppercase">👤 Character (人物)</span>
+                                        <div className="flex gap-2">
+                                            <button type="button" onClick={() => copyText(fixedPrompts.character, 'pinned_char')} className={`text-white text-[8px] font-black px-4 py-1.5 rounded-lg transition-all ${copyFeedback === 'pinned_char' ? 'bg-green-500' : 'bg-pink-600 hover:bg-pink-500'}`}>COPY</button>
+                                            <button type="button" onClick={() => unpinPrompt('character')} className="bg-slate-700 hover:bg-slate-600 text-slate-300 text-[8px] font-black px-3 py-1.5 rounded-lg transition-colors">解除</button>
+                                        </div>
+                                    </div>
+                                    <p className="text-pink-100/90 font-mono text-[9px] leading-relaxed break-all line-clamp-3 hover:line-clamp-none transition-all">{fixedPrompts.character}</p>
+                                </div>
+                            )}
+                            
+                            {fixedPrompts.environment && (
+                                <div className="bg-slate-900 rounded-2xl p-4 border border-blue-500/40 shadow-inner">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-blue-400 text-[9px] font-black uppercase">🖼️ Environment (環境)</span>
+                                        <div className="flex gap-2">
+                                            <button type="button" onClick={() => copyText(fixedPrompts.environment, 'pinned_env')} className={`text-white text-[8px] font-black px-4 py-1.5 rounded-lg transition-all ${copyFeedback === 'pinned_env' ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-500'}`}>COPY</button>
+                                            <button type="button" onClick={() => unpinPrompt('environment')} className="bg-slate-700 hover:bg-slate-600 text-slate-300 text-[8px] font-black px-3 py-1.5 rounded-lg transition-colors">解除</button>
+                                        </div>
+                                    </div>
+                                    <p className="text-blue-100/90 font-mono text-[9px] leading-relaxed break-all line-clamp-3 hover:line-clamp-none transition-all">{fixedPrompts.environment}</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {englishPrompt && (
                         <div className="space-y-4">
                             <div className="bg-slate-900 rounded-[2.5rem] p-6 text-white relative border border-slate-800 shadow-2xl">
                                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500"></div>
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-pink-400 text-[10px] font-black uppercase tracking-[0.2em]">Master Prompt</span>
-                                    <div className="flex gap-2">
-                                        <button type="button" onClick={copyBothPrompts} className={`text-white text-[9px] font-black px-3 py-1.5 rounded-xl transition-all shadow-md ${copyFeedback === 'both' ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-500'}`}>BOTH COPY</button>
-                                        <button type="button" onClick={() => copyText(englishPrompt, 'pos')} className={`text-white text-[9px] font-black px-3 py-1.5 rounded-xl transition-all shadow-md ${copyFeedback === 'pos' ? 'bg-green-500' : 'bg-slate-700 hover:bg-slate-600'}`}>COPY POS</button>
+                                <div className="flex flex-col gap-3 mb-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-pink-400 text-[10px] font-black uppercase tracking-[0.2em]">Generated Prompt</span>
+                                        <div className="flex gap-1.5">
+                                            <button type="button" onClick={copyBothPrompts} className={`text-white text-[8px] font-black px-3 py-1.5 rounded-lg transition-all shadow-md ${copyFeedback === 'both' ? 'bg-green-500' : 'bg-slate-700 hover:bg-slate-600'}`}>BOTH COPY</button>
+                                            <button type="button" onClick={() => copyText(englishPrompt, 'pos')} className={`text-white text-[8px] font-black px-3 py-1.5 rounded-lg transition-all shadow-md ${copyFeedback === 'pos' ? 'bg-green-500' : 'bg-blue-600 hover:bg-blue-500'}`}>COPY POS</button>
+                                        </div>
+                                    </div>
+                                    {/* ★ ピン留め保存ボタン */}
+                                    <div className="flex gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800">
+                                        <span className="text-[8px] text-slate-500 font-bold self-center mr-1">保存📌</span>
+                                        <button type="button" onClick={() => pinPrompt('character', englishPrompt)} className="flex-1 bg-pink-900/40 hover:bg-pink-600 text-pink-300 hover:text-white border border-pink-700/50 text-[9px] font-black py-2 rounded-lg transition-all active:scale-95">人物プロンプトに固定</button>
+                                        <button type="button" onClick={() => pinPrompt('environment', englishPrompt)} className="flex-1 bg-blue-900/40 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-700/50 text-[9px] font-black py-2 rounded-lg transition-all active:scale-95">環境プロンプトに固定</button>
                                     </div>
                                 </div>
-                                <p className="text-pink-100 font-mono text-[10px] p-2 bg-slate-950 rounded-2xl border border-slate-850 italic">{englishPrompt}</p>
+                                <p className="text-pink-100 font-mono text-[10px] p-3 bg-slate-950 rounded-2xl border border-slate-850 italic break-all leading-relaxed">{englishPrompt}</p>
                             </div>
                             <div className="bg-white rounded-[2.5rem] p-6 border shadow-sm">
                                 <div className="flex justify-between items-center mb-2">
