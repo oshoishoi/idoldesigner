@@ -12,7 +12,7 @@ const safetySettings = window.safetySettings || [];
 
 const Icon = ({ name, className = "" }) => {
     const svgs = {
-        sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
+        sparkles: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
         refresh: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
         undo: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 7V5c0-1.1.9-2 2-2h2"/><path d="M17 3h2c1.1 0 2 .9 2 2v2"/><path d="M21 17v2c0 1.1-.9 2-2 2h-2"/><path d="M7 21H5c-1.1 0-2-.9-2-2v-2"/><path d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2Z"/><path d="M12 16v2"/><path d="M12 8V6"/><path d="M8 12H6"/><path d="M18 12h-2"/></svg>,
         target: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
@@ -60,6 +60,8 @@ function App() {
     const [statusMessage, setStatusMessage] = useState('');
     const [previews, setPreviews] = useState({ base: null, plus: null, baseStored: null, plusStored: null });
     const [memorySlots, setMemorySlots] = useState(Array(10).fill(null));
+
+    const [promptScope, setPromptScope] = useState('all'); // ★ 出力スコープのStateを追加
 
     const [openSections, setOpenSections] = useState({
         0: true,  
@@ -563,6 +565,26 @@ ${keyListString}`;
             const activeData = { ...selections };
             if (expressionMode === 'facs') activeData.expression = ""; else activeData.facs = "";
 
+            /* STREAMING_CHUNK:Filtering fields based on the selected prompt scope... */
+            let targetFields = FIELD_KEYS;
+            if (promptScope === 'character') {
+                targetFields = [
+                    'hairStyle', 'hairBangs', 'hairColor', 'hairTexture',
+                    'faceOutline', 'facePlacement', 'eyeShape', 'eyeSymmetry', 'irisRatio', 'eyeCorners', 'eyeColor', 'eyelidType', 'tearBags', 'eyelashes', 'eyeSparkle', 'eyeMakeupDetail', 'eyebrowShape', 'noseShape', 'mouthShape', 'lipTexture', 'teeth', 'cheekStyle', 'makeupStyle',
+                    'skinColor', 'skinTexture', 'molesFreckles', 'age', 'height', 'bodyFrame', 'threeSizes',
+                    'aesthetic', 'additionalNotes'
+                ];
+            } else if (promptScope === 'environment') {
+                targetFields = [
+                    'hairAccessory', 'outfit', 'bodyInterface', 'pose', 'expression', 'facs', 'bodyLine', 'situation', 'lighting', 'artStyle', 'cameraAngle', 'additionalNotes'
+                ];
+            }
+
+            // ターゲット以外のフィールドはAIに渡すデータから除外する
+            Object.keys(activeData).forEach(k => {
+                if (!targetFields.includes(k)) activeData[k] = '';
+            });
+
             const PRIORITY_ORDER = [
                 'cameraAngle', 'artStyle', 'pose', 'bodyLine', 'situation', 'lighting', 
                 'age', 'height', 'bodyFrame', 'threeSizes', 
@@ -636,6 +658,10 @@ ${artStyleSpecificInstruction}`;
 
             const FALLBACK_MODELS = ['gemini-3.5-flash', 'gemini-3.0-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
             let attempt = 0;
+            
+            // ★ モードに応じたAIへの特別指示
+            const modeInstruction = promptScope === 'character' ? '【重要】今回は「人物の身体的特徴・顔立ち」のみのプロンプトを生成します。背景や構図、衣装の要素は含めず、純粋なキャラクターデザインの定義として出力してください。' :
+                                    promptScope === 'environment' ? '【重要】今回は「構図、背景、衣装、演出」のみのプロンプトを生成します。人物の詳細な顔立ちや肉体的特徴は含めず、純粋なシチュエーションとスタイルの定義として出力してください。' : '';
 
             while (attempt < 5 && !success) {
                 for (let i = 0; i < FALLBACK_MODELS.length; i++) {
@@ -648,7 +674,7 @@ ${artStyleSpecificInstruction}`;
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{ parts: [{ text: `以下の日本語データに基づきプロンプトを作成し、末尾に比率 "${arTag}" を含めて出力せよ。\n\nデータ:\n${activeText}` }] }],
+                                contents: [{ parts: [{ text: `以下の日本語データに基づきプロンプトを作成し、末尾に比率 "${arTag}" を含めて出力せよ。\n${modeInstruction}\n\nデータ:\n${activeText}` }] }],
                                 systemInstruction: { parts: [{ text: promptSystemInstruction }] },
                                 safetySettings
                             }),
@@ -1053,6 +1079,16 @@ ${artStyleSpecificInstruction}`;
                     })}
 
                     <div className="pt-6 border-t border-pink-50 space-y-4 text-center font-black">
+                        {/* ★ 出力スコープ選択UIの追加 */}
+                        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <span className="text-[10px] font-black text-slate-500 block mb-2 uppercase tracking-widest">Output Scope (出力スコープ)</span>
+                            <div className="flex gap-1.5 text-[10px] font-bold">
+                                <button type="button" onClick={() => setPromptScope('all')} className={`flex-1 py-2.5 rounded-xl transition-all ${promptScope === 'all' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-100'}`}>すべて 🌐</button>
+                                <button type="button" onClick={() => setPromptScope('character')} className={`flex-1 py-2.5 rounded-xl transition-all ${promptScope === 'character' ? 'bg-pink-500 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-200 hover:bg-pink-50'}`}>人物のみ 👤</button>
+                                <button type="button" onClick={() => setPromptScope('environment')} className={`flex-1 py-2.5 rounded-xl transition-all ${promptScope === 'environment' ? 'bg-blue-500 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-200 hover:bg-blue-50'}`}>環境・演出 🖼️</button>
+                            </div>
+                        </div>
+
                         <div className="flex gap-2 justify-center">
                             <button type="button" onClick={() => applyPreset('cheki')} className="px-4 py-2 rounded-full border text-[10px]">チェキ風</button>
                             <button type="button" onClick={() => applyPreset('camera')} className="px-4 py-2 rounded-full border text-[10px]">スマホ風</button>
